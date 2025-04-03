@@ -26,7 +26,6 @@ class SecurityConfig(
             .cors { it.disable() }
             .authorizeHttpRequests{ request ->
                 request
-                    // 엔드포인트 넣기
                     .requestMatchers("/auth/*").permitAll()
                     .requestMatchers("/user/*").permitAll()
                     .anyRequest().authenticated()
