@@ -12,12 +12,12 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
     show-sql: false
     open-in-view: false
 
 app:
   jwt:
-    secret: ${JWT_SECRET} # your key
+    secret: ${JWT_SECRET}
     access: 36000000 # 10 hours
     refresh: 604800000 # 7 days
