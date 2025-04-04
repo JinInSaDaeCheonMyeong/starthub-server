@@ -58,13 +58,12 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
     annotation("jakarta.persistence.MappedSuperclass")
 }
-//
-//noArg {
-//    annotation("javax.persistence.Entity")
-//    annotation("javax.persistence.Embeddable")
-//    annotation("javax.persistence.MappedSuperclass")
-//}
 
+noArg {
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.Embeddable")
+    annotation("javax.persistence.MappedSuperclass")
+}
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")

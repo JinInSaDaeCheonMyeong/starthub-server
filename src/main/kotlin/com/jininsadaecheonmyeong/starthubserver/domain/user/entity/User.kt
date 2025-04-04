@@ -8,13 +8,13 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.UserRole
 @Entity(name = "user_tbl")
 class User(
     @Id
+    @Column(nullable = false, unique = true)
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID? = null,
 
     @Column(nullable = false, unique = true)
     val email: String,
 
-    @Column(columnDefinition = "text")
     var password: String,
 
     @Enumerated(EnumType.STRING)
