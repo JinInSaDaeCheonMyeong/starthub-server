@@ -11,7 +11,6 @@ import java.time.LocalDateTime
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
-
     @ExceptionHandler(EmailAlreadyExistsException::class)
     fun handleAlreadyExistsEmail(ex: EmailAlreadyExistsException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(

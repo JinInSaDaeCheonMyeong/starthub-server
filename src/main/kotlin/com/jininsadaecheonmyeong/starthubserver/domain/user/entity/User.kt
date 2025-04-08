@@ -4,7 +4,6 @@ import java.util.*
 import jakarta.persistence.*
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.UserRole
 
-
 @Entity(name = "user_tbl")
 class User(
     @Id
