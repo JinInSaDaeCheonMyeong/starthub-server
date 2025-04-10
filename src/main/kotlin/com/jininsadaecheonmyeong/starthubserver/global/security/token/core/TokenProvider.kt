@@ -11,11 +11,12 @@ import java.util.*
 @Component
 class TokenProvider(
     private val properties: TokenProperties,
+    private val tokenRedisService: TokenRedisService
 ) {
     private fun generate(tokenType: TokenType, user: User, expire: Long): String {
         return Jwts.builder()
             .claim("category", tokenType.value)
-            .claim("email", user.email) // change claim you want
+            .claim("email", user.email)
             .claim("role", user.role)
             .issuedAt(Date(currentTimeMillis()))
             .expiration(Date(currentTimeMillis() + expire))
@@ -28,7 +29,7 @@ class TokenProvider(
 
     fun generateRefresh(user: User): String {
         val refreshToken = generate(TokenType.REFRESH_TOKEN, user, properties.refresh)
-//        tokenRedisService.storeRefreshToken(user.username, refreshToken) -> redis 쓰게 된다면 사용하기
+        tokenRedisService.storeRefreshToken(user.email, refreshToken)
         return refreshToken
     }
 }
