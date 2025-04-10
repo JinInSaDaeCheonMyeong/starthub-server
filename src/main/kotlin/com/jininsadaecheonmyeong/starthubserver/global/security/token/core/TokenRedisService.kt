@@ -18,8 +18,4 @@ class TokenRedisService(
     fun findByEmail(email: String): String? {
         return redisTemplate.opsForValue()["refreshToken:$email"]
     }
-
-    fun existsByEmail(email: String): Boolean {
-        return redisTemplate.hasKey("refreshToken:$email")
-    }
 }
