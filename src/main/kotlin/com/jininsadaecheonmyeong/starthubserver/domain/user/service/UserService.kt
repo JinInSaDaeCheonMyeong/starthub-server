@@ -6,8 +6,10 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenRedisService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
@@ -23,7 +25,8 @@ class UserService (
     private val bcryptPasswordEncoder: BCryptPasswordEncoder,
     private val tokenProvider: TokenProvider,
     private val tokenValidator: TokenValidator,
-    private val tokenParser: TokenParser
+    private val tokenParser: TokenParser,
+    private val tokenRedisService: TokenRedisService
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
@@ -40,9 +43,13 @@ class UserService (
     }
 
     fun reissue(request: RefreshRequest): TokenResponse {
+        val email: String = tokenParser.findEmail(request.refresh)
         tokenValidator.validateAll(request.refresh, TokenType.REFRESH_TOKEN)
         val user: User = userRepository.findByEmail(tokenParser.findEmail(request.refresh))
             ?: throw UserNotFoundException("찾을 수 없는 유저")
+        if (tokenRedisService.findByEmail(email)?.equals(request.refresh) != true) {
+            throw InvalidTokenException("유효하지 않은 리프레시 토큰")
+        }
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
             refresh = tokenProvider.generateRefresh(user)
