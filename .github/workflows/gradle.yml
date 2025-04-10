@@ -30,9 +30,9 @@ jobs:
 
       - name: Build Docker Image For Spring
         run: |
-          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
-          docker build --platform linux/amd64 -t ${{ secrets.DOCKERHUB_USERNAME }}/starthub-server:latest .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/starthub-server:latest
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build --platform linux/amd64 -t ${{ secrets.DOCKER_USERNAME }}/starthub-server:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/starthub-server:latest
 
   deploy:
     needs: build
@@ -45,7 +45,7 @@ jobs:
           username: ${{ secrets.GCP_USERNAME }}
           key: ${{ secrets.GCP_KEY }}
           script: |
-            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/starthub-server:latest
+            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            docker pull ${{ secrets.DOCKER_USERNAME }}/starthub-server:latest
             docker-compose down
             docker-compose up -d
