@@ -3,6 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.user.entity
 import java.util.*
 import jakarta.persistence.*
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.UserRole
+import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 
 @Entity(name = "user_tbl")
 class User(
@@ -18,4 +19,4 @@ class User(
 
     @Enumerated(EnumType.STRING)
     val role: UserRole = UserRole.USER,
-)
+) : BaseEntity()
