@@ -1,3 +1,4 @@
+version: '3'
 services:
   server:
     image: ${DOCKER_USERNAME}/starthub-server:latest
