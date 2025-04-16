@@ -9,7 +9,7 @@ data class CustomUserDetails(val user: User): UserDetails {
         return listOf(GrantedAuthority { user.role.value })
     }
 
-    override fun getPassword(): String = user.password
+    override fun getPassword(): String? = null
 
     override fun getUsername(): String = user.email
 

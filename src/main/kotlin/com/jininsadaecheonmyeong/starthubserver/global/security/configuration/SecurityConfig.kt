@@ -23,16 +23,16 @@ class SecurityConfig(
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
-            .formLogin{ it.disable() }
-            .httpBasic{ it.disable() }
+            .formLogin { it.disable() }
+            .httpBasic { it.disable() }
             .cors { it.configurationSource(corsConfigurationSource()) }
-            .authorizeHttpRequests{ request ->
+            .authorizeHttpRequests { request ->
                 request
-                    .requestMatchers("/auth/*").permitAll()
                     .requestMatchers("/user/*").permitAll()
+                    .requestMatchers("/oauth/*").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
-                    .anyRequest().authenticated()
+                    .anyRequest().permitAll() //TODO
             }
             .addFilterAfter(tokenFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(tokenExceptionFilter, TokenFilter::class.java)
@@ -59,4 +59,3 @@ class SecurityConfig(
         return urlBasedCorsConfigurationSource
     }
 }
-

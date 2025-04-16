@@ -28,3 +28,12 @@ app:
     secret: ${JWT_SECRET}
     access: 3600000
     refresh: 604800000
+
+google:
+  client:
+    id: ${GOOGLE_CLIENT_ID}
+    secret: ${GOOGLE_CLIENT_SECRET}
+    redirect-uri: ${GOOGLE_REDIRECT_URI}
+    token-uri: https://oauth2.googleapis.com/token
+    user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+    grant-type: authorization_code

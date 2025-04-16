@@ -1,6 +1,5 @@
-package com.jininsadaecheonmyeong.starthubserver.global.security.configuration
+package com.jininsadaecheonmyeong.starthubserver.global.configuration.redis
 
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.RedisConnectionFactory

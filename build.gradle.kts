@@ -55,6 +55,9 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-impl:0.12.3")
     implementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
 
+    // webflux
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
     // etc
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 }

@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.data
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.AuthProvider
 
 data class UserRequest(
     val email: String,
@@ -10,6 +11,7 @@ data class UserRequest(
         return User(
             email = email,
             password = encodedPassword,
+            provider = AuthProvider.LOCAL
         )
     }
 }
