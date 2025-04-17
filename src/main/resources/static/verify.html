@@ -3,27 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이메일 인증</title>
+    <title>StartHub 이메일 인증</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fc;
+            color: #333;
+            line-height: 1.6;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .email-header {
+            background-color: #1F49FF;
+            padding: 30px;
             text-align: center;
         }
-        .code {
-            font-size: 48px;
-            margin: 20px 0;
-            letter-spacing: 10px;
+        .email-header h1 {
+            color: white;
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .email-header p {
+            color: #e0e8ff;
+            margin: 10px 0 0;
+            font-size: 16px;
+        }
+        .email-body {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .email-body h2 {
+            margin-top: 0;
+            color: #2d2d2d;
+            font-size: 22px;
+        }
+        .code-container {
+            margin: 30px auto;
+            background-color: #f0f4ff;
+            border: 1px solid #d0d9ff;
+            border-radius: 6px;
+            padding: 16px;
+            max-width: 300px;
+        }
+        .instructions {
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 30px;
+        }
+        .expiry-notice {
+            font-size: 14px;
+            color: #888;
+            margin-top: 20px;
+        }
+        .email-footer {
+            background-color: #f8faff;
+            padding: 20px 30px;
+            text-align: center;
+            border-top: 1px solid #e9efff;
+        }
+        .social-link img {
+            vertical-align: middle;
+            width: 18px;
+            height: 18px;
+            filter: invert(1);
+        }
+        .contact-info {
+            color: #888;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .help-text {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #777;
+        }
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100%;
+                border-radius: 0;
+            }
+            .email-header, .email-body, .email-footer {
+                padding: 20px 15px;
+            }
         }
     </style>
 </head>
 <body>
-<img src="cid:image" style="width: 150px;" alt="스타트허브 인증코드 이미지"><br><br>
-<p style="font-size: 16px; font-weight: bold;">스타트허브 이메일 인증을 위해 아래 코드를 입력하세요</p>
-<h1 class="code">{code}</h1>
-<p style="font-size: 14px;">코드는 5분 후 만료됩니다.</p>
-<p style="font-size: 10px; line-height: 1.6; margin: 20px 0;">만약 이 요청을 본인이 하지 않았다면, 이 메일을 무시하셔도 됩니다.</p>
-<div style="text-align: center; margin-top: 30px; font-size: 12px; color: #999;">
-    © 2024 Modurang. All rights reserved.
-</div>
+<table class="email-container">
+    <tr>
+        <td class="email-header">
+            <img src="cid:image" alt="StartHub" width="120" height="48" style="border-radius: 6px;">
+            <h1>이메일 인증</h1>
+            <p>창업의 첫 걸음을 함께합니다</p>
+        </td>
+    </tr>
+    <tr>
+        <td class="email-body">
+            <h2>인증 코드 확인</h2>
+            <p class="instructions">안녕하세요! StartHub에 가입해 주셔서 감사합니다.<br>아래의 인증 코드를 입력하여 회원가입을 완료해 주세요.</p>
+
+            <div class="code-container">
+                <div class="code">{code}</div>
+            </div>
+
+            <p class="expiry-notice">※ 인증 코드는 발송 시점으로부터 5분간 유효합니다.</p>
+
+            <p class="help-text">인증 코드 입력에 문제가 있으신가요?<br>starthub.noreply@gmail.com로 문의해 주세요.</p>
+        </td>
+    </tr>
+    <tr>
+        <td class="email-footer">
+            <div class="contact-info">
+                <p>Team. 진인사대천명</p>
+                <p>© 2025 StartHub. All rights reserved.</p>
+            </div>
+        </td>
+    </tr>
+</table>
 </body>
 </html>
