@@ -36,7 +36,7 @@ class EmailService (
 
             helper.setText(content, true)
 
-            helper.addInline("image", ClassPathResource("static/스타트허브 인증코드 이미지.png"))
+            helper.addInline("image", ClassPathResource("static/스타트허브 로고.png"))
 
             javaMailSender.send(message)
         } catch (e: MessagingException) {
