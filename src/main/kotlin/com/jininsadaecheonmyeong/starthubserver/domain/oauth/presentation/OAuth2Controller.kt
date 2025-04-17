@@ -14,7 +14,7 @@ class OAuth2Controller(
     private val oAuth2Service: OAuth2Service,
 ) {
     @GetMapping("")
-    fun auth(@RequestParam code: String): BaseResponse<TokenResponse> {
+    fun auth(@RequestParam code: String): BaseResponse<TokenResponse?> {
         return BaseResponse.of(oAuth2Service.auth(code))
     }
 }
