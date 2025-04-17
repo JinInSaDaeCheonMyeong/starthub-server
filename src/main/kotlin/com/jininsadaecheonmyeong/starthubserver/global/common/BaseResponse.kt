@@ -6,7 +6,7 @@ data class BaseResponse<T>(
     val message: String
 ) {
     companion object {
-        fun <T> of(data: T): BaseResponse<T> {
+        fun <T> of(data: T?): BaseResponse<T?> {
             return BaseResponse(
                 data = data,
                 message = "성공",
