@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.global.security.configuration
+package com.jininsadaecheonmyeong.starthubserver.global.configuration
 
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI

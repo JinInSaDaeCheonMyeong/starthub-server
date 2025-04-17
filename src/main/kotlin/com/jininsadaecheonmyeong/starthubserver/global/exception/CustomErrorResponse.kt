@@ -5,12 +5,22 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPas
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.time.LocalDateTime
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handleValidationException(ex: MethodArgumentNotValidException): ResponseEntity<CustomErrorResponse> {
+        val customErrorResponse = CustomErrorResponse(
+            message = ex.message,
+            status = HttpStatus.BAD_REQUEST.value()
+        )
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(customErrorResponse)
+    }
+
     @ExceptionHandler(EmailAlreadyExistsException::class)
     fun handleAlreadyExistsEmail(ex: EmailAlreadyExistsException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
