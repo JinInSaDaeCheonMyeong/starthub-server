@@ -1,5 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.service
 
+import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
+import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
@@ -26,10 +28,15 @@ class UserService (
     private val tokenProvider: TokenProvider,
     private val tokenValidator: TokenValidator,
     private val tokenParser: TokenParser,
-    private val tokenRedisService: TokenRedisService
+    private val tokenRedisService: TokenRedisService,
+    private val emailRepository: EmailRepository
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
+        val verification = emailRepository.findByEmail(request.email)
+        if (verification == null || !verification.isVerified) {
+            throw EmailNotVerifiedException("인증되지 않은 이메일")
+        }
         userRepository.save(request.toEntity(bcryptPasswordEncoder.encode(request.password)))
     }
 
