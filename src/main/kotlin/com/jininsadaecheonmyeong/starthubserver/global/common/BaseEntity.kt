@@ -9,10 +9,9 @@ import java.time.LocalDateTime
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener::class)
-class BaseEntity {
-    @CreatedDate
-    private var createdAt: LocalDateTime? = null
-
-    @LastModifiedDate
+data class BaseEntity(
+    @field:CreatedDate
+    private var createdAt: LocalDateTime? = null,
+    @field:LastModifiedDate
     private var updatedAt: LocalDateTime? = null
-}
+)

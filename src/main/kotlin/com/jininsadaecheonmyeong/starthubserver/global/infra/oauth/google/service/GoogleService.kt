@@ -3,7 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.servi
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.configuration.GoogleProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data.GoogleTokenResponse
-import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data.UserInfo
+import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data.GoogleUserInfo
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -15,7 +15,7 @@ class GoogleService(
 ) {
     private val webClient = WebClient.create()
 
-    fun exchangeCodeForUserInfo(code: String): UserInfo {
+    fun exchangeCodeForUserInfo(code: String): GoogleUserInfo {
         val tokenResponse = webClient.post()
             .uri(googleProperties.tokenUri)
             .contentType(MediaType.APPLICATION_JSON)
@@ -39,7 +39,7 @@ class GoogleService(
             .uri(googleProperties.userInfoUri)
             .headers { it.setBearerAuth(accessToken) }
             .retrieve()
-            .bodyToMono<UserInfo>()
-            .block() ?: throw InvalidTokenException("사용자 정보를 검색하지 못함")
+            .bodyToMono<GoogleUserInfo>()
+            .block() ?: throw InvalidTokenException("사용자 정보 조회 실패")
     }
 }

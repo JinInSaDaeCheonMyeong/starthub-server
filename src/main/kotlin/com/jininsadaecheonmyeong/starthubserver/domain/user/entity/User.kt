@@ -1,30 +1,35 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.entity
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.AuthProvider
-import java.util.*
-import jakarta.persistence.*
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.UserRole
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
+import jakarta.persistence.*
+import java.util.*
 
-@Entity(name = "user_tbl")
-class User(
-    @Id
-    @Column(nullable = false, unique = true)
-    @GeneratedValue(strategy = GenerationType.UUID)
+@Entity
+@Table(name = "user_tbl")
+class User (
+    @field:Id
+    @field:Column(nullable = false, unique = true)
+    @field:GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID? = null,
 
-    @Column(nullable = false, unique = true)
+    @field:Column(nullable = false, unique = true)
     val email: String,
 
     var password: String? = null,
 
-    @Enumerated(EnumType.STRING)
+    @field:Enumerated(EnumType.STRING)
     val role: UserRole = UserRole.USER,
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @field:Enumerated(EnumType.STRING)
+    @field:Column(nullable = false)
     var provider: AuthProvider,
 
-    @Column(nullable = true)
-    var providerId: String? = null
+    @field:Column(nullable = true)
+    var providerId: String? = null,
+
+    @field:Column(nullable = false)
+    var deleted: Boolean = false,
+
 ) : BaseEntity()
