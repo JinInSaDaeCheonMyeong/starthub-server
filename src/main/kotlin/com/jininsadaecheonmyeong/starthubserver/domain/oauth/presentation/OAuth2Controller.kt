@@ -26,4 +26,9 @@ class OAuth2Controller(
     ): BaseResponse<TokenResponse?> {
         return BaseResponse.of(oAuth2Service.naverAuth(code, state, AuthProvider.NAVER))
     }
+
+    @GetMapping("/apple")
+    fun appleAuth(@RequestParam code: String): BaseResponse<TokenResponse?> {
+        return BaseResponse.of(oAuth2Service.appleAuth(code, AuthProvider.APPLE))
+    }
 }

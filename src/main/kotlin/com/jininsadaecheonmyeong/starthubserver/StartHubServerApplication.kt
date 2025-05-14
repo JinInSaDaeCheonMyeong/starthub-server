@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver
 
+import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.configuration.AppleProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.configuration.GoogleProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.configuration.NaverProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -9,7 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 
 @EnableJpaAuditing
 @EnableConfigurationProperties(
-    value = [GoogleProperties::class, NaverProperties::class]
+    value = [GoogleProperties::class, NaverProperties::class, AppleProperties::class]
 )
 @SpringBootApplication
 class StartHubServerApplication
