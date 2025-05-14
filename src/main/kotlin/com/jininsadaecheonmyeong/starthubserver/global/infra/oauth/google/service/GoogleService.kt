@@ -11,9 +11,10 @@ import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
 class GoogleService(
-    private val googleProperties: GoogleProperties
+    private val googleProperties: GoogleProperties,
+    webClientBuilder: WebClient.Builder
 ) {
-    private val webClient = WebClient.create()
+    private val webClient = webClientBuilder.build()
 
     fun exchangeCodeForUserInfo(code: String): GoogleUserInfo {
         val tokenResponse = webClient.post()

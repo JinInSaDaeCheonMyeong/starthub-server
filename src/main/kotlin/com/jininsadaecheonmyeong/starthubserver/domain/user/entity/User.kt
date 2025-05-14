@@ -30,6 +30,5 @@ class User (
     var providerId: String? = null,
 
     @field:Column(nullable = false)
-    var deleted: Boolean = false,
-
+    var deleted: Boolean = false
 ) : BaseEntity()

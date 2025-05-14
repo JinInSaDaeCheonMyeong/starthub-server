@@ -2,7 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.servic
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.configuration.AppleProperties
-import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthUserInfo
+import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.data.AppleUserInfo
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.jackson.io.JacksonDeserializer
@@ -19,11 +19,12 @@ import java.util.*
 @Service
 class AppleService(
     private val appleProperties: AppleProperties,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    webClientBuilder: WebClient.Builder
 ) {
-    private val webClient = WebClient.create()
+    private val webClient = webClientBuilder.build()
 
-    fun exchangeCodeForUserInfo(code: String): OAuthUserInfo {
+    fun exchangeCodeForUserInfo(code: String): AppleUserInfo {
         val clientSecret = generateClientSecret()
 
         val response = webClient.post()
@@ -47,7 +48,7 @@ class AppleService(
         return parseIdToken(idToken)
     }
 
-    private fun parseIdToken(idToken: String): OAuthUserInfo {
+    private fun parseIdToken(idToken: String): AppleUserInfo {
         val parser = Jwts.parser()
             .json(JacksonDeserializer(objectMapper))
             .build()
@@ -55,15 +56,15 @@ class AppleService(
         val jwt = parser.parseSignedClaims(idToken)
         val body: Claims = jwt.payload
 
-        val email = body["email"] as? String ?: throw IllegalStateException("이메일 누락")
-        val sub = body["sub"] as? String ?: throw IllegalStateException("sub 누락")
-
-        return object : OAuthUserInfo {
-            override val id: String = sub
-            override val email: String = email
-            override val name: String = ""
-            override val profileImage: String? = null
-        }
+        return AppleUserInfo(
+            sub = body["sub"] as? String ?: throw IllegalStateException("sub 누락"),
+            name = body["name"] as? String ?: "",
+            email = body["email"] as? String ?: throw IllegalStateException("이메일 누락"),
+            email_verified = (body["email_verified"] as? Boolean) ?: false,
+            given_name = body["given_name"] as? String,
+            family_name = body["family_name"] as? String,
+            locale = body["locale"] as? String
+        )
     }
 
     private fun generateClientSecret(): String {

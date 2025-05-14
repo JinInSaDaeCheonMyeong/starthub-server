@@ -12,9 +12,10 @@ import org.springframework.web.reactive.function.client.WebClient
 
 @Service
 class NaverService(
-    private val naverProperties: NaverProperties
+    private val naverProperties: NaverProperties,
+    webClientBuilder: WebClient.Builder
 ) {
-    private val webClient = WebClient.create()
+    private val webClient = webClientBuilder.build()
 
     fun exchangeCodeForUserInfo(code: String, state: String): NaverProfile {
         val tokenResponse = webClient.post()
