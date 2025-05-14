@@ -6,19 +6,19 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.AuthProv
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.UserRole
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.service.AppleService
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthUserInfo
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.service.GoogleService
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.service.NaverService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
-@Transactional
 class OAuth2Service(
     private val tokenProvider: TokenProvider,
     private val googleService: GoogleService,
     private val naverService: NaverService,
+    private val appleService: AppleService,
     private val userRepository: UserRepository
 ) {
 
@@ -29,6 +29,11 @@ class OAuth2Service(
 
     fun naverAuth(code: String, state: String, authProvider: AuthProvider): TokenResponse {
         val userInfo = naverService.exchangeCodeForUserInfo(code, state)
+        return processOAuthLogin(userInfo, authProvider)
+    }
+
+    fun appleAuth(code: String, authProvider: AuthProvider): TokenResponse {
+        val userInfo = appleService.exchangeCodeForUserInfo(code)
         return processOAuthLogin(userInfo, authProvider)
     }
 
