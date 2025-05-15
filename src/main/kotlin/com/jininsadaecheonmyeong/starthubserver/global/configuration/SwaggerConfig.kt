@@ -26,7 +26,7 @@ class SwaggerConfig {
             )
             .servers(
                 listOf(
-                    Server().url("").description("Production Server"),
+                    Server().url("https://api.start-hub.kr").description("Production Server"),
                     Server().url("http://localhost:8080").description("Development Server")
                 )
             )
