@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.common
 
+import jakarta.persistence.Column
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.MappedSuperclass
 import org.springframework.data.annotation.CreatedDate
@@ -9,10 +10,11 @@ import java.time.LocalDateTime
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener::class)
-data class BaseEntity(
+abstract class BaseEntity(
     @CreatedDate
-    val createdAt: LocalDateTime = LocalDateTime.now(),
+    @Column(updatable = false)
+    var createdAt: LocalDateTime? = null,
 
     @LastModifiedDate
-    val updatedAt: LocalDateTime = LocalDateTime.now()
+    var updatedAt: LocalDateTime? = null
 )
