@@ -1,9 +1,6 @@
-server:
-  port: 8080
-
 spring:
   application:
-    name: startHub-server
+    name: starthub-server
 
   datasource:
     url: ${DATABASE_URL}
@@ -13,19 +10,19 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update #TODO
+      ddl-auto: update #TODO Change to validate and add migration tool
     show-sql: false
     open-in-view: false
 
   data:
     redis:
       host: ${REDIS_HOST}
-      port: 6379
+      port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
 
   mail:
-    host: smtp.gmail.com
-    port: 587
+    host: ${EMAIL_HOST:smtp.gmail.com}
+    port: ${EMAIL_PORT:587}
     username: ${EMAIL_USERNAME}
     password: ${EMAIL_PASSWORD}
     properties:
