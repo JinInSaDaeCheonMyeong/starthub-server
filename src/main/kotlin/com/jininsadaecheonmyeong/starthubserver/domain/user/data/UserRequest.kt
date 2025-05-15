@@ -1,7 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.data
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.AuthProvider
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthProvider
 import jakarta.validation.constraints.Email
 
 data class UserRequest(
@@ -9,10 +9,10 @@ data class UserRequest(
     val email: String,
     val password: String,
 ) {
-    fun toEntity(encodedPassword: String): User {
+    fun toEntity(password: String): User {
         return User(
             email = email,
-            password = encodedPassword,
+            password = password,
             provider = AuthProvider.LOCAL
         )
     }

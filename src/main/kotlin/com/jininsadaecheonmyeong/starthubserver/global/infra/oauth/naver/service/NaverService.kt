@@ -9,12 +9,14 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
 class NaverService(
-    private val naverProperties: NaverProperties
+    private val naverProperties: NaverProperties,
+    webClientBuilder: WebClient.Builder
 ) {
-    private val webClient = WebClient.create()
+    private val webClient = webClientBuilder.build()
 
     fun exchangeCodeForUserInfo(code: String, state: String): NaverProfile {
         val tokenResponse = webClient.post()
@@ -22,14 +24,14 @@ class NaverService(
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
             .body(
                 BodyInserters.fromFormData("grant_type", naverProperties.grantType)
-                    .with("client_id", naverProperties.id)
-                    .with("client_secret", naverProperties.secret)
+                    .with("client_id", naverProperties.clientId)
+                    .with("client_secret", naverProperties.clientSecret)
                     .with("code", code)
                     .with("state", state)
                     .with("redirect_uri", naverProperties.redirectUri)
             )
             .retrieve()
-            .bodyToMono(NaverTokenResponse::class.java)
+            .bodyToMono<NaverTokenResponse>()
             .block() ?: throw InvalidTokenException("네이버 토큰 발급 실패")
 
         val accessToken = tokenResponse.access_token
@@ -38,7 +40,7 @@ class NaverService(
             .uri(naverProperties.userInfoUri)
             .headers { it.setBearerAuth(accessToken) }
             .retrieve()
-            .bodyToMono(NaverUserInfo::class.java)
+            .bodyToMono<NaverUserInfo>()
             .block() ?: throw InvalidTokenException("사용자 정보 조회 실패")
 
         return userInfo.response
