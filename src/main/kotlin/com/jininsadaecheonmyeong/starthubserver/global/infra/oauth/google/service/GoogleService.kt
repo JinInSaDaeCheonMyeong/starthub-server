@@ -23,8 +23,8 @@ class GoogleService(
             .bodyValue(
                 mapOf(
                     "code" to code,
-                    "client_id" to googleProperties.id,
-                    "client_secret" to googleProperties.secret,
+                    "client_id" to googleProperties.clientId,
+                    "client_secret" to googleProperties.clientSecret,
                     "redirect_uri" to googleProperties.redirectUri,
                     "grant_type" to googleProperties.grantType
                 )
