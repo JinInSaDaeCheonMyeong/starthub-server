@@ -11,9 +11,10 @@ import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
 class GoogleService(
-    private val googleProperties: GoogleProperties
+    private val googleProperties: GoogleProperties,
+    webClientBuilder: WebClient.Builder
 ) {
-    private val webClient = WebClient.create()
+    private val webClient = webClientBuilder.build()
 
     fun exchangeCodeForUserInfo(code: String): GoogleUserInfo {
         val tokenResponse = webClient.post()
@@ -22,8 +23,8 @@ class GoogleService(
             .bodyValue(
                 mapOf(
                     "code" to code,
-                    "client_id" to googleProperties.id,
-                    "client_secret" to googleProperties.secret,
+                    "client_id" to googleProperties.clientId,
+                    "client_secret" to googleProperties.clientSecret,
                     "redirect_uri" to googleProperties.redirectUri,
                     "grant_type" to googleProperties.grantType
                 )

@@ -11,12 +11,12 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPas
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenRedisService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenRedisService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.enumeration.TokenType
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class UserService (
     private val userRepository: UserRepository,
-    private val bcryptPasswordEncoder: BCryptPasswordEncoder,
+    private val passwordEncoder: PasswordEncoder,
     private val tokenProvider: TokenProvider,
     private val tokenValidator: TokenValidator,
     private val tokenParser: TokenParser,
@@ -37,12 +37,12 @@ class UserService (
         if (verification == null || !verification.isVerified) {
             throw EmailNotVerifiedException("인증되지 않은 이메일")
         }
-        userRepository.save(request.toEntity(bcryptPasswordEncoder.encode(request.password)))
+        userRepository.save(request.toEntity(passwordEncoder.encode(request.password)))
     }
 
     fun signIn(request: UserRequest): TokenResponse {
         val user: User = userRepository.findByEmail(request.email) ?: throw UserNotFoundException("찾을 수 없는 유저")
-        if (!bcryptPasswordEncoder.matches(request.password, user.password)) throw InvalidPasswordException("잘못된 비밀번호")
+        if (!passwordEncoder.matches(request.password, user.password)) throw InvalidPasswordException("잘못된 비밀번호")
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
             refresh = tokenProvider.generateRefresh(user)

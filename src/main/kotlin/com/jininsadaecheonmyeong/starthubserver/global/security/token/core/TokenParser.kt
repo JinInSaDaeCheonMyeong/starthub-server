@@ -2,7 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.global.security.token.core
 
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.Claims
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.enumeration.TokenType
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.properties.TokenProperties
 import org.springframework.stereotype.Component
 import java.util.*
@@ -24,6 +24,6 @@ class TokenParser(
     }
 
     private fun createClaims(token: String): Claims {
-        return Jwts.parser().verifyWith(properties.secretKey()).build().parseSignedClaims(token).payload
+        return Jwts.parser().verifyWith(properties.secretKey).build().parseSignedClaims(token).payload
     }
 }

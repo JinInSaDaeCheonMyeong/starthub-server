@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.global.security.configuration
+package com.jininsadaecheonmyeong.starthubserver.global.security.config
 
 import com.jininsadaecheonmyeong.starthubserver.global.security.filter.TokenExceptionFilter
 import com.jininsadaecheonmyeong.starthubserver.global.security.filter.TokenFilter
@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
@@ -32,7 +33,7 @@ class SecurityConfig(
                     .requestMatchers("/oauth/*").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
-                    .anyRequest().permitAll() //TODO
+                    .anyRequest().permitAll() //TODO Remove it
             }
             .addFilterAfter(tokenFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(tokenExceptionFilter, TokenFilter::class.java)
@@ -40,16 +41,14 @@ class SecurityConfig(
     }
 
     @Bean
-    fun bCryptPasswordEncoder(): BCryptPasswordEncoder {
-        return BCryptPasswordEncoder()
-    }
+    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val corsConfiguration = CorsConfiguration()
-        corsConfiguration.addAllowedOriginPattern("*")
-        corsConfiguration.addAllowedHeader("*")
-        corsConfiguration.addAllowedMethod("*")
+        corsConfiguration.allowedOriginPatterns = listOf("*")
+        corsConfiguration.allowedHeaders = listOf("*")
+        corsConfiguration.allowedMethods = listOf("*")
         corsConfiguration.allowCredentials = true
         corsConfiguration.maxAge = 3600
 

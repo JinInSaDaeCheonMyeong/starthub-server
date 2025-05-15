@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.global.configuration
+package com.jininsadaecheonmyeong.starthubserver.global.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
