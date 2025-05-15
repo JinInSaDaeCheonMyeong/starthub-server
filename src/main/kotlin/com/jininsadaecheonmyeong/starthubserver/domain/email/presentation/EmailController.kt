@@ -19,15 +19,11 @@ class EmailController(
 ) {
     @Operation(summary = "인증 코드 발송")
     @PostMapping("/send")
-    fun sendVerificationCode(@RequestBody request: EmailSendRequest): BaseResponse<Nothing?> {
-        emailVerificationService.sendVerificationCode(request.email)
-        return BaseResponse.of(null)
-    }
+    fun sendVerificationCode(@RequestBody request: EmailSendRequest)
+        = BaseResponse.of(emailVerificationService.sendVerificationCode(request.email))
 
     @Operation(summary = "인증 코드 확인")
     @PostMapping("/verify")
-    fun verifyEmail(@RequestBody request: EmailVerifyRequest): BaseResponse<Nothing?> {
-        emailVerificationService.verifyCode(request.email, request.code)
-        return BaseResponse.of(null)
-    }
+    fun verifyEmail(@RequestBody request: EmailVerifyRequest)
+        = BaseResponse.of(emailVerificationService.verifyCode(request.email, request.code))
 }
