@@ -12,5 +12,5 @@ data class TokenProperties(
     val refresh: Long,
     private val secret: String
 ) {
-    fun secretKey(): SecretKey = SecretKeySpec(secret.toByteArray(StandardCharsets.UTF_8), Jwts.SIG.HS512.key().build().algorithm)
+    val secretKey: SecretKey = SecretKeySpec(secret.toByteArray(StandardCharsets.UTF_8), Jwts.SIG.HS512.key().build().algorithm)
 }

@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.global.security.token.enumeration
+package com.jininsadaecheonmyeong.starthubserver.global.security.token.enums
 
 enum class TokenType(
     val value: String,

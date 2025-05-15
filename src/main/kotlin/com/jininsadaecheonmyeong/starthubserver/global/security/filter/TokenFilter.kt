@@ -3,7 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.global.security.filter
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.enumeration.TokenType
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.CustomUserDetails
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest

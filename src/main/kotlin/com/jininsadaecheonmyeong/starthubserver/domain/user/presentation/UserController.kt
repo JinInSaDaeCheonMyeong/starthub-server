@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/user")
-@Tag(name = "User API", description = "사용자 관련 API")
+@Tag(name = "유저", description = "사용자 관련 API")
 class UserController(
     private val userService: UserService,
 ) {
