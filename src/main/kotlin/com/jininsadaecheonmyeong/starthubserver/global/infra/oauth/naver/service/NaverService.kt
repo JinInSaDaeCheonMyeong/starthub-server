@@ -9,6 +9,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
 class NaverService(
@@ -30,7 +31,7 @@ class NaverService(
                     .with("redirect_uri", naverProperties.redirectUri)
             )
             .retrieve()
-            .bodyToMono(NaverTokenResponse::class.java)
+            .bodyToMono<NaverTokenResponse>()
             .block() ?: throw InvalidTokenException("네이버 토큰 발급 실패")
 
         val accessToken = tokenResponse.access_token
@@ -39,7 +40,7 @@ class NaverService(
             .uri(naverProperties.userInfoUri)
             .headers { it.setBearerAuth(accessToken) }
             .retrieve()
-            .bodyToMono(NaverUserInfo::class.java)
+            .bodyToMono<NaverUserInfo>()
             .block() ?: throw InvalidTokenException("사용자 정보 조회 실패")
 
         return userInfo.response

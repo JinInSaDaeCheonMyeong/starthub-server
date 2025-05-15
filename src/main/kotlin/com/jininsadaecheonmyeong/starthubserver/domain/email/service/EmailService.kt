@@ -1,10 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.email.service
 
 import com.jininsadaecheonmyeong.starthubserver.global.configuration.EmailConfig
+import com.jininsadaecheonmyeong.starthubserver.logger
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.MimeMessage
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
@@ -20,6 +19,7 @@ class EmailService (
     private val javaMailSender: JavaMailSender? = null,
     private val emailConfig: EmailConfig? = null
 ) {
+    private val log = logger()
 
     fun sendEmail(email: String, code: String) {
         try {
@@ -36,7 +36,7 @@ class EmailService (
 
             helper.setText(content, true)
 
-            helper.addInline("image", ClassPathResource("static/스타트허브 로고.png"))
+            helper.addInline("image", ClassPathResource("static/logo.png"))
 
             javaMailSender.send(message)
         } catch (e: MessagingException) {
@@ -47,10 +47,6 @@ class EmailService (
     }
 
     private fun logEmailError(email: String, exception: Exception) {
-        logger.error("{}에게 인증 이메일 전송 실패: {}", email, exception.message)
-    }
-
-    companion object {
-        private val logger: Logger = LoggerFactory.getLogger(EmailService::class.java)
+        log.error("{}에게 인증 이메일 전송 실패: {}", email, exception.message)
     }
 }
