@@ -6,7 +6,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity
-data class Email(
+@Table(name = "emails")
+class Email(
     @Id
     @Column(nullable = false, unique = true)
     @GeneratedValue(strategy = GenerationType.UUID)

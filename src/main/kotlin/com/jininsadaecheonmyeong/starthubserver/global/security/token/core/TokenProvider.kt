@@ -1,7 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.core
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.enumeration.TokenType
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.properties.TokenProperties
 import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Component
@@ -20,7 +20,7 @@ class TokenProvider(
             .claim("role", user.role)
             .issuedAt(Date(currentTimeMillis()))
             .expiration(Date(currentTimeMillis() + expire))
-            .signWith(properties.secretKey())
+            .signWith(properties.secretKey)
             .compact()
     }
 

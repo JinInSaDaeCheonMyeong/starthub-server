@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.core
 
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.enumeration.TokenType
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.security.SignatureException
 import org.springframework.stereotype.Component

@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.filter
 
+import com.jininsadaecheonmyeong.starthubserver.logger
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -8,6 +9,8 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
 class TokenExceptionFilter: OncePerRequestFilter() {
+    private val log = logger()
+
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -15,10 +18,10 @@ class TokenExceptionFilter: OncePerRequestFilter() {
     ) {
         try {
             filterChain.doFilter(request, response)
-        } catch (e: RuntimeException) { // CustomException 사용 시, 여기 바꾸기
-            println(e.message)
+        } catch (e: RuntimeException) { // TODO Custom Exception 으로 변경
+            log.error("Exception occurred while processing request", e)
         } catch (e: Exception) {
-            println(e.message)
+            log.error("Exception occurred while processing request", e)
         }
     }
 }

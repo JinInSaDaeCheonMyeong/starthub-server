@@ -2,7 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.oauth.presentation
 
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.service.OAuth2Service
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.AuthProvider
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthProvider
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping

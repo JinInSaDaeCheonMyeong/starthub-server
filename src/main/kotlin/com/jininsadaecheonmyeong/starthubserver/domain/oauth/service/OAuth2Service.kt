@@ -2,8 +2,8 @@ package com.jininsadaecheonmyeong.starthubserver.domain.oauth.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.AuthProvider
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enumeration.UserRole
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthProvider
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserRole
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.service.AppleService
@@ -21,7 +21,6 @@ class OAuth2Service(
     private val appleService: AppleService,
     private val userRepository: UserRepository
 ) {
-
     fun googleAuth(code: String, authProvider: AuthProvider): TokenResponse {
         val userInfo = googleService.exchangeCodeForUserInfo(code)
         return processOAuthLogin(userInfo, authProvider)
@@ -37,13 +36,13 @@ class OAuth2Service(
         return processOAuthLogin(userInfo, authProvider)
     }
 
-    private fun processOAuthLogin(oAuthUserInfo: OAuthUserInfo, authProvider: AuthProvider): TokenResponse {
-        if (!userRepository.existsByEmail(oAuthUserInfo.email)) {
+    private fun processOAuthLogin(info: OAuthUserInfo, provider: AuthProvider): TokenResponse {
+        if (!userRepository.existsByEmail(info.email)) {
             val user = User(
-                email = oAuthUserInfo.email,
+                email = info.email,
                 role = UserRole.USER,
-                provider = authProvider,
-                providerId = oAuthUserInfo.id
+                provider = provider,
+                providerId = info.id
             )
             userRepository.save(user)
             return TokenResponse(
@@ -52,7 +51,7 @@ class OAuth2Service(
             )
         }
 
-        val user = userRepository.findByEmail(oAuthUserInfo.email) ?: throw UserNotFoundException("유저를 찾을 수 없음")
+        val user = userRepository.findByEmail(info.email) ?: throw UserNotFoundException("유저를 찾을 수 없음")
         return TokenResponse(
             tokenProvider.generateAccess(user),
             tokenProvider.generateRefresh(user)
