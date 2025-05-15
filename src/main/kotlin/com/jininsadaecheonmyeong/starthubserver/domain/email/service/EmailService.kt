@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.email.service
 
-import com.jininsadaecheonmyeong.starthubserver.global.configuration.EmailConfig
+import com.jininsadaecheonmyeong.starthubserver.global.config.EmailConfig
 import com.jininsadaecheonmyeong.starthubserver.logger
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.MimeMessage

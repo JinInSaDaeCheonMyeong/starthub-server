@@ -2,10 +2,10 @@ package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
-@ConfigurationProperties(prefix = "naver.client")
+@ConfigurationProperties(prefix = "oauth.naver")
 class NaverProperties {
-    lateinit var id: String
-    lateinit var secret: String
+    lateinit var clientId: String
+    lateinit var clientSecret: String
     lateinit var redirectUri: String
     lateinit var tokenUri: String
     lateinit var userInfoUri: String

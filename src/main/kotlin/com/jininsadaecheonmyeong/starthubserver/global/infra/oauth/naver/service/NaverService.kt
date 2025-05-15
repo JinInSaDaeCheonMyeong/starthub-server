@@ -24,8 +24,8 @@ class NaverService(
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
             .body(
                 BodyInserters.fromFormData("grant_type", naverProperties.grantType)
-                    .with("client_id", naverProperties.id)
-                    .with("client_secret", naverProperties.secret)
+                    .with("client_id", naverProperties.clientId)
+                    .with("client_secret", naverProperties.clientSecret)
                     .with("code", code)
                     .with("state", state)
                     .with("redirect_uri", naverProperties.redirectUri)
