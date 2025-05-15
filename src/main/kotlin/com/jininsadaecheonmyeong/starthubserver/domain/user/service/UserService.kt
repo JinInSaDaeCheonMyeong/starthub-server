@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthProvider
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
@@ -35,7 +36,11 @@ class UserService (
 
     fun signIn(request: UserRequest): TokenResponse {
         val user: User = userRepository.findByEmail(request.email) ?: throw UserNotFoundException("찾을 수 없는 유저")
-        // TODO Check user provider
+
+        if (user.provider != AuthProvider.LOCAL) {
+            throw InvalidPasswordException("OAuth 사용자 로그인 불가")
+        }
+
         if (!passwordEncoder.matches(request.password, user.password)) throw InvalidPasswordException("잘못된 비밀번호")
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
