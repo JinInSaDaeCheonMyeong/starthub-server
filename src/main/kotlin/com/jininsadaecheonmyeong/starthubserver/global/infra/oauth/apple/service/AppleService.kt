@@ -3,12 +3,11 @@ package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.servic
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.configuration.AppleProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.data.AppleUserInfo
-import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.jackson.io.JacksonDeserializer
 import io.jsonwebtoken.jackson.io.JacksonSerializer
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 import java.security.KeyFactory
 import java.security.PrivateKey
@@ -30,14 +29,14 @@ class AppleService(
         val response = webClient.post()
             .uri(appleProperties.tokenUri)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .bodyValue(
-                mapOf(
-                    "client_id" to appleProperties.clientId,
-                    "client_secret" to clientSecret,
-                    "code" to code,
-                    "grant_type" to "authorization_code",
-                    "redirect_uri" to appleProperties.redirectUri
+            .body(
+                BodyInserters.fromFormData(
+                    "client_id", appleProperties.clientId
                 )
+                    .with("client_secret", clientSecret)
+                    .with("code", code)
+                    .with("grant_type", "authorization_code")
+                    .with("redirect_uri", appleProperties.redirectUri)
             )
             .retrieve()
             .bodyToMono(Map::class.java)
@@ -49,21 +48,20 @@ class AppleService(
     }
 
     private fun parseIdToken(idToken: String): AppleUserInfo {
-        val parser = Jwts.parser()
-            .json(JacksonDeserializer(objectMapper))
-            .build()
+        val parts = idToken.split(".")
+        if (parts.size != 3) throw IllegalArgumentException("유효하지 않은 JWT 형식")
 
-        val jwt = parser.parseSignedClaims(idToken)
-        val body: Claims = jwt.payload
+        val payloadJson = String(Base64.getUrlDecoder().decode(parts[1]))
+        val payloadMap = objectMapper.readValue(payloadJson, Map::class.java)
 
         return AppleUserInfo(
-            sub = body["sub"] as? String ?: throw IllegalStateException("sub 누락"),
-            name = body["name"] as? String ?: "",
-            email = body["email"] as? String ?: throw IllegalStateException("이메일 누락"),
-            email_verified = (body["email_verified"] as? Boolean) ?: false,
-            given_name = body["given_name"] as? String,
-            family_name = body["family_name"] as? String,
-            locale = body["locale"] as? String
+            sub = payloadMap["sub"] as? String ?: throw IllegalStateException("sub 누락"),
+            name = payloadMap["name"] as? String ?: "",
+            email = payloadMap["email"] as? String ?: throw IllegalStateException("이메일 누락"),
+            email_verified = (payloadMap["email_verified"] as? Boolean) ?: false,
+            given_name = payloadMap["given_name"] as? String,
+            family_name = payloadMap["family_name"] as? String,
+            locale = payloadMap["locale"] as? String
         )
     }
 
