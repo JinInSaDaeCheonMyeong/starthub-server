@@ -17,4 +17,17 @@ class TokenRedisService(
     fun findByEmail(email: String): String? {
         return redisTemplate.opsForValue()["refreshToken:$email"]
     }
+
+    fun blockToken(token: String) {
+        redisTemplate.opsForValue().set(
+            "blacklist:$token",
+            "revoked",
+            properties.refresh,
+            TimeUnit.MILLISECONDS
+        )
+    }
+
+    fun isTokenBlocked(token: String): Boolean {
+        return redisTemplate.hasKey("blacklist:$token")
+    }
 }
