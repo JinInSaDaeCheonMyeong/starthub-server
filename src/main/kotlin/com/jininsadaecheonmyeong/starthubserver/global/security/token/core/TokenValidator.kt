@@ -1,9 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.core
 
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.BlockedTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.ExpiredTokenException
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.InvalidTokenException
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.security.SignatureException
 import org.springframework.stereotype.Component
@@ -25,7 +24,7 @@ class TokenValidator(
     }
 
     fun validateNotBlocked(token: String) {
-        if (tokenRedisService.isTokenBlocked(token)) throw BlockedTokenException("토큰이 무효화되었습니다")
+        if (tokenRedisService.isTokenBlocked(token)) throw ExpiredTokenException("토큰이 무효화되었습니다")
     }
 
     fun validate(token: String) {
