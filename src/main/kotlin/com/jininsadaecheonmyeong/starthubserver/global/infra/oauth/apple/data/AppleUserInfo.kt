@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.data
 
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthUserInfo
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthProvider
 
 data class AppleUserInfo(
     val sub: String,
@@ -13,4 +14,5 @@ data class AppleUserInfo(
 ) : OAuthUserInfo {
     override val id: String get() = sub
     override val profileImage = null
+    override val provider = AuthProvider.APPLE
 }
