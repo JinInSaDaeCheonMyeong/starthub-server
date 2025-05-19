@@ -35,7 +35,6 @@ class EmailVerificationService(
         emailService.sendEmail(email, code)
     }
 
-
     fun generateVerificationCode(): String {
         return String.format("%06d", SecureRandom().nextInt(1_000_000))
     }
@@ -49,5 +48,9 @@ class EmailVerificationService(
             verification.isVerified = true
             emailRepository.save(verification)
         }
+    }
+
+    fun checkEmailDuplication(email: String): Boolean {
+        return emailRepository.existsByEmail(email)
     }
 }
