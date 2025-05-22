@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-@Tag(name = "email", description = "이메일 관련 API")
+@Tag(name = "이메일", description = "이메일 인증 및 검사 관련 API")
 @RestController
 @RequestMapping("/email")
 class EmailController(
