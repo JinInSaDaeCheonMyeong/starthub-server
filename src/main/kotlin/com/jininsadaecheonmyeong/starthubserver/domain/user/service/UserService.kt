@@ -34,9 +34,7 @@ class UserService (
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
         val verification = emailRepository.findByEmail(request.email)
-        if (verification == null || !verification.isVerified) {
-            throw EmailNotVerifiedException("인증되지 않은 이메일")
-        }
+        if (verification == null || !verification.isVerified) throw EmailNotVerifiedException("인증되지 않은 이메일")
         userRepository.save(request.toEntity(passwordEncoder.encode(request.password)))
     }
 
@@ -54,9 +52,9 @@ class UserService (
         tokenValidator.validateAll(request.refresh, TokenType.REFRESH_TOKEN)
         val user: User = userRepository.findByEmail(tokenParser.findEmail(request.refresh))
             ?: throw UserNotFoundException("찾을 수 없는 유저")
-        if (tokenRedisService.findByEmail(email)?.equals(request.refresh) != true) {
-            throw InvalidTokenException("유효하지 않은 리프레시 토큰")
-        }
+
+        if (tokenRedisService.findByEmail(email)?.equals(request.refresh) != true) throw InvalidTokenException("유효하지 않은 리프레시 토큰")
+
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
             refresh = tokenProvider.generateRefresh(user)

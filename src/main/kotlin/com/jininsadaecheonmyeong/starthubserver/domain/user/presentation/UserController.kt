@@ -17,18 +17,18 @@ import org.springframework.web.bind.annotation.RestController
 class UserController(
     private val userService: UserService,
 ) {
-    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
+    @Operation(summary = "회원가입", description = "이메일 인증을 먼저 해야합니다.")
     @PostMapping("/sign-up")
     fun signUp(@RequestBody request: UserRequest)
-        = BaseResponse.of(userService.signUp(request))
+        = BaseResponse.created(userService.signUp(request), "회원가입 성공")
 
     @Operation(summary = "로그인", description = "사용자 로그인을 처리하고 JWT 토큰을 반환합니다.")
     @PostMapping("/sign-in")
     fun signIn(@RequestBody request: UserRequest)
-        = BaseResponse.of(userService.signIn(request))
+        = BaseResponse.ok(userService.signIn(request), "로그인 성공")
 
     @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.")
     @PostMapping("/reissue")
     fun reissue(@RequestBody request: RefreshRequest)
-        = BaseResponse.of(userService.reissue(request))
+        = BaseResponse.ok(userService.reissue(request), "토큰 재발급 성공")
 }

@@ -11,19 +11,24 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-@Tag(name = "Email-verification", description = "이메일 인증 API")
+@Tag(name = "이메일", description = "이메일 인증 및 검사 관련 API")
 @RestController
-@RequestMapping("/email-verification")
+@RequestMapping("/email")
 class EmailController(
     private val emailVerificationService: EmailVerificationService
 ) {
     @Operation(summary = "인증 코드 발송")
-    @PostMapping("/send")
-    fun sendVerificationCode(@RequestBody request: EmailSendRequest)
-        = BaseResponse.of(emailVerificationService.sendVerificationCode(request.email))
+    @PostMapping("/send-code")
+    fun sendVerificationCode(@RequestBody request: EmailSendRequest) =
+        BaseResponse.ok(emailVerificationService.sendVerificationCode(request.email), "전송 성공")
 
     @Operation(summary = "인증 코드 확인")
     @PostMapping("/verify")
-    fun verifyEmail(@RequestBody request: EmailVerifyRequest)
-        = BaseResponse.of(emailVerificationService.verifyCode(request.email, request.code))
+    fun verifyEmail(@RequestBody request: EmailVerifyRequest) =
+        BaseResponse.ok(emailVerificationService.verifyCode(request.email, request.code), "코드 확인 성공")
+
+    @Operation(summary = "이메일 중복 검사")
+    @PostMapping("/check-duplication")
+    fun checkDuplication(@RequestBody request: EmailSendRequest) =
+        BaseResponse.ok(emailVerificationService.checkEmailDuplication(request.email), "중복 확인 성공")
 }
