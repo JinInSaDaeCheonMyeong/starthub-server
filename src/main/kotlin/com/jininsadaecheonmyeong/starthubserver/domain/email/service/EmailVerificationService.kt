@@ -17,7 +17,7 @@ class EmailVerificationService(
 ) {
     fun sendVerificationCode(email: String) {
         if (emailRepository.findByEmailAndIsVerifiedTrue(email) != null) {
-            throw EmailAlreadyVerifiedException("이미 인증된 이메일입니다.")
+            throw EmailAlreadyVerifiedException("이미 인증된 이메일")
         }
 
         val existingEmail = emailRepository.findByEmail(email)
@@ -41,10 +41,10 @@ class EmailVerificationService(
     }
 
     fun verifyCode(email: String, code: String) {
-        val verification = emailRepository.findByEmailAndVerificationCode(email, code) ?: throw EmailNotFoundException("인증코드가 일치하지 않습니다.")
+        val verification = emailRepository.findByEmailAndVerificationCode(email, code) ?: throw EmailNotFoundException("일치하지 않은 인증코드")
 
         if (verification.expirationDate.isBefore(LocalDateTime.now())) {
-            throw ExpiredEmailException("만료된 인증코드입니다.")
+            throw ExpiredEmailException("만료된 인증코드")
         } else {
             verification.isVerified = true
             emailRepository.save(verification)
@@ -52,7 +52,7 @@ class EmailVerificationService(
     }
 
     fun checkEmailDuplication(email: String): String? {
-        if (emailRepository.existsByEmail(email)) throw EmailAlreadyExistsException("이미 등록된 이메일입니다.")
+        if (emailRepository.existsByEmail(email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
         return null
     }
 }
