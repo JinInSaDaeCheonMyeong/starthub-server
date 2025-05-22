@@ -51,7 +51,7 @@ class OAuth2Service(
             )
         }
 
-        val user = userRepository.findByEmailAndProvider(info.email, info.provider) ?: throw UserNotFoundException("유저를 찾을 수 없음")
+        val user = userRepository.findByEmail(info.email) ?: throw UserNotFoundException("유저를 찾을 수 없음")
         return TokenResponse(
             tokenProvider.generateAccess(user),
             tokenProvider.generateRefresh(user)
