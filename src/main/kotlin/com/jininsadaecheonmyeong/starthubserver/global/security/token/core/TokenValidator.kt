@@ -1,14 +1,17 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.core
 
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.ExpiredTokenException
 import io.jsonwebtoken.ExpiredJwtException
+import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.security.SignatureException
 import org.springframework.stereotype.Component
-import java.util.*
 
 @Component
 class TokenValidator(
     private val parser: TokenParser,
+    private val tokenRedisService: TokenRedisService
 ) {
     fun validateAll(token: String, tokenType: TokenType) {
         validate(token)
@@ -16,21 +19,22 @@ class TokenValidator(
     }
 
     fun validateType(token: String, tokenType: TokenType) {
-        if (parser.findType(token) != tokenType) throw RuntimeException("token mismatch")
+        if (parser.findType(token) != tokenType) throw InvalidTokenException("토큰이 일치하지 않음")
     }
 
     fun validate(token: String) {
         try {
             parser.findType(token)
-            if (
-                parser.findExpiration(token).before(Date())
-            ) throw RuntimeException("토큰 만료됨")
         } catch (e: ExpiredJwtException) {
-            throw RuntimeException("토큰 만료됨")
+            throw ExpiredTokenException("토큰 만료됨")
         } catch (e: SignatureException) {
-            throw RuntimeException("유효하지 않은 토큰 시그니처")
+            throw InvalidTokenException("유효하지 않은 토큰 시그니처")
         } catch (e: Exception) {
-            throw RuntimeException("알 수 없는 토큰")
+            throw InvalidTokenException("알 수 없는 토큰")
+        } catch (e: MalformedJwtException) {
+            throw MalformedJwtException("잘못된 토큰 형식")
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("토큰이 유효하지 않거나 비어있음")
         }
     }
 }
