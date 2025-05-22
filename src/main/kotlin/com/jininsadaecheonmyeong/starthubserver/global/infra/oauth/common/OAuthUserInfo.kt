@@ -7,5 +7,4 @@ interface OAuthUserInfo {
     val name: String
     val email: String
     val profileImage: String?
-    val provider: AuthProvider
 }

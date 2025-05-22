@@ -53,11 +53,7 @@ class UserService (
         val user: User = userRepository.findByEmail(tokenParser.findEmail(request.refresh))
             ?: throw UserNotFoundException("찾을 수 없는 유저")
 
-        val storedToken = tokenRedisService.findByEmail(email)
-        if (storedToken?.equals(request.refresh) != true || tokenRedisService.isTokenBlocked(request.refresh))
-            throw InvalidTokenException("유효하지 않은 리프레시 토큰")
-
-        tokenRedisService.blockToken(request.refresh)
+        if (tokenRedisService.findByEmail(email)?.equals(request.refresh) != true) throw InvalidTokenException("유효하지 않은 리프레시 토큰")
 
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
