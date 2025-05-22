@@ -26,8 +26,8 @@ class OAuth2Service(
         return processOAuthLogin(userInfo, authProvider)
     }
 
-    fun naverAuth(code: String, state: String, authProvider: AuthProvider): TokenResponse {
-        val userInfo = naverService.exchangeCodeForUserInfo(code, state)
+    fun naverAuth(code: String, authProvider: AuthProvider): TokenResponse {
+        val userInfo = naverService.exchangeCodeForUserInfo(code)
         return processOAuthLogin(userInfo, authProvider)
     }
 
