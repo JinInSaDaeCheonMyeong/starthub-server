@@ -18,7 +18,7 @@ class NaverService(
 ) {
     private val webClient = webClientBuilder.build()
 
-    fun exchangeCodeForUserInfo(code: String, state: String): NaverProfile {
+    fun exchangeCodeForUserInfo(code: String): NaverProfile {
         val tokenResponse = webClient.post()
             .uri(naverProperties.tokenUri)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -27,7 +27,6 @@ class NaverService(
                     .with("client_id", naverProperties.clientId)
                     .with("client_secret", naverProperties.clientSecret)
                     .with("code", code)
-                    .with("state", state)
                     .with("redirect_uri", naverProperties.redirectUri)
             )
             .retrieve()
