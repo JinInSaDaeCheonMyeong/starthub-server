@@ -1,6 +1,5 @@
 package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthProvider
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthUserInfo
 
 data class GoogleUserInfo(
@@ -15,5 +14,4 @@ data class GoogleUserInfo(
 ) : OAuthUserInfo {
     override val id: String get() = sub
     override val profileImage: String? get() = picture
-    override val provider = AuthProvider.GOOGLE
 }

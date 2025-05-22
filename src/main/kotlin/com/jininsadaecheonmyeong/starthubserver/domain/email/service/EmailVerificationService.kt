@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailAlre
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.ExpiredEmailException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import org.springframework.stereotype.Service
 import java.security.SecureRandom
 import java.time.LocalDateTime
@@ -16,7 +17,7 @@ class EmailVerificationService(
 ) {
     fun sendVerificationCode(email: String) {
         if (emailRepository.findByEmailAndIsVerifiedTrue(email) != null) {
-            throw EmailAlreadyVerifiedException("이미 인증된 이메일")
+            throw EmailAlreadyVerifiedException("이미 인증된 이메일입니다.")
         }
 
         val existingEmail = emailRepository.findByEmail(email)
@@ -40,17 +41,18 @@ class EmailVerificationService(
     }
 
     fun verifyCode(email: String, code: String) {
-        val verification = emailRepository.findByEmailAndVerificationCode(email, code) ?: throw EmailNotFoundException("잘못된 이메일 인증코드")
+        val verification = emailRepository.findByEmailAndVerificationCode(email, code) ?: throw EmailNotFoundException("인증코드가 일치하지 않습니다.")
 
         if (verification.expirationDate.isBefore(LocalDateTime.now())) {
-            throw ExpiredEmailException("만료된 이메일")
+            throw ExpiredEmailException("만료된 인증코드입니다.")
         } else {
             verification.isVerified = true
             emailRepository.save(verification)
         }
     }
 
-    fun checkEmailDuplication(email: String): Boolean {
-        return emailRepository.existsByEmail(email)
+    fun checkEmailDuplication(email: String): String? {
+        if (emailRepository.existsByEmail(email)) throw EmailAlreadyExistsException("이미 등록된 이메일입니다.")
+        return null
     }
 }
