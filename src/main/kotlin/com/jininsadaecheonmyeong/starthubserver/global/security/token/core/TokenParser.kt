@@ -5,7 +5,6 @@ import io.jsonwebtoken.Claims
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.properties.TokenProperties
 import org.springframework.stereotype.Component
-import java.util.*
 
 @Component
 class TokenParser(
@@ -13,10 +12,6 @@ class TokenParser(
 ) {
     fun findType(token: String): TokenType {
         return TokenType.toTokenType(createClaims(token)["category"].toString())
-    }
-
-    fun findExpiration(token: String): Date {
-        return createClaims(token).expiration
     }
 
     fun findEmail(token: String): String {

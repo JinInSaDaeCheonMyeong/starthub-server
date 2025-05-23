@@ -1,9 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth.presentation
 
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.service.OAuth2Service
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthProvider
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
+import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
@@ -28,12 +27,12 @@ class OAuth2Controller(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
-    ): ResponseEntity<BaseResponse<TokenResponse>> {
+    ): ResponseEntity<BaseResponse<OAuthResponse>> {
         val sessionState = session.getAttribute("oauth_state") as? String
         if (sessionState == null || sessionState != state) {
-            throw IllegalStateException("State mismatch - CSRF 가능성")
+            throw IllegalStateException("상태 값 불일치")
         }
-        return BaseResponse.ok(oAuth2Service.googleAuth(code, AuthProvider.GOOGLE), "구글 로그인 성공")
+        return BaseResponse.ok(oAuth2Service.googleAuth(code), "구글 로그인 성공")
     }
 
     @GetMapping("/naver")
@@ -41,12 +40,12 @@ class OAuth2Controller(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
-    ): ResponseEntity<BaseResponse<TokenResponse>> {
+    ): ResponseEntity<BaseResponse<OAuthResponse>> {
         val sessionState = session.getAttribute("oauth_state") as? String
         if (sessionState == null || sessionState != state) {
-            throw IllegalStateException("State mismatch - CSRF 가능성")
+            throw IllegalStateException("상태 값 불일치")
         }
-        return BaseResponse.ok(oAuth2Service.naverAuth(code, AuthProvider.NAVER), "네이버 로그인 성공")
+        return BaseResponse.ok(oAuth2Service.naverAuth(code), "네이버 로그인 성공")
     }
 
     @PostMapping("/apple")
@@ -54,11 +53,11 @@ class OAuth2Controller(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
-    ): ResponseEntity<BaseResponse<TokenResponse>> {
+    ): ResponseEntity<BaseResponse<OAuthResponse>> {
         val sessionState = session.getAttribute("oauth_state") as? String
         if (sessionState == null || sessionState != state) {
-            throw IllegalStateException("State mismatch - CSRF 가능성")
+            throw IllegalStateException("상태 값 불일치")
         }
-        return BaseResponse.ok(oAuth2Service.appleAuth(code, AuthProvider.APPLE), "애플 로그인 성공")
+        return BaseResponse.ok(oAuth2Service.appleAuth(code), "애플 로그인 성공")
     }
 }
