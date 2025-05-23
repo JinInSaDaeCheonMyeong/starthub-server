@@ -10,4 +10,5 @@ class AppleProperties {
     lateinit var privateKey: String
     lateinit var redirectUri: String
     lateinit var tokenUri: String
+    lateinit var grantType: String
 }

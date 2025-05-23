@@ -6,6 +6,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data.G
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data.GoogleUserInfo
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 
@@ -20,14 +21,12 @@ class GoogleService(
         val tokenResponse = webClient.post()
             .uri(googleProperties.tokenUri)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(
-                mapOf(
-                    "code" to code,
-                    "client_id" to googleProperties.clientId,
-                    "client_secret" to googleProperties.clientSecret,
-                    "redirect_uri" to googleProperties.redirectUri,
-                    "grant_type" to googleProperties.grantType
-                )
+            .body(
+                BodyInserters.fromFormData("client_id", googleProperties.clientId)
+                    .with("client_secret", googleProperties.clientSecret)
+                    .with("code", code)
+                    .with("redirect_uri", googleProperties.redirectUri)
+                    .with("grant_type", googleProperties.grantType)
             )
             .retrieve()
             .bodyToMono<GoogleTokenResponse>()
