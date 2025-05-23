@@ -4,7 +4,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTok
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.configuration.NaverProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.data.NaverTokenResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.data.NaverUserInfo
-import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.data.NaverProfile
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.BodyInserters
@@ -18,16 +17,16 @@ class NaverService(
 ) {
     private val webClient = webClientBuilder.build()
 
-    fun exchangeCodeForUserInfo(code: String): NaverProfile {
+    fun exchangeCodeForUserInfo(code: String): NaverUserInfo {
         val tokenResponse = webClient.post()
             .uri(naverProperties.tokenUri)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
             .body(
-                BodyInserters.fromFormData("grant_type", naverProperties.grantType)
-                    .with("client_id", naverProperties.clientId)
+                BodyInserters.fromFormData("client_id", naverProperties.clientId)
                     .with("client_secret", naverProperties.clientSecret)
                     .with("code", code)
                     .with("redirect_uri", naverProperties.redirectUri)
+                    .with("grant_type", naverProperties.grantType)
             )
             .retrieve()
             .bodyToMono<NaverTokenResponse>()
@@ -42,6 +41,6 @@ class NaverService(
             .bodyToMono<NaverUserInfo>()
             .block() ?: throw InvalidTokenException("사용자 정보 조회 실패")
 
-        return userInfo.response
+        return userInfo
     }
 }

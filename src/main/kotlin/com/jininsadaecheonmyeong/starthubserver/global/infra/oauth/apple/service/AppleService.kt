@@ -30,12 +30,10 @@ class AppleService(
             .uri(appleProperties.tokenUri)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
             .body(
-                BodyInserters.fromFormData(
-                    "client_id", appleProperties.clientId
-                )
+                BodyInserters.fromFormData("client_id", appleProperties.clientId)
                     .with("client_secret", clientSecret)
                     .with("code", code)
-                    .with("grant_type", "authorization_code")
+                    .with("grant_type", appleProperties.grantType)
                     .with("redirect_uri", appleProperties.redirectUri)
             )
             .retrieve()
