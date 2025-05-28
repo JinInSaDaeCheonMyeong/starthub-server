@@ -18,8 +18,8 @@ class OAuth2Controller(
     @GetMapping("/state")
     fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>> {
         val state = UUID.randomUUID().toString()
-        session.setAttribute("oauth_state", state)
-        return BaseResponse.ok(state, "OAuth state 발급 완료")
+        session.setAttribute("state", state)
+        return BaseResponse.ok(state, "state 발급 완료")
     }
 
     @GetMapping("/google")
@@ -28,9 +28,9 @@ class OAuth2Controller(
         @RequestParam state: String,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
-        val sessionState = session.getAttribute("oauth_state") as? String
+        val sessionState = session.getAttribute("state") as? String
         if (sessionState == null || sessionState != state) {
-            throw IllegalStateException("상태 값 불일치")
+            throw IllegalStateException("state 불일치")
         }
         return BaseResponse.ok(oAuth2Service.googleAuth(code), "구글 로그인 성공")
     }
@@ -41,9 +41,9 @@ class OAuth2Controller(
         @RequestParam state: String,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
-        val sessionState = session.getAttribute("oauth_state") as? String
+        val sessionState = session.getAttribute("state") as? String
         if (sessionState == null || sessionState != state) {
-            throw IllegalStateException("상태 값 불일치")
+            throw IllegalStateException("state 불일치")
         }
         return BaseResponse.ok(oAuth2Service.naverAuth(code), "네이버 로그인 성공")
     }
@@ -54,9 +54,9 @@ class OAuth2Controller(
         @RequestParam state: String,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
-        val sessionState = session.getAttribute("oauth_state") as? String
+        val sessionState = session.getAttribute("state") as? String
         if (sessionState == null || sessionState != state) {
-            throw IllegalStateException("상태 값 불일치")
+            throw IllegalStateException("state 불일치")
         }
         return BaseResponse.ok(oAuth2Service.appleAuth(code), "애플 로그인 성공")
     }

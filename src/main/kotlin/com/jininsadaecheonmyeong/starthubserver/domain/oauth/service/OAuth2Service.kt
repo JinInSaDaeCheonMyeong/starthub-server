@@ -20,14 +20,14 @@ class OAuth2Service(
     private val appleService: AppleService,
     private val userRepository: UserRepository
 ) {
-    fun googleAuth(code: String): OAuthResponse =
-        processOAuthLogin(googleService.exchangeCodeForUserInfo(code), AuthProvider.GOOGLE)
+    fun googleAuth(code: String)
+    = processOAuthLogin(googleService.exchangeCodeForUserInfo(code), AuthProvider.GOOGLE)
 
-    fun naverAuth(code: String): OAuthResponse =
-        processOAuthLogin(naverService.exchangeCodeForUserInfo(code), AuthProvider.NAVER)
+    fun naverAuth(code: String)
+    = processOAuthLogin(naverService.exchangeCodeForUserInfo(code), AuthProvider.NAVER)
 
-    fun appleAuth(code: String): OAuthResponse =
-        processOAuthLogin(appleService.exchangeCodeForUserInfo(code), AuthProvider.APPLE)
+    fun appleAuth(code: String)
+    = processOAuthLogin(appleService.exchangeCodeForUserInfo(code), AuthProvider.APPLE)
 
     private fun processOAuthLogin(info: OAuthUserInfo, provider: AuthProvider): OAuthResponse {
         val user = userRepository.findByEmail(info.email)
