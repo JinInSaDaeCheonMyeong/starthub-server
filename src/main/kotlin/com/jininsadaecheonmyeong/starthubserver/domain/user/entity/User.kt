@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.entity
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthProvider
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserRole
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.*
@@ -23,7 +23,7 @@ class User (
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var provider: AuthProvider,
+    var provider: AuthType,
 
     @Column(nullable = true)
     var providerId: String? = null,
