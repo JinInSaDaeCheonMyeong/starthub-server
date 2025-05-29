@@ -71,9 +71,8 @@ class UserService (
         userRepository.save(user)
 
         userInterestRepository.deleteByUser(user)
-        val distinctInterests = interests.distinct()
 
-        val newInterests = distinctInterests.map { interestType ->
+        val newInterests = interests.map { interestType ->
             UserInterest(user = user, interestType = interestType)
         }
         userInterestRepository.saveAll(newInterests)
