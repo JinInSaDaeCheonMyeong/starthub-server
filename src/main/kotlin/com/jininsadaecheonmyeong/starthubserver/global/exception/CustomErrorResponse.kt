@@ -30,7 +30,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistsException::class)
     fun handleAlreadyExistsEmail(ex: EmailAlreadyExistsException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message ?: "이미 등록된 이메일입니다.",
+            message = ex.message ?: "이미 등록된 이메일",
             status = HttpStatus.CONFLICT.value(),
         )
         return ResponseEntity.status(HttpStatus.CONFLICT).body(customErrorResponse)
@@ -39,7 +39,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(InvalidPasswordException::class)
     fun handleInvalidPassword(ex: InvalidPasswordException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message ?: "잘못된 비밀번호입니다.",
+            message = ex.message ?: "잘못된 비밀번호",
             status = HttpStatus.UNAUTHORIZED.value(),
         )
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(customErrorResponse)
@@ -48,7 +48,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException::class)
     fun handleUserNotFound(ex: UserNotFoundException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message ?: "유저를 찾을 수 없습니다.",
+            message = ex.message ?: "유저를 찾을 수 없음",
             status = HttpStatus.NOT_FOUND.value(),
         )
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(customErrorResponse)
@@ -57,7 +57,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ExpiredTokenException::class)
     fun handleExpiredToken(ex: ExpiredTokenException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message ?: "만료된 토큰입니다.",
+            message = ex.message ?: "만료된 토큰",
             status = HttpStatus.UNAUTHORIZED.value(),
         )
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(customErrorResponse)
@@ -66,7 +66,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyVerifiedException::class)
     fun handleAlreadyVerifiedEmail(ex: EmailAlreadyVerifiedException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message ?: "이미 인증된 이메일입니다.",
+            message = ex.message ?: "이미 인증된 이메일",
             status = HttpStatus.CONFLICT.value(),
         )
         return ResponseEntity.status(HttpStatus.CONFLICT).body(customErrorResponse)
@@ -75,7 +75,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(EmailNotVerifiedException::class)
     fun handleNotVerifiedEmail(ex: EmailNotVerifiedException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message ?: "인증되지 않은 이메일입니다.",
+            message = ex.message ?: "인증되지 않은 이메일",
             status = HttpStatus.UNAUTHORIZED.value(),
         )
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(customErrorResponse)
@@ -84,7 +84,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ExpiredEmailException::class)
     fun handleExpiredEmail(ex: ExpiredEmailException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message ?: "만료된 이메일입니다.",
+            message = ex.message ?: "만료된 이메일",
             status = HttpStatus.CONFLICT.value(),
         )
         return ResponseEntity.status(HttpStatus.CONFLICT).body(customErrorResponse)
@@ -93,7 +93,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(EmailNotFoundException::class)
     fun handleEmailNotFound(ex: EmailNotFoundException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message ?: "이메일을 찾을 수 없습니다.",
+            message = ex.message ?: "이메일을 찾을 수 없음",
             status = HttpStatus.NOT_FOUND.value(),
         )
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(customErrorResponse)
@@ -102,7 +102,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(InvalidTokenException::class)
     fun handleInvalidToken(ex: InvalidTokenException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message ?: "유효하지 않은 토큰입니다.",
+            message = ex.message ?: "유효하지 않은 토큰",
             status = HttpStatus.UNAUTHORIZED.value(),
         )
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(customErrorResponse)
