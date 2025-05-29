@@ -1,12 +1,10 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserRole
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.service.AppleService
+import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthUserInfo
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.service.GoogleService
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.service.NaverService
@@ -22,33 +20,25 @@ class OAuth2Service(
     private val userRepository: UserRepository
 ) {
     fun googleAuth(code: String)
-    = processOAuthLogin(googleService.exchangeCodeForUserInfo(code), AuthType.GOOGLE)
+        = processOAuthLogin(googleService.exchangeCodeForUserInfo(code), AuthType.GOOGLE)
 
     fun naverAuth(code: String)
-    = processOAuthLogin(naverService.exchangeCodeForUserInfo(code), AuthType.NAVER)
+        = processOAuthLogin(naverService.exchangeCodeForUserInfo(code), AuthType.NAVER)
 
     fun appleAuth(code: String)
-    = processOAuthLogin(appleService.exchangeCodeForUserInfo(code), AuthType.APPLE)
+        = processOAuthLogin(appleService.exchangeCodeForUserInfo(code), AuthType.APPLE)
 
-    private fun processOAuthLogin(info: OAuthUserInfo, provider: AuthType): TokenResponse {
-        if (!userRepository.existsByEmail(info.email)) {
-            val user = User(
-                email = info.email,
-                role = UserRole.USER,
-                provider = provider,
-                providerId = info.sub
-            )
-            userRepository.save(user)
-            return TokenResponse(
-                tokenProvider.generateAccess(user),
-                tokenProvider.generateRefresh(user)
-            )
-        }
-
-        val user = userRepository.findByEmail(info.email) ?: throw UserNotFoundException("유저를 찾을 수 없음")
-        return TokenResponse(
-            tokenProvider.generateAccess(user),
-            tokenProvider.generateRefresh(user)
-        )
+    private fun processOAuthLogin(info: OAuthUserInfo, provider: AuthType): OAuthResponse {
+        val existingUser = userRepository.findByEmail(info.email)
+        val isFirstLogin = existingUser == null
+        val user = existingUser ?: userRepository.save(info.toUser(provider))
+        return provideTokens(user, isFirstLogin)
     }
+
+    private fun provideTokens(user: User, isFirstLogin: Boolean) =
+        OAuthResponse(
+            access = tokenProvider.generateAccess(user),
+            refresh = tokenProvider.generateRefresh(user),
+            isFirstLogin = isFirstLogin
+        )
 }
