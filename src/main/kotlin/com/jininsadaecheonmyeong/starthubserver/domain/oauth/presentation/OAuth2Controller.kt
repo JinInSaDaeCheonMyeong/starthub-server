@@ -21,7 +21,7 @@ class OAuth2Controller(
     fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>> {
         val state = UUID.randomUUID().toString()
         session.setAttribute("state", state)
-        return BaseResponse.ok(state, "state 발급 완료")
+        return BaseResponse.of(state, "state 발급 완료")
     }
 
     @PostMapping("/google")
@@ -31,7 +31,7 @@ class OAuth2Controller(
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
-        return BaseResponse.ok(oAuth2Service.googleAuth(code), "구글 로그인 성공")
+        return BaseResponse.of(oAuth2Service.googleAuth(code), "구글 로그인 성공")
     }
 
     @PostMapping("/naver")
@@ -41,7 +41,7 @@ class OAuth2Controller(
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
-        return BaseResponse.ok(oAuth2Service.naverAuth(code), "네이버 로그인 성공")
+        return BaseResponse.of(oAuth2Service.naverAuth(code), "네이버 로그인 성공")
     }
 
     @PostMapping("/apple")
@@ -51,7 +51,7 @@ class OAuth2Controller(
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
-        return BaseResponse.ok(oAuth2Service.appleAuth(code), "애플 로그인 성공")
+        return BaseResponse.of(oAuth2Service.appleAuth(code), "애플 로그인 성공")
     }
 
     private fun validateState(session: HttpSession, state: String?) {

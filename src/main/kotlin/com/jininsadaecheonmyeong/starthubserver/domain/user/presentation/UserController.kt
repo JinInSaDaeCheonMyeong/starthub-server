@@ -17,20 +17,20 @@ class UserController(
 ) : UserDocs {
     @PostMapping("/sign-up")
     override fun signUp(request: UserRequest)
-        = BaseResponse.created(userService.signUp(request), "회원가입 성공")
+        = BaseResponse.of(userService.signUp(request), "회원가입 성공")
 
     @PostMapping("/sign-in")
     override fun signIn(request: UserRequest)
-        = BaseResponse.ok(userService.signIn(request), "로그인 성공")
+        = BaseResponse.of(userService.signIn(request), "로그인 성공")
 
     @PostMapping("/reissue")
     override fun reissue(request: RefreshRequest)
-        = BaseResponse.ok(userService.reissue(request), "토큰 재발급 성공")
+        = BaseResponse.of(userService.reissue(request), "토큰 재발급 성공")
 
     @PatchMapping("/profile")
     fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>> {
         val currentUser = UserAuthenticationHolder.current()
         userService.updateUserProfile(currentUser, request.username, request.interests)
-        return BaseResponse.ok(null, "유저 프로필 설정 성공")
+        return BaseResponse.of("유저 프로필 설정 성공")
     }
 }
