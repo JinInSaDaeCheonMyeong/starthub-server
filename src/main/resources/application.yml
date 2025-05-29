@@ -62,3 +62,4 @@ oauth:
     private-key: ${APPLE_PRIVATE_KEY}
     redirect-uri: ${APPLE_REDIRECT_URL}
     token-uri: https://appleid.apple.com/auth/token
+    grant-type: authorization_code

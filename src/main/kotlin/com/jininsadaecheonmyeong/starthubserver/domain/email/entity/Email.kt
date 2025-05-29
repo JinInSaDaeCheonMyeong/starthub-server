@@ -3,15 +3,14 @@ package com.jininsadaecheonmyeong.starthubserver.domain.email.entity
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Entity
 @Table(name = "emails")
 class Email(
     @Id
     @Column(nullable = false, unique = true)
-    @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
     @Column(nullable = false)
     var email: String? = null,
