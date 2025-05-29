@@ -1,7 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.data
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthProvider
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
 import jakarta.validation.constraints.Email
 
 data class UserRequest(
@@ -13,7 +13,7 @@ data class UserRequest(
         return User(
             email = email,
             password = password,
-            provider = AuthProvider.LOCAL
+            provider = AuthType.LOCAL
         )
     }
 }

@@ -26,9 +26,4 @@ class EmailController(
     @PostMapping("/verify")
     fun verifyEmail(@RequestBody request: EmailVerifyRequest) =
         BaseResponse.ok(emailVerificationService.verifyCode(request.email, request.code), "코드 확인 성공")
-
-    @Operation(summary = "이메일 중복 검사")
-    @PostMapping("/check-duplication")
-    fun checkDuplication(@RequestBody request: EmailSendRequest) =
-        BaseResponse.ok(emailVerificationService.checkEmailDuplication(request.email), "중복 확인 성공")
 }
