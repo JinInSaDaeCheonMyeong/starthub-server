@@ -20,8 +20,9 @@ import java.time.LocalDateTime
 class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(ex: MethodArgumentNotValidException): ResponseEntity<CustomErrorResponse> {
+        val errorMessage = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage ?: "잘못된 입력 형식"
         val customErrorResponse = CustomErrorResponse(
-            message = ex.message,
+            message = errorMessage,
             status = HttpStatus.BAD_REQUEST.value()
         )
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(customErrorResponse)
@@ -37,7 +38,7 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidPasswordException::class)
-    fun handleInvalidPassword(ex: InvalidPasswordException): ResponseEntity<CustomErrorResponse> {
+    fun handleIncorrectPassword(ex: InvalidPasswordException): ResponseEntity<CustomErrorResponse> {
         val customErrorResponse = CustomErrorResponse(
             message = ex.message ?: "잘못된 비밀번호",
             status = HttpStatus.UNAUTHORIZED.value(),
