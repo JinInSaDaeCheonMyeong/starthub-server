@@ -5,7 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserRole
 
 interface OAuthUserInfo {
-    val id: String
+    val sub: String
     val name: String
     val email: String
 
@@ -14,6 +14,6 @@ interface OAuthUserInfo {
             email = email,
             role = UserRole.USER,
             provider = provider,
-            providerId = id
+            providerId = sub
         )
 }
