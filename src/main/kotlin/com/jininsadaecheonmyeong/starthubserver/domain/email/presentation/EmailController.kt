@@ -20,10 +20,10 @@ class EmailController(
     @Operation(summary = "인증 코드 발송")
     @PostMapping("/send-code")
     fun sendVerificationCode(@RequestBody request: EmailSendRequest) =
-        BaseResponse.ok(emailVerificationService.sendVerificationCode(request.email), "전송 성공")
+        BaseResponse.of(emailVerificationService.sendVerificationCode(request.email), "전송 성공")
 
     @Operation(summary = "인증 코드 확인")
     @PostMapping("/verify")
     fun verifyEmail(@RequestBody request: EmailVerifyRequest) =
-        BaseResponse.ok(emailVerificationService.verifyCode(request.email, request.code), "코드 확인 성공")
+        BaseResponse.of(emailVerificationService.verifyCode(request.email, request.code), "코드 확인 성공")
 }
