@@ -1,9 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth.presentation
 
-import com.jininsadaecheonmyeong.starthubserver.domain.oauth.docs.Oauth2Docs
+import com.jininsadaecheonmyeong.starthubserver.domain.oauth.docs.OAuth2Docs
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.service.OAuth2Service
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
+import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
@@ -15,7 +15,7 @@ import java.util.*
 @RequestMapping("/oauth")
 class OAuth2Controller(
     private val oAuth2Service: OAuth2Service,
-): Oauth2Docs {
+): OAuth2Docs {
 
     @GetMapping("/state")
     fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>> {
@@ -29,7 +29,7 @@ class OAuth2Controller(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
-    ): ResponseEntity<BaseResponse<TokenResponse>> {
+    ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
         return BaseResponse.ok(oAuth2Service.googleAuth(code), "구글 로그인 성공")
     }
@@ -39,7 +39,7 @@ class OAuth2Controller(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
-    ): ResponseEntity<BaseResponse<TokenResponse>> {
+    ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
         return BaseResponse.ok(oAuth2Service.naverAuth(code), "네이버 로그인 성공")
     }
@@ -49,7 +49,7 @@ class OAuth2Controller(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
-    ): ResponseEntity<BaseResponse<TokenResponse>> {
+    ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
         return BaseResponse.ok(oAuth2Service.appleAuth(code), "애플 로그인 성공")
     }
