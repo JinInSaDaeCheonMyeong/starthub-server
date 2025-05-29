@@ -1,8 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth.presentation
 
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.service.OAuth2Service
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
-import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
@@ -14,7 +14,8 @@ import java.util.*
 @RequestMapping("/oauth")
 class OAuth2Controller(
     private val oAuth2Service: OAuth2Service,
-) {
+): Oauth2Docs {
+
     @GetMapping("/state")
     fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>> {
         val state = UUID.randomUUID().toString()
@@ -22,42 +23,40 @@ class OAuth2Controller(
         return BaseResponse.ok(state, "state 발급 완료")
     }
 
-    @GetMapping("/google")
-    fun googleCallback(
+    @PostMapping("/google")
+    override fun googleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
-    ): ResponseEntity<BaseResponse<OAuthResponse>> {
-        val sessionState = session.getAttribute("state") as? String
-        if (sessionState == null || sessionState != state) {
-            throw IllegalStateException("state 불일치")
-        }
+    ): ResponseEntity<BaseResponse<TokenResponse>> {
+        validateState(session, state)
         return BaseResponse.ok(oAuth2Service.googleAuth(code), "구글 로그인 성공")
     }
 
-    @GetMapping("/naver")
-    fun naverCallback(
+    @PostMapping("/naver")
+    override fun naverAuth(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
-    ): ResponseEntity<BaseResponse<OAuthResponse>> {
-        val sessionState = session.getAttribute("state") as? String
-        if (sessionState == null || sessionState != state) {
-            throw IllegalStateException("state 불일치")
-        }
+    ): ResponseEntity<BaseResponse<TokenResponse>> {
+        validateState(session, state)
         return BaseResponse.ok(oAuth2Service.naverAuth(code), "네이버 로그인 성공")
     }
 
     @PostMapping("/apple")
-    fun appleCallback(
+    override fun appleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
-    ): ResponseEntity<BaseResponse<OAuthResponse>> {
+    ): ResponseEntity<BaseResponse<TokenResponse>> {
+        validateState(session, state)
+        return BaseResponse.ok(oAuth2Service.appleAuth(code), "애플 로그인 성공")
+    }
+
+    private fun validateState(session: HttpSession, state: String?) {
         val sessionState = session.getAttribute("state") as? String
-        if (sessionState == null || sessionState != state) {
+        if (state != null && (sessionState == null || sessionState != state)) {
             throw IllegalStateException("state 불일치")
         }
-        return BaseResponse.ok(oAuth2Service.appleAuth(code), "애플 로그인 성공")
     }
 }
