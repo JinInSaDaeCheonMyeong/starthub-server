@@ -18,7 +18,7 @@ class Email(
     @Column(length = 6)
     var verificationCode: String? = null,
 
-    val expirationDate: LocalDateTime = LocalDateTime.now().plusMinutes(5),
+    var expirationDate: LocalDateTime = LocalDateTime.now().plusMinutes(5),
 
     @Column(nullable = false)
     var isVerified: Boolean = false

@@ -18,15 +18,17 @@ class User (
 
     var password: String? = null,
 
+    var username: String? = null,
+
     @Enumerated(EnumType.STRING)
     val role: UserRole = UserRole.USER,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var provider: AuthType,
+    val provider: AuthType,
 
     @Column(nullable = true)
-    var providerId: String? = null,
+    val providerId: String? = null,
 
     @Column(nullable = false)
     var deleted: Boolean = false
