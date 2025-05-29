@@ -22,7 +22,6 @@ class EmailService (
     private val log = logger()
 
     fun sendEmail(email: String, code: String) {
-
         try {
             val message: MimeMessage = javaMailSender!!.createMimeMessage()
             val helper = MimeMessageHelper(message, true, "UTF-8")
