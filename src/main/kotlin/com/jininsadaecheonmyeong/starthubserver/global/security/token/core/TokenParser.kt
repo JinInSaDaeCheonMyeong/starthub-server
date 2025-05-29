@@ -1,9 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.core
 
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.Claims
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.properties.TokenProperties
+import io.jsonwebtoken.Claims
+import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Component
 
 @Component
