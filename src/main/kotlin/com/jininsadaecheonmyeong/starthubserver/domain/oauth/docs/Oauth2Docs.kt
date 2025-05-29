@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.oauth.presentation
+package com.jininsadaecheonmyeong.starthubserver.domain.oauth.docs
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
