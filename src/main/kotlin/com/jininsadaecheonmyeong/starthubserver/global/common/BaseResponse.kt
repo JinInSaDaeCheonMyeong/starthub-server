@@ -13,26 +13,23 @@ data class BaseResponse<T>(
             ResponseEntity.status(status)
                 .body(BaseResponse(data, status, message))
 
-        fun <T> ok(data: T?, message: String): ResponseEntity<BaseResponse<T>> =
+        fun <T> of(data: T, message: String): ResponseEntity<BaseResponse<T>> =
             of(data, HttpStatus.OK, message)
 
-        fun <T> created(data: T?, message: String): ResponseEntity<BaseResponse<T>> =
-            of(data, HttpStatus.CREATED, message)
-            
-        fun <T> badRequest(data: T?, message: String): ResponseEntity<BaseResponse<T>> =
-            of(data, HttpStatus.BAD_REQUEST, message)
-            
-        fun <T> notFound(data: T?, message: String): ResponseEntity<BaseResponse<T>> =
-            of(data, HttpStatus.NOT_FOUND, message)
-            
-        fun <T> forbidden(data: T?, message: String): ResponseEntity<BaseResponse<T>> =
-            of(data, HttpStatus.FORBIDDEN, message)
-            
-        fun <T> unauthorized(data: T?, message: String): ResponseEntity<BaseResponse<T>> =
-            of(data, HttpStatus.UNAUTHORIZED, message)
-            
-        fun <T> internalServerError(data: T?, message: String): ResponseEntity<BaseResponse<T>> =
-            of(data, HttpStatus.INTERNAL_SERVER_ERROR, message)
+        fun <T> of(data: T?, status: HttpStatus): ResponseEntity<BaseResponse<T>> =
+            of(data, status, "")
+
+        fun <T> of(data: T): ResponseEntity<BaseResponse<T>> =
+            of(data, HttpStatus.OK, "")
+
+        fun <T> of(message: String, status: HttpStatus): ResponseEntity<BaseResponse<T>> =
+            of(null, status, message)
+
+        fun <T> of(message: String): ResponseEntity<BaseResponse<T>> =
+            of(null, HttpStatus.OK, message)
+
+        fun <T> of(status: HttpStatus): ResponseEntity<BaseResponse<T>> =
+            of(null, status, "")
     }
 
     fun getStatusCode(): Int = status.value()

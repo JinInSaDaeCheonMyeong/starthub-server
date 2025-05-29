@@ -1,13 +1,14 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.presentation
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.docs.UserDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.user.service.UserService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/user")
@@ -16,15 +17,15 @@ class UserController(
 ) : UserDocs {
     @PostMapping("/sign-up")
     override fun signUp(request: UserRequest)
-            = BaseResponse.of(userService.signUp(request), "회원가입 성공")
+        = BaseResponse.of(userService.signUp(request), "회원가입 성공")
 
     @PostMapping("/sign-in")
     override fun signIn(request: UserRequest)
-            = BaseResponse.of(userService.signIn(request), "로그인 성공")
+        = BaseResponse.of(userService.signIn(request), "로그인 성공")
 
     @PostMapping("/reissue")
     override fun reissue(request: RefreshRequest)
-            = BaseResponse.of(userService.reissue(request), "토큰 재발급 성공")
+        = BaseResponse.of(userService.reissue(request), "토큰 재발급 성공")
 
     @PatchMapping("/profile")
     fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>> {

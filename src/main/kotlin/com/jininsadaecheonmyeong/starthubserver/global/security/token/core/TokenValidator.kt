@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component
 @Component
 class TokenValidator(
     private val parser: TokenParser,
-    private val tokenRedisService: TokenRedisService
 ) {
     fun validateAll(token: String, tokenType: TokenType) {
         validate(token)
