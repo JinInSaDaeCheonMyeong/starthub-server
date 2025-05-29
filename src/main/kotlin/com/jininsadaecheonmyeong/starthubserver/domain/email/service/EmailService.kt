@@ -1,12 +1,13 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.email.service
 
-import com.jininsadaecheonmyeong.starthubserver.global.config.EmailConfig
 import com.jininsadaecheonmyeong.starthubserver.logger
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.MimeMessage
+import org.springframework.boot.autoconfigure.mail.MailProperties
 import org.springframework.core.io.ClassPathResource
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.util.FileCopyUtils
 import java.io.BufferedReader
@@ -15,17 +16,18 @@ import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
 @Service
-class EmailService (
-    private val javaMailSender: JavaMailSender? = null,
-    private val emailConfig: EmailConfig? = null
+class EmailService(
+    private val javaMailSender: JavaMailSender,
+    private val mailProperties: MailProperties,
 ) {
     private val log = logger()
 
+    @Async
     fun sendEmail(email: String, code: String) {
         try {
-            val message: MimeMessage = javaMailSender!!.createMimeMessage()
+            val message: MimeMessage = javaMailSender.createMimeMessage()
             val helper = MimeMessageHelper(message, true, "UTF-8")
-            message.setFrom(emailConfig?.username)
+            message.setFrom(mailProperties.username)
             message.setRecipients(MimeMessage.RecipientType.TO, email)
             message.subject = "스타트허브 이메일 인증코드 : $code"
 

@@ -6,10 +6,13 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
+import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserInterest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.InterestType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserInterestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
@@ -29,7 +32,8 @@ class UserService (
     private val tokenValidator: TokenValidator,
     private val tokenParser: TokenParser,
     private val tokenRedisService: TokenRedisService,
-    private val emailRepository: EmailRepository
+    private val emailRepository: EmailRepository,
+    private val userInterestRepository: UserInterestRepository
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
@@ -60,4 +64,18 @@ class UserService (
             refresh = tokenProvider.generateRefresh(user)
         )
     }
+
+    @Transactional
+    fun updateUserProfile(user: User, username: String, interests: List<InterestType>) {
+        user.username = username
+        userRepository.save(user)
+
+        userInterestRepository.deleteByUser(user)
+
+        val newInterests = interests.map { interestType ->
+            UserInterest(user = user, interestType = interestType)
+        }
+        userInterestRepository.saveAll(newInterests)
+    }
+
 }

@@ -3,11 +3,11 @@ package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.config
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "oauth.naver")
-class NaverProperties {
-    lateinit var clientId: String
-    lateinit var clientSecret: String
-    lateinit var redirectUri: String
-    lateinit var tokenUri: String
-    lateinit var userInfoUri: String
-    lateinit var grantType: String
-}
+class NaverProperties(
+    val clientId: String,
+    val clientSecret: String,
+    val redirectUri: String,
+    val tokenUri: String,
+    val userInfoUri: String,
+    val grantType: String
+)
