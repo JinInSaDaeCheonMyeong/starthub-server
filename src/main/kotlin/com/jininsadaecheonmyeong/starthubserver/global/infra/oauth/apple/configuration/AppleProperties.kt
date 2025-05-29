@@ -3,12 +3,12 @@ package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.config
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "oauth.apple")
-class AppleProperties {
-    lateinit var teamId: String
-    lateinit var clientId: String
-    lateinit var keyId: String
-    lateinit var privateKey: String
-    lateinit var redirectUri: String
-    lateinit var tokenUri: String
-    lateinit var grantType: String
-}
+data class AppleProperties(
+    val teamId: String,
+    val clientId: String,
+    val keyId: String,
+    val privateKey: String,
+    val redirectUri: String,
+    val tokenUri: String,
+    val grantType: String
+)
