@@ -5,7 +5,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailAlre
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.ExpiredEmailException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import org.springframework.stereotype.Service
 import java.security.SecureRandom
 import java.time.LocalDateTime
@@ -16,8 +15,6 @@ class EmailVerificationService(
     private val emailService: EmailService
 ) {
     fun sendVerificationCode(email: String) {
-        checkEmailDuplication(email)
-
         if (emailRepository.findByEmailAndIsVerifiedTrue(email) != null) {
             throw EmailAlreadyVerifiedException("이미 인증된 이메일")
         }
@@ -51,10 +48,5 @@ class EmailVerificationService(
             verification.isVerified = true
             emailRepository.save(verification)
         }
-    }
-
-    private fun checkEmailDuplication(email: String): String? {
-        if (emailRepository.existsByEmail(email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
-        return null
     }
 }
