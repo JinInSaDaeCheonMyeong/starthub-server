@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailAlre
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.ExpiredEmailException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.security.SecureRandom
 import java.time.LocalDateTime
@@ -14,28 +15,29 @@ class EmailVerificationService(
     private val emailRepository: EmailRepository,
     private val emailService: EmailService
 ) {
+    @Transactional
     fun sendVerificationCode(email: String) {
-        if (emailRepository.findByEmailAndIsVerifiedTrue(email) != null) {
-            throw EmailAlreadyVerifiedException("이미 인증된 이메일")
+        val existingEmail = emailRepository.findByEmail(email)
+
+        if (existingEmail?.isVerified == true) {
+            throw EmailAlreadyVerifiedException("이미 인증된 이메일입니다.")
         }
 
-        val existingEmail = emailRepository.findByEmail(email)
         val code = generateVerificationCode()
 
         val emailVerification = existingEmail?.apply {
             verificationCode = code
-        }
-            ?: Email(
-                email = email,
-                verificationCode = code
-            )
+        } ?: Email(
+            email = email,
+            verificationCode = code
+        )
 
         emailRepository.save(emailVerification)
 
         emailService.sendEmail(email, code)
     }
 
-    fun generateVerificationCode(): String {
+    private fun generateVerificationCode(): String {
         return String.format("%06d", SecureRandom().nextInt(1_000_000))
     }
 
