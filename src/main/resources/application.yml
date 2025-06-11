@@ -43,6 +43,10 @@ oauth:
     client-id: ${GOOGLE_CLIENT_ID}
     client-secret: ${GOOGLE_CLIENT_SECRET}
     redirect-uri: ${GOOGLE_REDIRECT_URI}
+    android-client-id: ${GOOGLE_ANDROID_CLIENT_ID}
+    android-redirect-uri: ${GOOGLE_ANDROID_REDIRECT_URI}
+    ios-client-id: ${GOOGLE_IOS_CLIENT_ID}
+    ios-redirect-uri: ${GOOGLE_IOS_REDIRECT_URI}
     token-uri: https://oauth2.googleapis.com/token
     user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
     grant-type: authorization_code

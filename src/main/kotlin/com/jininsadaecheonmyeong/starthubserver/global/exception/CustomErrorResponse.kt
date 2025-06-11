@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotF
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.ExpiredEmailException
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception.InvalidStateException
+import com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception.UnsupportedPlatformException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
@@ -114,6 +115,15 @@ class GlobalExceptionHandler {
     fun handleInvalidState(ex: InvalidStateException): ResponseEntity<CustomErrorResponse> {
         val response = CustomErrorResponse(
             message = ex.message ?: "잘못된 state 값",
+            status = HttpStatus.BAD_REQUEST.value()
+        )
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
+    }
+
+    @ExceptionHandler(UnsupportedPlatformException::class)
+    fun handleInvalidState(ex: UnsupportedPlatformException): ResponseEntity<CustomErrorResponse> {
+        val response = CustomErrorResponse(
+            message = ex.message ?: "지원되지 않는 플랫폼",
             status = HttpStatus.BAD_REQUEST.value()
         )
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
