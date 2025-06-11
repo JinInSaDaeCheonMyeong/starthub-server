@@ -13,6 +13,8 @@ interface OAuth2Docs {
     fun googleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
+        @RequestParam platform: String,
+        @RequestParam(required = false) codeVerifier: String?,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>>
 

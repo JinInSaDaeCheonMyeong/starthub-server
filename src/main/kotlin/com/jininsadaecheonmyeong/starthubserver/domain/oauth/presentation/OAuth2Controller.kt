@@ -29,10 +29,17 @@ class OAuth2Controller(
     override fun googleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
+        @RequestParam platform: String,
+        @RequestParam(required = false) codeVerifier: String?,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
-        return BaseResponse.of(oAuth2Service.googleAuth(code), "구글 로그인 성공")
+        val response = oAuth2Service.googleAuth(
+            code = code,
+            platform = platform,
+            codeVerifier = codeVerifier
+        )
+        return BaseResponse.of(response, "구글 로그인 성공")
     }
 
     @PostMapping("/naver")
