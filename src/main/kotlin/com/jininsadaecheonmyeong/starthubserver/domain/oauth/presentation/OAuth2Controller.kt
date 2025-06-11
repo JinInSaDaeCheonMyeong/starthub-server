@@ -25,7 +25,7 @@ class OAuth2Controller(
         return BaseResponse.of(state, "state 발급 완료")
     }
 
-    @PostMapping("/google")
+    @GetMapping("/google")
     override fun googleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
@@ -42,7 +42,7 @@ class OAuth2Controller(
         return BaseResponse.of(response, "구글 로그인 성공")
     }
 
-    @PostMapping("/naver")
+    @GetMapping("/naver")
     override fun naverAuth(
         @RequestParam code: String,
         @RequestParam state: String,
