@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailAlre
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.ExpiredEmailException
+import com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception.InvalidStateException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
@@ -107,6 +108,15 @@ class GlobalExceptionHandler {
             status = HttpStatus.UNAUTHORIZED.value(),
         )
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(customErrorResponse)
+    }
+
+    @ExceptionHandler(InvalidStateException::class)
+    fun handleInvalidState(ex: InvalidStateException): ResponseEntity<CustomErrorResponse> {
+        val response = CustomErrorResponse(
+            message = ex.message ?: "잘못된 state 값",
+            status = HttpStatus.BAD_REQUEST.value()
+        )
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
     }
 }
 

@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth.presentation
 
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.docs.OAuth2Docs
+import com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception.InvalidStateException
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.service.OAuth2Service
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthResponse
@@ -57,7 +58,7 @@ class OAuth2Controller(
     private fun validateState(session: HttpSession, state: String?) {
         val sessionState = session.getAttribute("state") as? String
         if (state != null && (sessionState == null || sessionState != state)) {
-            throw IllegalStateException("state 불일치")
+            throw InvalidStateException("state 불일치")
         }
     }
 }
