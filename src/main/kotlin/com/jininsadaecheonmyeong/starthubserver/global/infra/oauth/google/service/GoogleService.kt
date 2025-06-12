@@ -1,6 +1,5 @@
 package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception.UnsupportedPlatformException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.configuration.GoogleProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data.GoogleTokenResponse
@@ -28,7 +27,7 @@ class GoogleService(
             "web" -> googleProperties.clientId to googleProperties.redirectUri
             "android" -> googleProperties.androidClientId to googleProperties.androidRedirectUri
             "ios" -> googleProperties.iosClientId to googleProperties.iosRedirectUri
-            else -> throw UnsupportedPlatformException("지원되지 않는 플랫폼입니다: $platform")
+            else -> googleProperties.clientId to googleProperties.redirectUri
         }
 
         val bodyBuilder = BodyInserters.fromFormData("client_id", clientId)
