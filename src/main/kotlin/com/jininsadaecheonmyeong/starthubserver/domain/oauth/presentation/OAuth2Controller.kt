@@ -29,11 +29,12 @@ class OAuth2Controller(
     override fun googleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
-        @RequestParam(required = false) platform: String,
+        @RequestParam(required = false) platform: String?,
         @RequestParam(required = false) codeVerifier: String?,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
+
         val response = oAuth2Service.googleAuth(
             code = code,
             platform = platform,
