@@ -24,7 +24,6 @@ class GoogleService(
     ): GoogleUserInfo {
 
         val (clientId, redirectUri) = when (platform.lowercase()) {
-            "web" -> googleProperties.clientId to googleProperties.redirectUri
             "android" -> googleProperties.androidClientId to googleProperties.androidRedirectUri
             "ios" -> googleProperties.iosClientId to googleProperties.iosRedirectUri
             else -> googleProperties.clientId to googleProperties.redirectUri
