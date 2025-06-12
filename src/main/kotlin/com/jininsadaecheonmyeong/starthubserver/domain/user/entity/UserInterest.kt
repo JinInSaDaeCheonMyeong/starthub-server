@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.entity
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.InterestType
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import jakarta.persistence.*
 
 @Entity
@@ -19,5 +19,5 @@ class UserInterest (
 
     @Enumerated(EnumType.STRING)
     @Column(name = "interest", nullable = false)
-    val interestType: InterestType
+    val businessType: BusinessType
 )

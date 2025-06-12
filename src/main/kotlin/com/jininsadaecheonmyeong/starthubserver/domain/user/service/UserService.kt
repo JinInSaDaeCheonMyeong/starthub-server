@@ -7,7 +7,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserInterest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.InterestType
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
@@ -66,14 +66,14 @@ class UserService (
     }
 
     @Transactional
-    fun updateUserProfile(user: User, username: String, interests: List<InterestType>) {
+    fun updateUserProfile(user: User, username: String, interests: List<BusinessType>) {
         user.username = username
         userRepository.save(user)
 
         userInterestRepository.deleteByUser(user)
 
         val newInterests = interests.map { interestType ->
-            UserInterest(user = user, interestType = interestType)
+            UserInterest(user = user, businessType = interestType)
         }
         userInterestRepository.saveAll(newInterests)
     }
