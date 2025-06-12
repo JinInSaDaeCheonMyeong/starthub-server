@@ -1,3 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.exception
 
-class InvalidPasswordException(message: String) : RuntimeException(message)
+import com.jininsadaecheonmyeong.starthubserver.global.exception.CustomException
+import org.springframework.http.HttpStatus
+
+class InvalidPasswordException(message: String) : CustomException(message, HttpStatus.UNAUTHORIZED)
