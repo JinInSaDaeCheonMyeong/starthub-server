@@ -19,11 +19,13 @@ class GoogleService(
 
     fun exchangeCodeForUserInfo(
         code: String,
-        platform: String,
+        platform: String? = null,
         codeVerifier: String? = null
     ): GoogleUserInfo {
 
-        val (clientId, redirectUri) = when (platform.lowercase()) {
+        val normalizedPlatform = platform?.lowercase() ?: ""
+
+        val (clientId, redirectUri) = when (normalizedPlatform) {
             "android" -> googleProperties.androidClientId to googleProperties.androidRedirectUri
             "ios" -> googleProperties.iosClientId to googleProperties.iosRedirectUri
             else -> googleProperties.clientId to googleProperties.redirectUri
