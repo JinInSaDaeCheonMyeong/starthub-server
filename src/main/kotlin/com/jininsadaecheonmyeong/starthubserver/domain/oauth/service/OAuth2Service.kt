@@ -19,8 +19,11 @@ class OAuth2Service(
     private val appleService: AppleService,
     private val userRepository: UserRepository
 ) {
-    fun googleAuth(code: String, platform: String?, codeVerifier: String?)
-        = processOAuthLogin(googleService.exchangeCodeForUserInfo(code, platform, codeVerifier), AuthType.GOOGLE)
+    fun googleAuthWeb(code: String) =
+        processOAuthLogin(googleService.exchangeCodeForUserInfoWeb(code), AuthType.GOOGLE)
+
+    fun googleAuthApp(code: String, platform: String, codeVerifier: String) =
+        processOAuthLogin(googleService.exchangeCodeForUserInfoApp(code, platform, codeVerifier), AuthType.GOOGLE)
 
     fun naverAuth(code: String)
         = processOAuthLogin(naverService.exchangeCodeForUserInfo(code), AuthType.NAVER)
