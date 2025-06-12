@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.enums
 
-enum class InterestType(val displayName: String) {
+enum class BusinessType(val displayName: String) {
     CONTENT_MEDIA("콘텐츠/미디어"),
     FINTECH("핀테크"),
     HEALTHCARE_BIO("헬스케어/바이오"),
