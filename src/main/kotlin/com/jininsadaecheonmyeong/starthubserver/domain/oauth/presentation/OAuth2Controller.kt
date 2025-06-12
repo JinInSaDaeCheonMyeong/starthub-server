@@ -46,10 +46,17 @@ class OAuth2Controller(
     override fun naverAuth(
         @RequestParam code: String,
         @RequestParam state: String,
+        @RequestParam(defaultValue = "web") platform: String,
+        @RequestParam(required = false) codeVerifier: String?,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
-        return BaseResponse.of(oAuth2Service.naverAuth(code), "네이버 로그인 성공")
+        val response = oAuth2Service.naverAuth(
+            code = code,
+            platform = platform,
+            codeVerifier = codeVerifier
+        )
+        return BaseResponse.of(response, "네이버 로그인 성공")
     }
 
     @PostMapping("/apple")

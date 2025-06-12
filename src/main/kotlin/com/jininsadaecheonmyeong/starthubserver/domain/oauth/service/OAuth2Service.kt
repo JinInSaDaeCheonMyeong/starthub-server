@@ -22,8 +22,8 @@ class OAuth2Service(
     fun googleAuth(code: String, platform: String, codeVerifier: String?)
         = processOAuthLogin(googleService.exchangeCodeForUserInfo(code, platform, codeVerifier), AuthType.GOOGLE)
 
-    fun naverAuth(code: String)
-        = processOAuthLogin(naverService.exchangeCodeForUserInfo(code), AuthType.NAVER)
+    fun naverAuth(code: String, platform: String = "web", codeVerifier: String? = null)
+        = processOAuthLogin(naverService.exchangeCodeForUserInfo(code, platform, codeVerifier), AuthType.NAVER)
 
     fun appleAuth(code: String)
         = processOAuthLogin(appleService.exchangeCodeForUserInfo(code), AuthType.APPLE)

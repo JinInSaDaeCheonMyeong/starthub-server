@@ -22,9 +22,10 @@ interface OAuth2Docs {
     fun naverAuth(
         @RequestParam code: String,
         @RequestParam state: String,
+        @RequestParam(defaultValue = "web") platform: String,
+        @RequestParam(required = false) codeVerifier: String?,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>>
-
 
     @Operation(summary = "애플 계정으로 회원가입 및 로그인합니다.")
     fun appleAuth(
