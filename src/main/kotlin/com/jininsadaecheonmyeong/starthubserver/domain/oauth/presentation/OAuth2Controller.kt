@@ -25,22 +25,30 @@ class OAuth2Controller(
         return BaseResponse.of(state, "state 발급 완료")
     }
 
-    @GetMapping("/google")
-    override fun googleAuth(
+    @GetMapping("/google/web")
+    override fun googleAuthWeb(
         @RequestParam code: String,
         @RequestParam state: String,
-        @RequestParam(required = false) platform: String?,
-        @RequestParam(required = false) codeVerifier: String?,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
 
-        val response = oAuth2Service.googleAuth(
-            code = code,
-            platform = platform,
-            codeVerifier = codeVerifier
-        )
-        return BaseResponse.of(response, "구글 로그인 성공")
+        val response = oAuth2Service.googleAuthWeb(code)
+        return BaseResponse.of(response, "구글 웹 로그인 성공")
+    }
+
+    @GetMapping("/google/app")
+    override fun googleAuthApp(
+        @RequestParam code: String,
+        @RequestParam state: String,
+        @RequestParam platform: String,
+        @RequestParam codeVerifier: String,
+        session: HttpSession
+    ): ResponseEntity<BaseResponse<OAuthResponse>> {
+        validateState(session, state)
+
+        val response = oAuth2Service.googleAuthApp(code, platform, codeVerifier)
+        return BaseResponse.of(response, "구글 앱 로그인 성공")
     }
 
     @GetMapping("/naver")
@@ -65,7 +73,7 @@ class OAuth2Controller(
 
     private fun validateState(session: HttpSession, state: String?) {
         val sessionState = session.getAttribute("state") as? String
-        if (state != null && (sessionState == null || sessionState != state)) {
+        if (state == null || sessionState == null || sessionState != state) {
             throw InvalidStateException("state 불일치")
         }
     }

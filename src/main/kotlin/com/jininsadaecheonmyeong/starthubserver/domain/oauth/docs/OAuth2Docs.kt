@@ -9,12 +9,19 @@ import org.springframework.web.bind.annotation.RequestParam
 
 interface OAuth2Docs {
 
-    @Operation(summary = "구글 계정으로 회원가입 및 로그인합니다.")
-    fun googleAuth(
+    @Operation(summary = "구글 웹에서 계정으로 회원가입 및 로그인합니다.")
+    fun googleAuthWeb(
         @RequestParam code: String,
         @RequestParam state: String,
-        @RequestParam(required = false) platform: String?,
-        @RequestParam(required = false) codeVerifier: String?,
+        session: HttpSession
+    ): ResponseEntity<BaseResponse<OAuthResponse>>
+
+    @Operation(summary = "구글 앱에서 계정으로 회원가입 및 로그인합니다.")
+    fun googleAuthApp(
+        @RequestParam code: String,
+        @RequestParam state: String,
+        @RequestParam platform: String,
+        @RequestParam codeVerifier: String,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>>
 
@@ -24,7 +31,6 @@ interface OAuth2Docs {
         @RequestParam state: String,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>>
-
 
     @Operation(summary = "애플 계정으로 회원가입 및 로그인합니다.")
     fun appleAuth(

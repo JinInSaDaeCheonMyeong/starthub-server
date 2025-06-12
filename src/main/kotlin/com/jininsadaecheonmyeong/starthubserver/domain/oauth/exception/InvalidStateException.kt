@@ -1,3 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception
 
-class InvalidStateException(message: String) : RuntimeException(message)
+import com.jininsadaecheonmyeong.starthubserver.global.exception.CustomException
+import org.springframework.http.HttpStatus
+
+class InvalidStateException(message: String) : CustomException(message, HttpStatus.BAD_REQUEST)
