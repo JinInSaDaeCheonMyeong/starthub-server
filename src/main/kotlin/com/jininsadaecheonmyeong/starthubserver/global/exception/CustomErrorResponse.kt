@@ -1,5 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.global.exception
 
+import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.CompanyDuplicationException
+import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.CompanyNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.NotCompanyFounderException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailAlreadyVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
@@ -127,6 +130,33 @@ class GlobalExceptionHandler {
             status = HttpStatus.BAD_REQUEST.value()
         )
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
+    }
+
+    @ExceptionHandler(CompanyNotFoundException::class)
+    fun handleCompanyNotFound(ex: CompanyNotFoundException): ResponseEntity<CustomErrorResponse> {
+        val response = CustomErrorResponse(
+            message = ex.message ?: "찾을 수 없는 기업",
+            status = HttpStatus.NOT_FOUND.value()
+        )
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response)
+    }
+
+    @ExceptionHandler(CompanyDuplicationException::class)
+    fun handleCompanyDuplication(ex: CompanyDuplicationException): ResponseEntity<CustomErrorResponse> {
+        val response = CustomErrorResponse(
+            message = ex.message ?: "이미 존재하는 기업",
+            status = HttpStatus.CONFLICT.value()
+        )
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response)
+    }
+
+    @ExceptionHandler(NotCompanyFounderException::class)
+    fun handleNotCompanyFounder(ex: NotCompanyFounderException): ResponseEntity<CustomErrorResponse> {
+        val response = CustomErrorResponse(
+            message = ex.message ?: "기업 등록자만 접근할 수 있습니다.",
+            status = HttpStatus.FORBIDDEN.value()
+        )
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response)
     }
 }
 
