@@ -7,7 +7,10 @@ import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestParam
 
-interface OAuth2Docs {
+interface OAuthDocs {
+
+    @Operation(summary = "state 발급", description = "OAuth를 사용하기 위한 state를 발급합니다.")
+    fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>>
 
     @Operation(summary = "웹용 구글 로그인/회원가입", description = "구글 웹에서 계정으로 회원가입 및 로그인합니다.")
     fun googleAuthWeb(

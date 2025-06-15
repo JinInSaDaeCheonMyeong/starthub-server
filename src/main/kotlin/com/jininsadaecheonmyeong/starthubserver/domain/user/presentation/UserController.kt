@@ -17,16 +17,16 @@ class UserController(
     private val userService: UserService,
 ) : UserDocs {
     @PostMapping("/sign-up")
-    override fun signUp(@Valid request: UserRequest)
-        = BaseResponse.of(userService.signUp(request), "회원가입 성공")
+    override fun signUp(@Valid request: UserRequest) =
+        BaseResponse.of(userService.signUp(request), "회원가입 성공")
 
     @PostMapping("/sign-in")
-    override fun signIn(request: UserRequest)
-        = BaseResponse.of(userService.signIn(request), "로그인 성공")
+    override fun signIn(request: UserRequest) =
+        BaseResponse.of(userService.signIn(request), "로그인 성공")
 
     @PostMapping("/reissue")
-    override fun reissue(request: RefreshRequest)
-        = BaseResponse.of(userService.reissue(request), "토큰 재발급 성공")
+    override fun reissue(request: RefreshRequest) =
+        BaseResponse.of(userService.reissue(request), "토큰 재발급 성공")
 
     @PatchMapping("/profile")
     fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>> {
