@@ -26,6 +26,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
+    // websocket + stomp
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+
     // email
     implementation ("org.springframework.boot:spring-boot-starter-mail")
 
