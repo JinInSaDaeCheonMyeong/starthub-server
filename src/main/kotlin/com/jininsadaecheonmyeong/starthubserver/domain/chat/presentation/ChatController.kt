@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.chat.presentation
 
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.data.CreateChatMessageDto
+import com.jininsadaecheonmyeong.starthubserver.domain.chat.docs.ChatDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.service.ChatService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import org.springframework.messaging.handler.annotation.MessageMapping
@@ -12,16 +13,16 @@ import java.util.*
 @RequestMapping("/chat")
 class ChatController(
     private val chatService: ChatService
-) {
+) : ChatDocs {
     @PostMapping("/room")
-    fun createOrGetRoom(@RequestParam user1Id: UUID, @RequestParam user2Id: UUID)
+    override fun createOrGetRoom(@RequestParam user1Id: UUID, @RequestParam user2Id: UUID)
         = BaseResponse.of(chatService.getOrCreateChatRoom(user1Id, user2Id), "채팅방 생성 성공")
 
     @GetMapping("/messages")
-    fun getMessages(@RequestParam roomId: Long)
-        = BaseResponse.of(chatService.getMessages(roomId), "메시지 조회 성공")
+    override fun getMessages(@RequestParam roomId: Long)
+        = BaseResponse.of(chatService.getMessages(roomId), "채팅 내역 조회 성공")
 
     @MessageMapping("/send")
-    fun sendMessage(@Payload createChatMessageDto: CreateChatMessageDto)
-        = BaseResponse.of(chatService.saveAndSendMessage(createChatMessageDto), "메시지 전송 성공")
+    fun saveAndSendMessage(@Payload createChatMessageDto: CreateChatMessageDto)
+        = BaseResponse.of(chatService.saveAndSendMessage(createChatMessageDto), "성공")
 }
