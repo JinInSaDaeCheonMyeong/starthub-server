@@ -7,6 +7,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.docs.UserDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.user.service.UserService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -16,7 +17,7 @@ class UserController(
     private val userService: UserService,
 ) : UserDocs {
     @PostMapping("/sign-up")
-    override fun signUp(request: UserRequest)
+    override fun signUp(@Valid request: UserRequest)
         = BaseResponse.of(userService.signUp(request), "회원가입 성공")
 
     @PostMapping("/sign-in")
