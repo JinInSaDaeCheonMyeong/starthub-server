@@ -8,6 +8,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.chat.entity.ChatRoom
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.repository.ChatMessageRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.repository.ChatRoomRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.format.DateTimeFormatter
@@ -17,7 +18,8 @@ import java.util.*
 class ChatService(
     private val chatRoomRepository: ChatRoomRepository,
     private val chatMessageRepository: ChatMessageRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val messagingTemplate: SimpMessagingTemplate
 ) {
     @Transactional
     fun getOrCreateChatRoom(user1Id: UUID, user2Id: UUID): ChatRoomResponse {
@@ -33,9 +35,11 @@ class ChatService(
     }
 
     @Transactional
-    fun saveMessage(createChatMessageDto: CreateChatMessageDto): ChatMessageResponse {
-        val room = chatRoomRepository.findById(createChatMessageDto.roomId).orElseThrow { IllegalArgumentException("ChatRoom not found") }
-        val sender = userRepository.findById(createChatMessageDto.senderId).orElseThrow { IllegalArgumentException("Sender not found") }
+    fun saveAndSendMessage(createChatMessageDto: CreateChatMessageDto): ChatMessageResponse {
+        val room = chatRoomRepository.findById(createChatMessageDto.roomId)
+            .orElseThrow { IllegalArgumentException("ChatRoom not found") }
+        val sender = userRepository.findById(createChatMessageDto.senderId)
+            .orElseThrow { IllegalArgumentException("Sender not found") }
 
         val chatMessage = ChatMessage(
             room = room,
@@ -44,13 +48,17 @@ class ChatService(
         )
         val saved = chatMessageRepository.save(chatMessage)
 
-        return ChatMessageResponse(
+        val response = ChatMessageResponse(
             id = saved.id,
             roomId = saved.room.id,
             senderId = saved.sender.id!!,
             message = saved.message,
             sentAt = saved.sentAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
+
+        messagingTemplate.convertAndSend("/sub/chat/${room.id}", response)
+
+        return response
     }
 
     @Transactional(readOnly = true)

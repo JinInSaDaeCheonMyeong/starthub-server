@@ -23,5 +23,5 @@ class ChatController(
 
     @MessageMapping("/send")
     fun sendMessage(@Payload createChatMessageDto: CreateChatMessageDto)
-        = BaseResponse.of(chatService.saveMessage(createChatMessageDto), "메시지 전송 성공")
+        = BaseResponse.of(chatService.saveAndSendMessage(createChatMessageDto), "메시지 전송 성공")
 }
