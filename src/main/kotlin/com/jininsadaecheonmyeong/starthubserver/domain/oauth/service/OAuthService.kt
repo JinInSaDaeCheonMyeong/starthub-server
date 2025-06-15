@@ -12,7 +12,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.Token
 import org.springframework.stereotype.Service
 
 @Service
-class OAuth2Service(
+class OAuthService(
     private val tokenProvider: TokenProvider,
     private val googleService: GoogleService,
     private val naverService: NaverService,
