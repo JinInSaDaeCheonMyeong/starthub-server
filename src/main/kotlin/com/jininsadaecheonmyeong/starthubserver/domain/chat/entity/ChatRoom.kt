@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import jakarta.persistence.*
 
 @Entity
+@Table(name = "chat_rooms")
 data class ChatRoom(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

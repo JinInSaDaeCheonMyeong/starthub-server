@@ -5,6 +5,7 @@ import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
+@Table(name = "chat_messages")
 data class ChatMessage(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
