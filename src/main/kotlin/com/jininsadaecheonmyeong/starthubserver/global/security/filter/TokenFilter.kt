@@ -1,9 +1,11 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.filter
 
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.ExpiredTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.CustomUserDetails
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -29,20 +31,44 @@ class TokenFilter(
         filterChain: FilterChain
     ) {
         if (!request.getHeader("Authorization").isNullOrEmpty()) {
-            val token: String = request.getHeader("Authorization")?: throw RuntimeException("throw this error when header missing")
-            if (!token.startsWith(TOKEN_SECURE_TYPE)) throw RuntimeException("throw this error when token not found")
-            tokenValidator.validateAll(token.removePrefix(TOKEN_SECURE_TYPE), TokenType.ACCESS_TOKEN)
-            setAuthentication(token.removePrefix(TOKEN_SECURE_TYPE))
+            val token: String = request.getHeader("Authorization")
+                ?: throw RuntimeException("헤더가 누락됨")
+
+            if (!token.startsWith(TOKEN_SECURE_TYPE)) {
+                throw RuntimeException("토큰을 찾을 수 없음")
+            }
+
+            val actualToken = token.removePrefix(TOKEN_SECURE_TYPE)
+
+            try {
+                tokenValidator.validateAll(actualToken, TokenType.ACCESS_TOKEN)
+                setAuthentication(actualToken)
+            } catch (e: Exception) {
+                when {
+                    isTokenExpiredException(e) -> throw ExpiredTokenException("토큰이 만료되었습니다.")
+                    else -> throw InvalidTokenException("유효하지 않은 토큰입니다.")
+                }
+            }
         }
         filterChain.doFilter(request, response)
     }
 
     private fun setAuthentication(token: String) {
         val user = getUserDetails(token)
-        SecurityContextHolder.getContext().authentication = UsernamePasswordAuthenticationToken(user, null, user.authorities)
+        SecurityContextHolder.getContext().authentication =
+            UsernamePasswordAuthenticationToken(user, null, user.authorities)
     }
 
     private fun getUserDetails(token: String): CustomUserDetails {
-        return CustomUserDetails(userRepository.findByEmail(tokenParser.findEmail(token))?: throw RuntimeException("찾을 수 없는 유저"))
+        return CustomUserDetails(
+            userRepository.findByEmail(tokenParser.findEmail(token))
+                ?: throw RuntimeException("찾을 수 없는 유저")
+        )
+    }
+
+    private fun isTokenExpiredException(e: Exception): Boolean {
+        return e.message?.contains("expired", ignoreCase = true) == true ||
+                e.message?.contains("만료", ignoreCase = true) == true ||
+                e is io.jsonwebtoken.ExpiredJwtException
     }
 }
