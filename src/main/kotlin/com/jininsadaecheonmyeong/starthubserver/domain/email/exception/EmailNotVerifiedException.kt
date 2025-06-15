@@ -1,3 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.email.exception
 
-class EmailNotVerifiedException(message: String) : RuntimeException(message)
+import com.jininsadaecheonmyeong.starthubserver.global.exception.CustomException
+import org.springframework.http.HttpStatus
+
+class EmailNotVerifiedException(message: String) : CustomException(message, HttpStatus.UNAUTHORIZED)
