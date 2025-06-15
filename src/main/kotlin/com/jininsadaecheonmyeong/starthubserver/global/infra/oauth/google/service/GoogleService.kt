@@ -1,6 +1,5 @@
 package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception.UnsupportedPlatformException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.configuration.GoogleProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data.GoogleTokenResponse
@@ -18,32 +17,39 @@ class GoogleService(
 ) {
     private val webClient = webClientBuilder.build()
 
-    fun exchangeCodeForUserInfo(
-        code: String,
-        platform: String,
-        codeVerifier: String? = null
-    ): GoogleUserInfo {
+    fun exchangeCodeForUserInfoWeb(code: String): GoogleUserInfo {
+        val clientId = googleProperties.clientId
+        val redirectUri = googleProperties.redirectUri
+        val bodyBuilder = createTokenRequestBody(clientId, code, redirectUri, clientSecret = googleProperties.clientSecret, codeVerifier = null)
+        return getUserInfoFromToken(bodyBuilder)
+    }
 
-        val (clientId, redirectUri) = when (platform.lowercase()) {
-            "web" -> googleProperties.clientId to googleProperties.redirectUri
+    fun exchangeCodeForUserInfoApp(code: String, platform: String, codeVerifier: String): GoogleUserInfo {
+        val (clientId, redirectUri) = when(platform.lowercase()) {
             "android" -> googleProperties.androidClientId to googleProperties.androidRedirectUri
             "ios" -> googleProperties.iosClientId to googleProperties.iosRedirectUri
-            else -> throw UnsupportedPlatformException("지원되지 않는 플랫폼입니다: $platform")
+            else -> throw IllegalArgumentException("지원하지 않는 플랫폼입니다.")
+        }
+        val bodyBuilder = createTokenRequestBody(clientId, code, redirectUri, clientSecret = null, codeVerifier = codeVerifier)
+        return getUserInfoFromToken(bodyBuilder)
+    }
+
+    private fun createTokenRequestBody(
+        clientId: String,
+        code: String,
+        redirectUri: String,
+        clientSecret: String?,
+        codeVerifier: String?
+    ) = BodyInserters.fromFormData("client_id", clientId)
+        .with("code", code)
+        .with("redirect_uri", redirectUri)
+        .with("grant_type", googleProperties.grantType)
+        .also {
+            if (!clientSecret.isNullOrBlank()) it.with("client_secret", clientSecret)
+            if (!codeVerifier.isNullOrBlank()) it.with("code_verifier", codeVerifier)
         }
 
-        val bodyBuilder = BodyInserters.fromFormData("client_id", clientId)
-            .with("code", code)
-            .with("redirect_uri", redirectUri)
-            .with("grant_type", googleProperties.grantType)
-
-        if (platform == "web" && googleProperties.clientSecret.isNotBlank()) {
-            bodyBuilder.with("client_secret", googleProperties.clientSecret)
-        }
-
-        if (platform != "web" && !codeVerifier.isNullOrBlank()) {
-            bodyBuilder.with("code_verifier", codeVerifier)
-        }
-
+    private fun getUserInfoFromToken(bodyBuilder: BodyInserters.FormInserter<String>): GoogleUserInfo {
         val tokenResponse = webClient.post()
             .uri(googleProperties.tokenUri)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)

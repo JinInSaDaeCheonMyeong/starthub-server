@@ -2,10 +2,9 @@ package com.jininsadaecheonmyeong.starthubserver.domain.company.data.response
 
 import com.jininsadaecheonmyeong.starthubserver.domain.company.entity.Company
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
-import java.util.UUID
 
 data class CompanyListResponse(
-    val id: UUID,
+    val id: Long,
     val companyName: String,
     val companyDescription: String,
     val companyCategory: BusinessType,
