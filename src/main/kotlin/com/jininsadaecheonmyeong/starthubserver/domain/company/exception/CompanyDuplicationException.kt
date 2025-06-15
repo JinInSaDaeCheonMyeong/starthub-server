@@ -1,3 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.company.exception
 
-class CompanyDuplicationException(message: String): RuntimeException(message)
+import com.jininsadaecheonmyeong.starthubserver.global.exception.CustomException
+import org.springframework.http.HttpStatus
+
+class CompanyDuplicationException(message: String): CustomException(message, HttpStatus.CONFLICT)
