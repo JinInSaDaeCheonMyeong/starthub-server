@@ -19,19 +19,19 @@ class CompanyController(
 ) : CompanyDocs {
 
     @PostMapping
-    fun save(@RequestBody req: CreateCompanyRequest): ResponseEntity<BaseResponse<Unit>> {
+    override fun save(@RequestBody req: CreateCompanyRequest): ResponseEntity<BaseResponse<Unit>> {
         service.save(req)
         return BaseResponse.of(Unit, "기업 등록 성공")
     }
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: UUID): ResponseEntity<BaseResponse<Unit>> {
+    override fun delete(@PathVariable id: UUID): ResponseEntity<BaseResponse<Unit>> {
         service.delete(id)
         return BaseResponse.of(Unit, "기업 삭제 성공")
     }
 
     @PatchMapping("/{id}")
-    fun update(
+    override fun update(
         @PathVariable id: UUID,
         @RequestBody req: UpdateCompanyProfileRequest
     ): ResponseEntity<BaseResponse<Unit>> {
@@ -40,33 +40,33 @@ class CompanyController(
     }
 
     @GetMapping("/all")
-    fun getAll(): ResponseEntity<BaseResponse<List<CompanyListResponse>>> {
+    override fun getAll(): ResponseEntity<BaseResponse<List<CompanyListResponse>>> {
         val companies = service.findAll()
         return BaseResponse.of(CompanyListResponse.fromList(companies), "모든 기업 조회 성공")
     }
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: UUID): ResponseEntity<BaseResponse<CompanyResponse?>> {
+    override fun getById(@PathVariable id: UUID): ResponseEntity<BaseResponse<CompanyResponse?>> {
         val company = service.findById(id)
         val response = company?.let { CompanyResponse.from(it) }
         return BaseResponse.of(response, "기업 조회 성공")
     }
 
     @GetMapping(params = ["name"])
-    fun getByName(@RequestParam name: String): ResponseEntity<BaseResponse<CompanyResponse?>> {
+    override fun getByName(@RequestParam name: String): ResponseEntity<BaseResponse<CompanyResponse?>> {
         val company = service.findByCompanyName(name)
         val response = company?.let { CompanyResponse.from(it) }
         return BaseResponse.of(response, "기업 검색 성공")
     }
 
     @GetMapping(params = ["category"])
-    fun getByCategory(@RequestParam category: BusinessType): ResponseEntity<BaseResponse<List<CompanyListResponse>>> {
+    override fun getByCategory(@RequestParam category: BusinessType): ResponseEntity<BaseResponse<List<CompanyListResponse>>> {
         val companies = service.findByCategory(category)
         return BaseResponse.of(CompanyListResponse.fromList(companies), "기업 검색 성공")
     }
 
     @GetMapping("/my")
-    fun getMy(): ResponseEntity<BaseResponse<List<CompanyListResponse>>> {
+    override fun getMy(): ResponseEntity<BaseResponse<List<CompanyListResponse>>> {
         val companies = service.findMy()
         return BaseResponse.of(CompanyListResponse.fromList(companies), "등록한 기업 검색 성공")
     }

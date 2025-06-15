@@ -1,3 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.exception
 
-class ExpiredTokenException(message: String): RuntimeException(message)
+import com.jininsadaecheonmyeong.starthubserver.global.exception.CustomException
+import org.springframework.http.HttpStatus
+
+class ExpiredTokenException(message: String = "토큰 만료됨") : CustomException(message, HttpStatus.UNAUTHORIZED)
