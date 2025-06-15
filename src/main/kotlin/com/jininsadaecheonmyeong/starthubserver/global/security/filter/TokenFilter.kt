@@ -32,10 +32,10 @@ class TokenFilter(
     ) {
         if (!request.getHeader("Authorization").isNullOrEmpty()) {
             val token: String = request.getHeader("Authorization")
-                ?: throw RuntimeException("throw this error when header missing")
+                ?: throw RuntimeException("헤더가 누락됨")
 
             if (!token.startsWith(TOKEN_SECURE_TYPE)) {
-                throw RuntimeException("throw this error when token not found")
+                throw RuntimeException("토큰을 찾을 수 없음")
             }
 
             val actualToken = token.removePrefix(TOKEN_SECURE_TYPE)
