@@ -3,10 +3,10 @@ package com.jininsadaecheonmyeong.starthubserver.domain.company.data.response
 import com.jininsadaecheonmyeong.starthubserver.domain.company.entity.Company
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 data class CompanyResponse(
-    val id: UUID,
+    val id: Long,
     val companyName: String,
     val companyDescription: String,
     val companyCategory: BusinessType,
