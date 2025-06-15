@@ -21,8 +21,8 @@ import java.util.UUID
 @Table(name = "companies")
 class Company (
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
     @Column(nullable = false, unique = true)
     val companyName: String,
