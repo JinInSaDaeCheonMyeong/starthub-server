@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.RequestParam
 
 interface OAuth2Docs {
 
-    @Operation(summary = "구글 웹에서 계정으로 회원가입 및 로그인합니다.")
+    @Operation(summary = "웹용 구글 로그인/회원가입", description = "구글 웹에서 계정으로 회원가입 및 로그인합니다.")
     fun googleAuthWeb(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>>
 
-    @Operation(summary = "구글 앱에서 계정으로 회원가입 및 로그인합니다.")
+    @Operation(summary = "앱용 구글 로그인/회원가입", description = "구글 웹에서 계정으로 회원가입 및 로그인합니다.")
     fun googleAuthApp(
         @RequestParam code: String,
         @RequestParam state: String,
@@ -25,14 +25,14 @@ interface OAuth2Docs {
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>>
 
-    @Operation(summary = "네이버 계정으로 회원가입 및 로그인합니다.")
+    @Operation(summary = "네이버 로그인/회원가입", description = "네이버 계정으로 회원가입 및 로그인합니다.")
     fun naverAuth(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>>
 
-    @Operation(summary = "애플 계정으로 회원가입 및 로그인합니다.")
+    @Operation(summary = "애플 로그인/회원가입", description = "애플 계정으로 회원가입 및 로그인합니다.")
     fun appleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
