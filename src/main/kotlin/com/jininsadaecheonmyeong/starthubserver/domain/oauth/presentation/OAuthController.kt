@@ -1,8 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth.presentation
 
-import com.jininsadaecheonmyeong.starthubserver.domain.oauth.docs.OAuth2Docs
+import com.jininsadaecheonmyeong.starthubserver.domain.oauth.docs.OAuthDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception.InvalidStateException
-import com.jininsadaecheonmyeong.starthubserver.domain.oauth.service.OAuth2Service
+import com.jininsadaecheonmyeong.starthubserver.domain.oauth.service.OAuthService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthResponse
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -14,12 +14,12 @@ import java.util.*
 @Tag(name = "OAuth", description = "소셜 로그인 관련 API")
 @RestController
 @RequestMapping("/oauth")
-class OAuth2Controller(
-    private val oAuth2Service: OAuth2Service,
-): OAuth2Docs {
+class OAuthController(
+    private val oAuthService: OAuthService,
+): OAuthDocs {
 
     @GetMapping("/state")
-    fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>> {
+    override fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>> {
         val state = UUID.randomUUID().toString()
         session.setAttribute("state", state)
         return BaseResponse.of(state, "state 발급 완료")
@@ -33,7 +33,7 @@ class OAuth2Controller(
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
 
-        val response = oAuth2Service.googleAuthWeb(code)
+        val response = oAuthService.googleAuthWeb(code)
         return BaseResponse.of(response, "구글 웹 로그인 성공")
     }
 
@@ -47,7 +47,7 @@ class OAuth2Controller(
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
 
-        val response = oAuth2Service.googleAuthApp(code, platform, codeVerifier)
+        val response = oAuthService.googleAuthApp(code, platform, codeVerifier)
         return BaseResponse.of(response, "구글 앱 로그인 성공")
     }
 
@@ -58,7 +58,7 @@ class OAuth2Controller(
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
-        return BaseResponse.of(oAuth2Service.naverAuth(code), "네이버 로그인 성공")
+        return BaseResponse.of(oAuthService.naverAuth(code), "네이버 로그인 성공")
     }
 
     @PostMapping("/apple")
@@ -68,7 +68,7 @@ class OAuth2Controller(
         session: HttpSession
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
-        return BaseResponse.of(oAuth2Service.appleAuth(code), "애플 로그인 성공")
+        return BaseResponse.of(oAuthService.appleAuth(code), "애플 로그인 성공")
     }
 
     private fun validateState(session: HttpSession, state: String?) {
