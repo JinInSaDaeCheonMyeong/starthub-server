@@ -41,6 +41,11 @@ class Company (
     var address: String? = null,
 
     @Column(nullable = false)
+    var employeeCount: Int,
+
+    var logoImage: String? = null,
+
+    @Column(nullable = false)
     var deleted: Boolean = false
 ) : BaseEntity() {
 
@@ -53,6 +58,8 @@ class Company (
         request.email?.let { this.contactEmail = it }
         request.tel?.let { this.contactNumber = it }
         request.address?.let { this.address = it }
+        request.employeeCount?.let { this.employeeCount = it }
+        request.logoImage?.let { this.logoImage = it }
     }
 
     fun delete() {

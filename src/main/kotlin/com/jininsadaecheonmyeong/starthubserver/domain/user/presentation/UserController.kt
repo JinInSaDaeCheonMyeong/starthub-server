@@ -31,7 +31,7 @@ class UserController(
     @PatchMapping("/profile")
     fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>> {
         val currentUser = UserAuthenticationHolder.current()
-        userService.updateUserProfile(currentUser, request.username, request.interests)
+        userService.updateUserProfile(currentUser, request.username, request.interests, request.profileImage)
         return BaseResponse.of("유저 프로필 설정 성공")
     }
 }

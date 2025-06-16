@@ -66,8 +66,14 @@ class UserService (
     }
 
     @Transactional
-    fun updateUserProfile(user: User, username: String, interests: List<BusinessType>) {
+    fun updateUserProfile(
+        user: User,
+        username: String,
+        interests: List<BusinessType>,
+        profileImage: String
+    ) {
         user.username = username
+        user.profileImage = profileImage
         userRepository.save(user)
 
         userInterestRepository.deleteByUser(user)
