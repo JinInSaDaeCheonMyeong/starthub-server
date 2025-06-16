@@ -30,6 +30,8 @@ class User (
     @Column(nullable = true)
     val providerId: String? = null,
 
+    var profileImage: String? = null,
+
     @Column(nullable = false)
     var deleted: Boolean = false
 ) : BaseEntity()
