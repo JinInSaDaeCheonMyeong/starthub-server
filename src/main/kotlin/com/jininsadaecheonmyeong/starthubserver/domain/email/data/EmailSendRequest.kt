@@ -1,5 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.email.data
 
+import jakarta.validation.constraints.Email
+
 data class EmailSendRequest (
-    val email: String
+    @field:Email val email: String
 )
