@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.RUNTIME)
 @Constraint(validatedBy = [PhoneValidator::class])
 annotation class Phone(
-    val message: String = "유효하지 않은 전화번호 형식입니다",
+    val message: String = "잘못된 전화번호 형식입니다",
     val groups: Array<KClass<*>> = [],
     val payload: Array<KClass<out Payload>> = []
 )
