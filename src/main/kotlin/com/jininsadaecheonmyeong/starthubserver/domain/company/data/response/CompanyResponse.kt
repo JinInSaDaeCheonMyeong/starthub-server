@@ -17,6 +17,8 @@ data class CompanyResponse(
     val contactEmail: String,
     val contactNumber: String,
     val address: String?,
+    val employeeCount: Int,
+    val logoImage: String?,
     val createdAt: LocalDateTime?,
     val updatedAt: LocalDateTime?
 ) {
@@ -34,6 +36,8 @@ data class CompanyResponse(
                 contactEmail = company.contactEmail,
                 contactNumber = company.contactNumber,
                 address = company.address,
+                employeeCount = company.employeeCount,
+                logoImage = company.logoImage,
                 createdAt = company.createdAt,
                 updatedAt = company.updatedAt
             )
