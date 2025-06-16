@@ -8,6 +8,7 @@ data class CompanyListResponse(
     val companyName: String,
     val companyDescription: String,
     val companyCategory: BusinessType,
+    val logoImage: String? = null,
 ) {
     companion object {
         fun from(company: Company): CompanyListResponse {
@@ -16,6 +17,7 @@ data class CompanyListResponse(
                 companyName = company.companyName,
                 companyDescription = company.companyDescription,
                 companyCategory = company.companyCategory,
+                logoImage = company.logoImage,
             )
         }
 
