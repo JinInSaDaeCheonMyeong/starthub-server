@@ -22,14 +22,8 @@ class PhoneValidator : ConstraintValidator<Phone, String?> {
     }
 
     override fun isValid(value: String?, context: ConstraintValidatorContext?): Boolean {
-        if (value == null) {
-            return true
-        }
-
-        if (value.isBlank()) {
-            return false
-        }
-
+        if (value == null) return true
+        if (value.isBlank()) return false
         return value.matches(Regex(PHONE_PATTERN))
     }
 }
