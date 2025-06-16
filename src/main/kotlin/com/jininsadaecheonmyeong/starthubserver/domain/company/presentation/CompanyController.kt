@@ -8,6 +8,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.company.docs.CompanyDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.company.service.CompanyService
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.*
@@ -19,7 +20,7 @@ class CompanyController(
 ) : CompanyDocs {
 
     @PostMapping
-    override fun save(@RequestBody req: CreateCompanyRequest) =
+    override fun save(@RequestBody @Valid req: CreateCompanyRequest) =
         BaseResponse.of(service.save(req), "기업 등록 성공")
 
     @DeleteMapping("/{id}")
@@ -29,7 +30,7 @@ class CompanyController(
     @PatchMapping("/{id}")
     override fun update(
         @PathVariable id: UUID,
-        @RequestBody req: UpdateCompanyProfileRequest
+        @RequestBody @Valid req: UpdateCompanyProfileRequest
     ) = BaseResponse.of(service.update(id, req), "기업 정보 수정 성공")
 
     @GetMapping("/all")
