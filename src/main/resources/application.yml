@@ -68,6 +68,6 @@ oauth:
     token-uri: https://appleid.apple.com/auth/token
     grant-type: authorization_code
 
-  discord:
-    webhook:
-      url: {DISCORD_WEBHOOK_URL}
+discord:
+  webhook:
+    url: ${DISCORD_WEBHOOK_URL}
