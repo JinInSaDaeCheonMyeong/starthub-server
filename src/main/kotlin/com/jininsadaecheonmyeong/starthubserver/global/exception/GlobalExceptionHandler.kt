@@ -1,9 +1,9 @@
 
 package com.jininsadaecheonmyeong.starthubserver.global.exception
 
-import com.jininsadaecheonmyeong.starthubserver.global.discord.DiscordWebhookService
+import com.jininsadaecheonmyeong.starthubserver.global.infra.discord.DiscordWebhookService
+import com.jininsadaecheonmyeong.starthubserver.logger
 import jakarta.servlet.http.HttpServletRequest
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 class GlobalExceptionHandler(
     private val discordWebhookService: DiscordWebhookService
 ) {
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val logger = logger()
 
     @ExceptionHandler(CustomException::class)
     fun handleCustomException(ex: CustomException): ResponseEntity<CustomErrorResponse> {
