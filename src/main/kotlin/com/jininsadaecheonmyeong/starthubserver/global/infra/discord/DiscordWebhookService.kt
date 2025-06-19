@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.global.discord
+package com.jininsadaecheonmyeong.starthubserver.global.infra.discord
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
