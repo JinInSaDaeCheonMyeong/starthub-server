@@ -35,7 +35,7 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET}
-    access: 3600000
+    access: 86400000
     refresh: 604800000
 
 oauth:
@@ -67,3 +67,7 @@ oauth:
     redirect-uri: ${APPLE_REDIRECT_URL}
     token-uri: https://appleid.apple.com/auth/token
     grant-type: authorization_code
+
+  discord:
+    webhook:
+      url: {DISCORD_WEBHOOK_URL}
