@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
-class UserService (
+class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val tokenProvider: TokenProvider,
@@ -33,7 +33,7 @@ class UserService (
     private val tokenParser: TokenParser,
     private val tokenRedisService: TokenRedisService,
     private val emailRepository: EmailRepository,
-    private val userInterestRepository: UserInterestRepository
+    private val userInterestRepository: UserInterestRepository,
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
@@ -47,21 +47,22 @@ class UserService (
         if (!passwordEncoder.matches(request.password, user.password)) throw InvalidPasswordException("잘못된 비밀번호")
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user)
+            refresh = tokenProvider.generateRefresh(user),
         )
     }
 
     fun reissue(request: RefreshRequest): TokenResponse {
         val email: String = tokenParser.findEmail(request.refresh)
         tokenValidator.validateAll(request.refresh, TokenType.REFRESH_TOKEN)
-        val user: User = userRepository.findByEmail(tokenParser.findEmail(request.refresh))
-            ?: throw UserNotFoundException("찾을 수 없는 유저")
+        val user: User =
+            userRepository.findByEmail(tokenParser.findEmail(request.refresh))
+                ?: throw UserNotFoundException("찾을 수 없는 유저")
 
         if (tokenRedisService.findByEmail(email)?.equals(request.refresh) != true) throw InvalidTokenException("유효하지 않은 리프레시 토큰")
 
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user)
+            refresh = tokenProvider.generateRefresh(user),
         )
     }
 
@@ -70,7 +71,7 @@ class UserService (
         user: User,
         username: String,
         interests: List<BusinessType>,
-        profileImage: String
+        profileImage: String,
     ) {
         user.username = username
         user.profileImage = profileImage
@@ -78,10 +79,10 @@ class UserService (
 
         userInterestRepository.deleteByUser(user)
 
-        val newInterests = interests.map { interestType ->
-            UserInterest(user = user, businessType = interestType)
-        }
+        val newInterests =
+            interests.map { interestType ->
+                UserInterest(user = user, businessType = interestType)
+            }
         userInterestRepository.saveAll(newInterests)
     }
-
 }

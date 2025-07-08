@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestParam
 
 interface OAuthDocs {
-
     @Operation(summary = "state 발급", description = "OAuth를 사용하기 위한 state를 발급합니다.")
     fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>>
 
@@ -16,7 +15,7 @@ interface OAuthDocs {
     fun googleAuthWeb(
         @RequestParam code: String,
         @RequestParam state: String,
-        session: HttpSession
+        session: HttpSession,
     ): ResponseEntity<BaseResponse<OAuthResponse>>
 
     @Operation(summary = "앱용 구글 로그인/회원가입", description = "구글 웹에서 계정으로 회원가입 및 로그인합니다.")
@@ -25,20 +24,20 @@ interface OAuthDocs {
         @RequestParam state: String,
         @RequestParam platform: String,
         @RequestParam codeVerifier: String,
-        session: HttpSession
+        session: HttpSession,
     ): ResponseEntity<BaseResponse<OAuthResponse>>
 
     @Operation(summary = "네이버 로그인/회원가입", description = "네이버 계정으로 회원가입 및 로그인합니다.")
     fun naverAuth(
         @RequestParam code: String,
         @RequestParam state: String,
-        session: HttpSession
+        session: HttpSession,
     ): ResponseEntity<BaseResponse<OAuthResponse>>
 
     @Operation(summary = "애플 로그인/회원가입", description = "애플 계정으로 회원가입 및 로그인합니다.")
     fun appleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
-        session: HttpSession
+        session: HttpSession,
     ): ResponseEntity<BaseResponse<OAuthResponse>>
 }

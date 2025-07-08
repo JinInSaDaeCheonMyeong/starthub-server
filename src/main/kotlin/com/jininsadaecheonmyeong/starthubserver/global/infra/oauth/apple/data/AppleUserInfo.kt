@@ -9,5 +9,5 @@ data class AppleUserInfo(
     val email_verified: Boolean,
     val given_name: String?,
     val family_name: String?,
-    val locale: String?
+    val locale: String?,
 ) : OAuthUserInfo

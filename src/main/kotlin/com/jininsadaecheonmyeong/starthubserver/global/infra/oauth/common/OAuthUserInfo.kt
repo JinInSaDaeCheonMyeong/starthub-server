@@ -14,6 +14,6 @@ interface OAuthUserInfo {
             email = email,
             role = UserRole.USER,
             provider = provider,
-            providerId = sub
+            providerId = sub,
         )
 }

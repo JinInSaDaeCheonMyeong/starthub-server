@@ -18,7 +18,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 class SecurityConfig(
     private val tokenFilter: TokenFilter,
-    private val tokenExceptionFilter: TokenExceptionFilter
+    private val tokenExceptionFilter: TokenExceptionFilter,
 ) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
@@ -33,7 +33,7 @@ class SecurityConfig(
                     .requestMatchers("/oauth/*").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
-                    .anyRequest().permitAll() //TODO Remove it
+                    .anyRequest().permitAll() // TODO Remove it
             }
             .addFilterAfter(tokenFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(tokenExceptionFilter, TokenFilter::class.java)

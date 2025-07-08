@@ -13,23 +13,29 @@ import org.springframework.web.reactive.function.client.bodyToMono
 @Service
 class GoogleService(
     private val googleProperties: GoogleProperties,
-    webClientBuilder: WebClient.Builder
+    webClientBuilder: WebClient.Builder,
 ) {
     private val webClient = webClientBuilder.build()
 
     fun exchangeCodeForUserInfoWeb(code: String): GoogleUserInfo {
         val clientId = googleProperties.clientId
         val redirectUri = googleProperties.redirectUri
-        val bodyBuilder = createTokenRequestBody(clientId, code, redirectUri, clientSecret = googleProperties.clientSecret, codeVerifier = null)
+        val bodyBuilder =
+            createTokenRequestBody(clientId, code, redirectUri, clientSecret = googleProperties.clientSecret, codeVerifier = null)
         return getUserInfoFromToken(bodyBuilder)
     }
 
-    fun exchangeCodeForUserInfoApp(code: String, platform: String, codeVerifier: String): GoogleUserInfo {
-        val (clientId, redirectUri) = when(platform.lowercase()) {
-            "android" -> googleProperties.androidClientId to googleProperties.androidRedirectUri
-            "ios" -> googleProperties.iosClientId to googleProperties.iosRedirectUri
-            else -> throw IllegalArgumentException("지원하지 않는 플랫폼입니다.")
-        }
+    fun exchangeCodeForUserInfoApp(
+        code: String,
+        platform: String,
+        codeVerifier: String,
+    ): GoogleUserInfo {
+        val (clientId, redirectUri) =
+            when (platform.lowercase()) {
+                "android" -> googleProperties.androidClientId to googleProperties.androidRedirectUri
+                "ios" -> googleProperties.iosClientId to googleProperties.iosRedirectUri
+                else -> throw IllegalArgumentException("지원하지 않는 플랫폼입니다.")
+            }
         val bodyBuilder = createTokenRequestBody(clientId, code, redirectUri, clientSecret = null, codeVerifier = codeVerifier)
         return getUserInfoFromToken(bodyBuilder)
     }
@@ -39,7 +45,7 @@ class GoogleService(
         code: String,
         redirectUri: String,
         clientSecret: String?,
-        codeVerifier: String?
+        codeVerifier: String?,
     ) = BodyInserters.fromFormData("client_id", clientId)
         .with("code", code)
         .with("redirect_uri", redirectUri)
@@ -50,16 +56,18 @@ class GoogleService(
         }
 
     private fun getUserInfoFromToken(bodyBuilder: BodyInserters.FormInserter<String>): GoogleUserInfo {
-        val tokenResponse = webClient.post()
-            .uri(googleProperties.tokenUri)
-            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .body(bodyBuilder)
-            .retrieve()
-            .bodyToMono<GoogleTokenResponse>()
-            .block()
+        val tokenResponse =
+            webClient.post()
+                .uri(googleProperties.tokenUri)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(bodyBuilder)
+                .retrieve()
+                .bodyToMono<GoogleTokenResponse>()
+                .block()
 
-        val accessToken = tokenResponse?.access_token
-            ?: throw InvalidTokenException("유효하지 않은 엑세스 토큰")
+        val accessToken =
+            tokenResponse?.access_token
+                ?: throw InvalidTokenException("유효하지 않은 엑세스 토큰")
 
         return webClient.get()
             .uri(googleProperties.userInfoUri)

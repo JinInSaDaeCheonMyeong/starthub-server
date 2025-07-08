@@ -6,14 +6,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.JavaMailSenderImpl
-import java.util.*
+import java.util.Properties
 
 @Configuration
 @EnableConfigurationProperties(MailProperties::class)
 class MailConfig(
-    private val mailProperties: MailProperties
+    private val mailProperties: MailProperties,
 ) {
-
     @Bean
     fun javaMailSender(): JavaMailSender {
         val mailSender = JavaMailSenderImpl()
