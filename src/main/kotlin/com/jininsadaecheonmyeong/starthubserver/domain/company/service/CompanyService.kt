@@ -7,21 +7,18 @@ import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.Company
 import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.CompanyNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.NotCompanyFounderException
 import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
-import com.jininsadaecheonmyeong.starthubserver.domain.user.support.UserAuthenticationHolder
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
 
 @Service
-class CompanyService (
+class CompanyService(
     private val repository: CompanyRepository,
-    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
     @Transactional
     fun save(req: CreateCompanyRequest) {
-        val founder = userAuthenticationHolder.current()
+        val founder = UserAuthenticationHolder.current()
         if (repository.existsByCompanyNameAndDeletedFalse(req.name)) {
             throw CompanyDuplicationException("이미 등록된 기업")
         }
@@ -29,25 +26,26 @@ class CompanyService (
     }
 
     @Transactional
-    fun delete(id: UUID) {
-        val user = userAuthenticationHolder.current()
-        val company = repository.findById(id).orElseThrow { CompanyNotFoundException("찾을 수 없는 기업") }
-        throwExceptionWhenUserIsNotFounder(user, company)
+    fun delete(id: Long) {
+        val company = findCompanyAndVerifyFounder(id)
         company.delete()
         repository.save(company)
     }
 
     @Transactional
-    fun update(id: UUID, req: UpdateCompanyProfileRequest) {
-        val user = userAuthenticationHolder.current()
-        val company = repository.findById(id).orElseThrow { CompanyNotFoundException("찾을 수 없는 기업") }
-        throwExceptionWhenUserIsNotFounder(user, company)
+    fun update(id: Long, req: UpdateCompanyProfileRequest) {
+        val company = findCompanyAndVerifyFounder(id)
         company.updateProfile(req)
         repository.save(company)
     }
 
-    private fun throwExceptionWhenUserIsNotFounder(user: User, company: Company) {
-        if (!company.isFounder(user)) throw NotCompanyFounderException("기업 등록자만 접근할 수 있습니다.")
+    private fun findCompanyAndVerifyFounder(companyId: Long): Company {
+        val user = UserAuthenticationHolder.current()
+        val company = repository.findById(companyId).orElseThrow { CompanyNotFoundException("찾을 수 없는 기업") }
+        if (!company.isFounder(user)) {
+            throw NotCompanyFounderException("기업 등록자만 접근할 수 있습니다.")
+        }
+        return company
     }
 
     @Transactional(readOnly = true)
@@ -56,7 +54,7 @@ class CompanyService (
     }
 
     @Transactional(readOnly = true)
-    fun findById(id: UUID): Company? {
+    fun findById(id: Long): Company? {
         return repository.findByIdAndDeletedFalse(id).orElse(null)
     }
 
@@ -72,7 +70,7 @@ class CompanyService (
 
     @Transactional(readOnly = true)
     fun findMy(): List<Company> {
-        val user = userAuthenticationHolder.current()
+        val user = UserAuthenticationHolder.current()
         return repository.findByFounderAndDeletedFalse(user)
     }
 }

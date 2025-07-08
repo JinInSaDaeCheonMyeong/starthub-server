@@ -17,31 +17,36 @@ class OAuthService(
     private val googleService: GoogleService,
     private val naverService: NaverService,
     private val appleService: AppleService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
-    fun googleAuthWeb(code: String) =
-        processOAuthLogin(googleService.exchangeCodeForUserInfoWeb(code), AuthType.GOOGLE)
+    fun googleAuthWeb(code: String) = processOAuthLogin(googleService.exchangeCodeForUserInfoWeb(code), AuthType.GOOGLE)
 
-    fun googleAuthApp(code: String, platform: String, codeVerifier: String) =
-        processOAuthLogin(googleService.exchangeCodeForUserInfoApp(code, platform, codeVerifier), AuthType.GOOGLE)
+    fun googleAuthApp(
+        code: String,
+        platform: String,
+        codeVerifier: String,
+    ) = processOAuthLogin(googleService.exchangeCodeForUserInfoApp(code, platform, codeVerifier), AuthType.GOOGLE)
 
-    fun naverAuth(code: String) =
-        processOAuthLogin(naverService.exchangeCodeForUserInfo(code), AuthType.NAVER)
+    fun naverAuth(code: String) = processOAuthLogin(naverService.exchangeCodeForUserInfo(code), AuthType.NAVER)
 
-    fun appleAuth(code: String) =
-        processOAuthLogin(appleService.exchangeCodeForUserInfo(code), AuthType.APPLE)
+    fun appleAuth(code: String) = processOAuthLogin(appleService.exchangeCodeForUserInfo(code), AuthType.APPLE)
 
-    private fun processOAuthLogin(info: OAuthUserInfo, provider: AuthType): OAuthResponse {
+    private fun processOAuthLogin(
+        info: OAuthUserInfo,
+        provider: AuthType,
+    ): OAuthResponse {
         val existingUser = userRepository.findByEmail(info.email)
         val isFirstLogin = existingUser == null
         val user = existingUser ?: userRepository.save(info.toUser(provider))
         return provideTokens(user, isFirstLogin)
     }
 
-    private fun provideTokens(user: User, isFirstLogin: Boolean) =
-        OAuthResponse(
-            access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user),
-            isFirstLogin = isFirstLogin
-        )
+    private fun provideTokens(
+        user: User,
+        isFirstLogin: Boolean,
+    ) = OAuthResponse(
+        access = tokenProvider.generateAccess(user),
+        refresh = tokenProvider.generateRefresh(user),
+        isFirstLogin = isFirstLogin,
+    )
 }

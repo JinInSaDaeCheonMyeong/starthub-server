@@ -4,5 +4,5 @@ import jakarta.validation.constraints.Email
 
 data class EmailVerifyRequest(
     @field:Email val email: String,
-    val code: String
+    val code: String,
 )

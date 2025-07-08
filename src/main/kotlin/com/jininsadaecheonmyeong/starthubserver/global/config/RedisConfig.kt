@@ -12,16 +12,16 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 
 @Configuration
 class RedisConfig(
-    private val redisProperties: RedisProperties
+    private val redisProperties: RedisProperties,
 ) {
-
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
-        val configuration = RedisStandaloneConfiguration().apply {
-            hostName = redisProperties.host
-            port = redisProperties.port
-            password = RedisPassword.of(redisProperties.password)
-        }
+        val configuration =
+            RedisStandaloneConfiguration().apply {
+                hostName = redisProperties.host
+                port = redisProperties.port
+                password = RedisPassword.of(redisProperties.password)
+            }
 
         return LettuceConnectionFactory(configuration)
     }

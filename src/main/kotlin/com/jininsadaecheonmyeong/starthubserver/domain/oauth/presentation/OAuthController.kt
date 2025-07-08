@@ -8,16 +8,19 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthR
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
-import java.util.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @Tag(name = "OAuth", description = "소셜 로그인 관련 API")
 @RestController
 @RequestMapping("/oauth")
 class OAuthController(
     private val oAuthService: OAuthService,
-): OAuthDocs {
-
+) : OAuthDocs {
     @GetMapping("/state")
     override fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>> {
         val state = UUID.randomUUID().toString()
@@ -29,7 +32,7 @@ class OAuthController(
     override fun googleAuthWeb(
         @RequestParam code: String,
         @RequestParam state: String,
-        session: HttpSession
+        session: HttpSession,
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
 
@@ -43,7 +46,7 @@ class OAuthController(
         @RequestParam state: String,
         @RequestParam platform: String,
         @RequestParam codeVerifier: String,
-        session: HttpSession
+        session: HttpSession,
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
 
@@ -55,7 +58,7 @@ class OAuthController(
     override fun naverAuth(
         @RequestParam code: String,
         @RequestParam state: String,
-        session: HttpSession
+        session: HttpSession,
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
         return BaseResponse.of(oAuthService.naverAuth(code), "네이버 로그인 성공")
@@ -65,13 +68,16 @@ class OAuthController(
     override fun appleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
-        session: HttpSession
+        session: HttpSession,
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
         return BaseResponse.of(oAuthService.appleAuth(code), "애플 로그인 성공")
     }
 
-    private fun validateState(session: HttpSession, state: String?) {
+    private fun validateState(
+        session: HttpSession,
+        state: String?,
+    ) {
         val sessionState = session.getAttribute("state") as? String
         if (state == null || sessionState == null || sessionState != state) {
             throw InvalidStateException("state 불일치")

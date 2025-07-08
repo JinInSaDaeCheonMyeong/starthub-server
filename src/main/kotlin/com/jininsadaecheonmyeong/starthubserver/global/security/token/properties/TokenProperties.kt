@@ -10,7 +10,7 @@ import javax.crypto.spec.SecretKeySpec
 data class TokenProperties(
     val access: Long,
     val refresh: Long,
-    private val secret: String
+    private val secret: String,
 ) {
     val secretKey: SecretKey = SecretKeySpec(secret.toByteArray(StandardCharsets.UTF_8), Jwts.SIG.HS512.key().build().algorithm)
 }

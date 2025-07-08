@@ -10,5 +10,5 @@ data class AppleProperties(
     val privateKey: String,
     val redirectUri: String,
     val tokenUri: String,
-    val grantType: String
+    val grantType: String,
 )

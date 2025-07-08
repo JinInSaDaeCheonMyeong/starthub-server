@@ -9,11 +9,11 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class CustomUserDetailsService(
     private val userRepository: UserRepository,
-): UserDetailsService {
+) : UserDetailsService {
     @Transactional(readOnly = true)
     override fun loadUserByUsername(email: String): UserDetails {
-        return CustomUserDetails (
-            user = userRepository.findByEmail(email)?: throw RuntimeException("유저를 찾을 수 없음")
+        return CustomUserDetails(
+            user = userRepository.findByEmail(email) ?: throw RuntimeException("유저를 찾을 수 없음"),
         )
     }
 }

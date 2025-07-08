@@ -6,7 +6,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import com.jininsadaecheonmyeong.starthubserver.global.support.Phone
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotNull
 
 data class CreateCompanyRequest(
     val name: String,
@@ -37,5 +36,4 @@ data class CreateCompanyRequest(
             employeeCount = employeeCount,
             logoImage = logoImage,
         )
-
 }

@@ -5,5 +5,5 @@ data class NaverTokenResponse(
     val refresh_token: String? = null,
     val token_type: String,
     val expires_in: String,
-    val scope: String
+    val scope: String,
 )

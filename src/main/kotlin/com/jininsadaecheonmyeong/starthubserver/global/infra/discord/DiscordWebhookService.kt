@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 @Service
 class DiscordWebhookService(
     @Value("\${discord.webhook.url}") private val webhookUrl: String,
-    private val webClient: WebClient
+    private val webClient: WebClient,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -20,7 +20,7 @@ class DiscordWebhookService(
         error: Throwable,
         requestUri: String? = null,
         userId: String? = null,
-        additionalInfo: Map<String, Any>? = null
+        additionalInfo: Map<String, Any>? = null,
     ) {
         try {
             val embed = createErrorEmbed(error, requestUri, userId, additionalInfo)
@@ -43,7 +43,7 @@ class DiscordWebhookService(
         error: Throwable,
         requestUri: String?,
         userId: String?,
-        additionalInfo: Map<String, Any>?
+        additionalInfo: Map<String, Any>?,
     ): Map<String, Any> {
         val koreaTime = ZonedDateTime.now(ZoneId.of("Asia/Seoul"))
         val koreaTimeString = koreaTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
@@ -51,53 +51,66 @@ class DiscordWebhookService(
 
         val fields = mutableListOf<Map<String, Any>>()
 
-        fields.add(mapOf(
-            "name" to "에러 타입",
-            "value" to error.javaClass.simpleName,
-            "inline" to true
-        ))
+        fields.add(
+            mapOf(
+                "name" to "에러 타입",
+                "value" to error.javaClass.simpleName,
+                "inline" to true,
+            ),
+        )
 
         requestUri?.let {
-            fields.add(mapOf(
-                "name" to "엔드포인트",
-                "value" to it,
-                "inline" to true
-            ))
+            fields.add(
+                mapOf(
+                    "name" to "엔드포인트",
+                    "value" to it,
+                    "inline" to true,
+                ),
+            )
         }
 
         userId?.let {
-            fields.add(mapOf(
-                "name" to "사용자 ID",
-                "value" to it,
-                "inline" to true
-            ))
+            fields.add(
+                mapOf(
+                    "name" to "사용자 ID",
+                    "value" to it,
+                    "inline" to true,
+                ),
+            )
         }
 
         error.message?.let { message ->
-            fields.add(mapOf(
-                "name" to "에러 내용",
-                "value" to if (message.length > 1000) message.substring(0, 1000) + "..." else message,
-                "inline" to false
-            ))
+            fields.add(
+                mapOf(
+                    "name" to "에러 내용",
+                    "value" to if (message.length > 1000) message.substring(0, 1000) + "..." else message,
+                    "inline" to false,
+                ),
+            )
         }
 
-        val stackTrace = error.stackTrace.take(5).joinToString("\n") {
-            "at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})"
-        }
+        val stackTrace =
+            error.stackTrace.take(5).joinToString("\n") {
+                "at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})"
+            }
         if (stackTrace.isNotEmpty()) {
-            fields.add(mapOf(
-                "name" to "Stack Trace",
-                "value" to "```\n$stackTrace\n```",
-                "inline" to false
-            ))
+            fields.add(
+                mapOf(
+                    "name" to "Stack Trace",
+                    "value" to "```\n$stackTrace\n```",
+                    "inline" to false,
+                ),
+            )
         }
 
         additionalInfo?.forEach { (key, value) ->
-            fields.add(mapOf(
-                "name" to key,
-                "value" to value.toString(),
-                "inline" to true
-            ))
+            fields.add(
+                mapOf(
+                    "name" to key,
+                    "value" to value.toString(),
+                    "inline" to true,
+                ),
+            )
         }
 
         return mapOf(
@@ -105,7 +118,7 @@ class DiscordWebhookService(
             "color" to 15158332,
             "fields" to fields,
             "footer" to mapOf("text" to "발생 시간: $koreaTimeString (KST)"),
-            "timestamp" to isoTimestamp
+            "timestamp" to isoTimestamp,
         )
     }
 }
