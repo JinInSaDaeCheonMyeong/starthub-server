@@ -33,7 +33,10 @@ class CompanyService(
     }
 
     @Transactional
-    fun update(id: Long, req: UpdateCompanyProfileRequest) {
+    fun update(
+        id: Long,
+        req: UpdateCompanyProfileRequest,
+    ) {
         val company = findCompanyAndVerifyFounder(id)
         company.updateProfile(req)
         repository.save(company)

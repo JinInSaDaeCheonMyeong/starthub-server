@@ -45,6 +45,7 @@ dependencies {
 
     // redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.session:spring-session-data-redis")
 
     // testCode
     testImplementation("org.springframework.boot:spring-boot-starter-test")

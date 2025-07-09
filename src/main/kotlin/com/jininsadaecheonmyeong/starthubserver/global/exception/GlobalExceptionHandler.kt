@@ -70,9 +70,7 @@ class GlobalExceptionHandler(
     }
 
     @ExceptionHandler(NoResourceFoundException::class)
-    fun handleNoResourceFoundException(
-        request: HttpServletRequest,
-    ): ResponseEntity<ErrorResponse> {
+    fun handleNoResourceFoundException(request: HttpServletRequest): ResponseEntity<ErrorResponse> {
         logger.warn("존재하지 않는 리소스 요청: {}", request.requestURI)
 
         val errorResponse =

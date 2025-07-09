@@ -26,12 +26,14 @@ class CompanyController(
     private val service: CompanyService,
 ) : CompanyDocs {
     @PostMapping
-    override fun save(@RequestBody @Valid req: CreateCompanyRequest) =
-        BaseResponse.of(service.save(req), "기업 등록 성공")
+    override fun save(
+        @RequestBody @Valid req: CreateCompanyRequest,
+    ) = BaseResponse.of(service.save(req), "기업 등록 성공")
 
     @DeleteMapping("/{id}")
-    override fun delete(@PathVariable id: Long) =
-        BaseResponse.of(service.delete(id), "기업 삭제 성공")
+    override fun delete(
+        @PathVariable id: Long,
+    ) = BaseResponse.of(service.delete(id), "기업 삭제 성공")
 
     @PatchMapping("/{id}")
     override fun update(
@@ -44,21 +46,27 @@ class CompanyController(
         BaseResponse.of(service.findAll().map { it.toCompanyListResponse() }, "모든 기업 조회 성공")
 
     @GetMapping("/{id}")
-    override fun getById(@PathVariable id: Long): ResponseEntity<BaseResponse<CompanyResponse?>> {
+    override fun getById(
+        @PathVariable id: Long,
+    ): ResponseEntity<BaseResponse<CompanyResponse?>> {
         val company = service.findById(id)
         val response = company?.toCompanyResponse()
         return BaseResponse.of(response, "기업 조회 성공")
     }
 
     @GetMapping(params = ["name"])
-    override fun getByName(@RequestParam name: String): ResponseEntity<BaseResponse<CompanyResponse?>> {
+    override fun getByName(
+        @RequestParam name: String,
+    ): ResponseEntity<BaseResponse<CompanyResponse?>> {
         val company = service.findByCompanyName(name)
         val response = company?.toCompanyResponse()
         return BaseResponse.of(response, "기업 검색 성공")
     }
 
     @GetMapping(params = ["category"])
-    override fun getByCategory(@RequestParam category: BusinessType): ResponseEntity<BaseResponse<List<CompanyListResponse>>> =
+    override fun getByCategory(
+        @RequestParam category: BusinessType,
+    ): ResponseEntity<BaseResponse<List<CompanyListResponse>>> =
         BaseResponse.of(service.findByCategory(category).map { it.toCompanyListResponse() }, "기업 검색 성공")
 
     @GetMapping("/my")

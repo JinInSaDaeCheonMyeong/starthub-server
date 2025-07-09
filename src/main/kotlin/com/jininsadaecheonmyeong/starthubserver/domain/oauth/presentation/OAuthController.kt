@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception.InvalidSt
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.service.OAuthService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthResponse
+import com.jininsadaecheonmyeong.starthubserver.logger
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
@@ -21,10 +22,13 @@ import java.util.UUID
 class OAuthController(
     private val oAuthService: OAuthService,
 ) : OAuthDocs {
+    private val log = logger()
+
     @GetMapping("/state")
     override fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>> {
         val state = UUID.randomUUID().toString()
         session.setAttribute("state", state)
+        log.info("발급한 state: $state / 세션 ID: ${session.id}")
         return BaseResponse.of(state, "state 발급 완료")
     }
 
@@ -78,6 +82,9 @@ class OAuthController(
         session: HttpSession,
         state: String?,
     ) {
+        log.info("요청 들어온 세션 ID: ${session.id}")
+        log.info("세션에서 꺼낸 state: ${session.getAttribute("state")}")
+        log.info("요청 파라미터로 전달된 state: $state")
         val sessionState = session.getAttribute("state") as? String
         if (state == null || sessionState == null || sessionState != state) {
             throw InvalidStateException("state 불일치")
