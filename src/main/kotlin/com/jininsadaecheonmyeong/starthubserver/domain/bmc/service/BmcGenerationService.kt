@@ -97,13 +97,11 @@ class BmcGenerationService(
         val content = StringBuilder()
         var currentIndex = startIndex
         
-        // 첫 번째 라인에서 키를 제거하고 내용 추출
         val firstLine = lines[currentIndex].removePrefix("$key:").trim()
         if (firstLine.isNotEmpty()) {
             content.append(firstLine)
         }
         
-        // 다음 키가 나올 때까지 내용 추출
         currentIndex++
         while (currentIndex < lines.size) {
             val line = lines[currentIndex].trim()
@@ -112,7 +110,6 @@ class BmcGenerationService(
                 continue
             }
             
-            // 다음 키가 나오면 중단
             if (line.contains(":") && line.split(":")[0].trim() in listOf(
                 "KEY_PARTNERS", "KEY_ACTIVITIES", "KEY_RESOURCES", "VALUE_PROPOSITION",
                 "CUSTOMER_RELATIONSHIPS", "CHANNELS", "CUSTOMER_SEGMENTS", "COST_STRUCTURE", "REVENUE_STREAMS"

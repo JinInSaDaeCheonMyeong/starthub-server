@@ -43,6 +43,6 @@ class BmcModificationRequest(
 }
 
 enum class BmcModificationType {
-    MODIFY,     // 특정 부분 수정
-    REGENERATE  // 전체 재생성
+    MODIFY,
+    REGENERATE
 }
