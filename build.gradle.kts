@@ -38,14 +38,13 @@ dependencies {
     implementation ("org.springframework.boot:spring-boot-starter-mail")
 
     // swagger
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
 
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")
 
     // database
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc")
 
     runtimeOnly("com.mysql:mysql-connector-j")
 

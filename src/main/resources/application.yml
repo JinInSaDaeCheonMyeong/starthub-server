@@ -23,11 +23,10 @@ spring:
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
-    chat:
-      memory:
-        repository:
-          jdbc:
-            initialize-schema: never
+      chat:
+        options:
+          model: gpt-4.1-mini
+          temperature: 0.7
 
   mail:
     host: ${EMAIL_HOST:smtp.gmail.com}
