@@ -33,6 +33,3 @@ jobs:
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           docker build --platform linux/amd64 -t ${{ secrets.DOCKER_USERNAME }}/starthub-server:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/starthub-server:latest
-            docker pull ${{ secrets.DOCKER_USERNAME }}/starthub-server:latest
-            docker-compose down
-            docker-compose up -d
