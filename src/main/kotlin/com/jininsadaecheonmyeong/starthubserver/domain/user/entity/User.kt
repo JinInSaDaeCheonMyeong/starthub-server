@@ -1,9 +1,11 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.entity
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserGender
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserRole
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.*
+import java.time.LocalDate
 import java.util.*
 
 @Entity
@@ -22,6 +24,13 @@ class User (
 
     @Enumerated(EnumType.STRING)
     val role: UserRole = UserRole.USER,
+
+    var birth: LocalDate? = null,
+
+    @Enumerated(EnumType.STRING)
+    var gender: UserGender? = null,
+
+    var introduction: String? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
