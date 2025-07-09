@@ -1,13 +1,26 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.docs
 
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.AnswerQuestionRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.CreateBmcSessionRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.GenerateBmcRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.ModifyBmcRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcModificationResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcSessionResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BusinessModelCanvasResponse
+import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import java.util.*
 
-@Tag(name = "BMC API", description = "비즈니스 모델 캔버스 관리 API")
+@Tag(name = "BMC", description = "비즈니스 모델 캔버스 관련 API")
 interface BmcDocs {
 
     @Operation(
@@ -45,11 +58,11 @@ interface BmcDocs {
             )
         ]
     )
-    fun getBmcQuestions()
+    fun getBmcQuestions(): ResponseEntity<BaseResponse<List<String>>>
 
     @Operation(
         summary = "BMC 세션 생성",
-        description = "새로운 BMC 질문 세션을 생성합니다. 사업 아이디어를 입력받아 세션을 시작합니다."
+        description = "새로운 BMC 대화 세션을 생성합니다. 사업 아이디어를 입력받아 세션을 시작합니다."
     )
     @ApiResponses(
         value = [
@@ -67,29 +80,22 @@ interface BmcDocs {
             )
         ]
     )
-    fun createBmcSession()
+    fun createBmcSession(
+        @Valid @RequestBody request: CreateBmcSessionRequest
+    ): ResponseEntity<BaseResponse<BmcSessionResponse>>
 
-    @Operation(
-        summary = "질문 답변",
-        description = "BMC 세션의 특정 질문에 답변합니다. 질문 번호(1-10)와 답변을 입력받습니다."
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "답변 저장 성공"
-            ),
-            ApiResponse(
-                responseCode = "400",
-                description = "잘못된 요청 (질문 번호 또는 답변 오류)"
-            ),
-            ApiResponse(
-                responseCode = "404",
-                description = "BMC 세션을 찾을 수 없음"
-            )
-        ]
-    )
-    fun answerQuestion()
+    @Operation(summary = "BMC 세션 목록 조회", description = "사용자의 모든 BMC 세션을 조회합니다.")
+    fun getAllBmcSessions(): ResponseEntity<BaseResponse<List<BmcSessionResponse>>>
+
+    @Operation(summary = "BMC 세션 상세 조회", description = "특정 BMC 세션의 상세 정보를 조회합니다.")
+    fun getBmcSession(
+        @PathVariable sessionId: String
+    ): ResponseEntity<BaseResponse<BmcSessionResponse>>
+
+    @Operation(summary = "질문 답변", description = "BMC 세션의 특정 질문에 답변합니다.")
+    fun answerQuestion(
+        @Valid @RequestBody request: AnswerQuestionRequest
+    ): ResponseEntity<BaseResponse<BmcSessionResponse>>
 
     @Operation(
         summary = "BMC 생성",
@@ -115,7 +121,9 @@ interface BmcDocs {
             )
         ]
     )
-    fun generateBmc()
+    fun generateBmc(
+        @Valid @RequestBody request: GenerateBmcRequest
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>>
 
     @Operation(
         summary = "BMC 목록 조회",
@@ -133,7 +141,7 @@ interface BmcDocs {
             )
         ]
     )
-    fun getAllBusinessModelCanvases()
+    fun getAllBusinessModelCanvases(): ResponseEntity<BaseResponse<List<BusinessModelCanvasResponse>>>
 
     @Operation(
         summary = "BMC 상세 조회",
@@ -155,11 +163,13 @@ interface BmcDocs {
             )
         ]
     )
-    fun getBusinessModelCanvas()
+    fun getBusinessModelCanvas(
+        @PathVariable id: UUID
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>>
 
     @Operation(
         summary = "BMC 삭제",
-        description = "특정 BMC를 삭제합니다. 소프트 삭제로 처리됩니다."
+        description = "특정 BMC를 삭제합니다. Soft Delete로 처리됩니다."
     )
     @ApiResponses(
         value = [
@@ -177,5 +187,17 @@ interface BmcDocs {
             )
         ]
     )
-    fun deleteBusinessModelCanvas()
+    fun deleteBusinessModelCanvas(
+        @PathVariable id: UUID
+    ): ResponseEntity<BaseResponse<Unit>>
+
+    @Operation(summary = "BMC 수정 요청", description = "생성된 BMC의 특정 부분을 수정하거나 전체를 재생성합니다.")
+    fun modifyBmc(
+        @Valid @RequestBody request: ModifyBmcRequest
+    ): ResponseEntity<BaseResponse<BmcModificationResponse>>
+
+    @Operation(summary = "BMC 수정 히스토리 조회", description = "특정 BMC의 수정 요청 히스토리를 조회합니다.")
+    fun getBmcModificationHistory(
+        @PathVariable id: UUID
+    ): ResponseEntity<BaseResponse<List<BmcModificationResponse>>>
 }
