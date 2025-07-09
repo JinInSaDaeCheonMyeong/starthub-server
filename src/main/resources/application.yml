@@ -20,6 +20,15 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
 
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: never
+
   mail:
     host: ${EMAIL_HOST:smtp.gmail.com}
     port: ${EMAIL_PORT:587}
