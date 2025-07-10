@@ -2,8 +2,17 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
-import jakarta.persistence.*
-import java.util.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
+import java.util.UUID
 
 @Entity
 @Table(name = "business_model_canvas")
@@ -11,52 +20,37 @@ class BusinessModelCanvas(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID? = null,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_user_id", nullable = false)
     val user: User,
-
     @Column(nullable = false)
     var title: String,
-
     @Column(columnDefinition = "TEXT")
     var keyPartners: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var keyActivities: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var keyResources: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var valueProposition: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var customerRelationships: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var channels: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var customerSegments: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var costStructure: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var revenueStreams: String? = null,
-
     @Column(nullable = false)
     var isCompleted: Boolean = false,
-
     @Column(nullable = false)
     var deleted: Boolean = false,
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_bmc_question_id")
-    var bmcQuestion: BmcQuestion? = null
+    var bmcQuestion: BmcQuestion? = null,
 ) : BaseEntity() {
-
     fun isOwner(user: User): Boolean = this.user.id == user.id
 
     fun updateCanvas(
@@ -69,7 +63,7 @@ class BusinessModelCanvas(
         channels: String? = null,
         customerSegments: String? = null,
         costStructure: String? = null,
-        revenueStreams: String? = null
+        revenueStreams: String? = null,
     ) {
         title?.let { this.title = it }
         keyPartners?.let { this.keyPartners = it }

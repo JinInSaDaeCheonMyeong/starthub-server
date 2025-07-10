@@ -6,7 +6,12 @@ import org.springframework.stereotype.Component
 
 @Component
 class CookieUtil {
-    fun createCookie(name: String, value: String, maxAge: Long, httpOnly: Boolean): ResponseCookie =
+    fun createCookie(
+        name: String,
+        value: String,
+        maxAge: Long,
+        httpOnly: Boolean,
+    ): ResponseCookie =
         ResponseCookie.from(name, value)
             .path("/")
             .maxAge(maxAge / 1000)
@@ -15,7 +20,13 @@ class CookieUtil {
             .sameSite("None")
             .build()
 
-    fun addCookie(response: HttpServletResponse, name: String, value: String, maxAge: Long, httpOnly: Boolean) {
+    fun addCookie(
+        response: HttpServletResponse,
+        name: String,
+        value: String,
+        maxAge: Long,
+        httpOnly: Boolean,
+    ) {
         val cookie = createCookie(name, value, maxAge, httpOnly)
         response.addHeader("Set-Cookie", cookie.toString())
     }

@@ -20,7 +20,7 @@ class TokenFilter(
     private val tokenValidator: TokenValidator,
     private val tokenParser: TokenParser,
     private val userRepository: UserRepository,
-): OncePerRequestFilter() {
+) : OncePerRequestFilter() {
     companion object {
         private const val TOKEN_SECURE_TYPE = "Bearer "
     }
@@ -28,11 +28,12 @@ class TokenFilter(
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         if (!request.getHeader("Authorization").isNullOrEmpty()) {
-            val token: String = request.getHeader("Authorization")
-                ?: throw RuntimeException("헤더가 누락됨")
+            val token: String =
+                request.getHeader("Authorization")
+                    ?: throw RuntimeException("헤더가 누락됨")
 
             if (!token.startsWith(TOKEN_SECURE_TYPE)) {
                 throw RuntimeException("토큰을 찾을 수 없음")
@@ -62,13 +63,13 @@ class TokenFilter(
     private fun getUserDetails(token: String): CustomUserDetails {
         return CustomUserDetails(
             userRepository.findByEmail(tokenParser.findEmail(token))
-                ?: throw RuntimeException("찾을 수 없는 유저")
+                ?: throw RuntimeException("찾을 수 없는 유저"),
         )
     }
 
     private fun isTokenExpiredException(e: Exception): Boolean {
         return e.message?.contains("expired", ignoreCase = true) == true ||
-                e.message?.contains("만료", ignoreCase = true) == true ||
-                e is io.jsonwebtoken.ExpiredJwtException
+            e.message?.contains("만료", ignoreCase = true) == true ||
+            e is io.jsonwebtoken.ExpiredJwtException
     }
 }

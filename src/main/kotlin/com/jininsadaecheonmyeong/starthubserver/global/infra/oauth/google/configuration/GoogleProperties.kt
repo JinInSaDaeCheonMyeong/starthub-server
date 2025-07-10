@@ -13,5 +13,5 @@ data class GoogleProperties(
     val iosRedirectUri: String,
     val tokenUri: String,
     val userInfoUri: String,
-    val grantType: String
+    val grantType: String,
 )

@@ -5,7 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface EmailRepository : JpaRepository<Email, Long> {
     fun findByEmail(email: String): Email?
-    fun findByEmailAndVerificationCode(email: String, code: String?): Email?
-    fun findByEmailAndIsVerifiedTrue(email: String): Email?
-    fun existsByEmail(email: String): Boolean
+
+    fun findByEmailAndVerificationCode(
+        email: String,
+        code: String?,
+    ): Email?
 }

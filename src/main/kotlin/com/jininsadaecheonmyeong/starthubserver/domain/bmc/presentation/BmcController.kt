@@ -15,8 +15,14 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.service.BusinessModel
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
-import java.util.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @RestController
 @RequestMapping("/bmc")
@@ -24,7 +30,7 @@ class BmcController(
     private val bmcQuestionService: BmcQuestionService,
     private val bmcGenerationService: BmcGenerationService,
     private val businessModelCanvasService: BusinessModelCanvasService,
-    private val bmcModificationService: BmcModificationService
+    private val bmcModificationService: BmcModificationService,
 ) : BmcDocs {
     @GetMapping("/questions")
     override fun getBmcQuestions(): ResponseEntity<BaseResponse<List<String>>> {
@@ -34,7 +40,7 @@ class BmcController(
 
     @PostMapping("/sessions")
     override fun createBmcSession(
-        @Valid @RequestBody request: CreateBmcSessionRequest
+        @Valid @RequestBody request: CreateBmcSessionRequest,
     ): ResponseEntity<BaseResponse<BmcSessionResponse>> {
         val response = bmcQuestionService.createBmcSession(request)
         return BaseResponse.of(response, "BMC 세션 생성 성공")
@@ -48,7 +54,7 @@ class BmcController(
 
     @GetMapping("/sessions/{sessionId}")
     override fun getBmcSession(
-        @PathVariable sessionId: String
+        @PathVariable sessionId: String,
     ): ResponseEntity<BaseResponse<BmcSessionResponse>> {
         val session = bmcQuestionService.getBmcSession(sessionId)
         return BaseResponse.of(session, "BMC 세션 조회 성공")
@@ -56,7 +62,7 @@ class BmcController(
 
     @PostMapping("/sessions/answer")
     override fun answerQuestion(
-        @Valid @RequestBody request: AnswerQuestionRequest
+        @Valid @RequestBody request: AnswerQuestionRequest,
     ): ResponseEntity<BaseResponse<BmcSessionResponse>> {
         val response = bmcQuestionService.answerQuestion(request)
         return BaseResponse.of(response, "답변 저장 성공")
@@ -64,7 +70,7 @@ class BmcController(
 
     @PostMapping("/generate")
     override fun generateBmc(
-        @Valid @RequestBody request: GenerateBmcRequest
+        @Valid @RequestBody request: GenerateBmcRequest,
     ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>> {
         val response = bmcGenerationService.generateBusinessModelCanvas(request)
         return BaseResponse.of(response, "BMC 생성 성공")
@@ -78,7 +84,7 @@ class BmcController(
 
     @GetMapping("/canvases/{id}")
     override fun getBusinessModelCanvas(
-        @PathVariable id: UUID
+        @PathVariable id: UUID,
     ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>> {
         val canvas = businessModelCanvasService.getBusinessModelCanvas(id)
         return BaseResponse.of(canvas, "BMC 조회 성공")
@@ -86,7 +92,7 @@ class BmcController(
 
     @DeleteMapping("/canvases/{id}")
     override fun deleteBusinessModelCanvas(
-        @PathVariable id: UUID
+        @PathVariable id: UUID,
     ): ResponseEntity<BaseResponse<Unit>> {
         businessModelCanvasService.deleteBusinessModelCanvas(id)
         return BaseResponse.of("BMC 삭제 성공")
@@ -94,7 +100,7 @@ class BmcController(
 
     @PostMapping("/modify")
     override fun modifyBmc(
-        @Valid @RequestBody request: ModifyBmcRequest
+        @Valid @RequestBody request: ModifyBmcRequest,
     ): ResponseEntity<BaseResponse<BmcModificationResponse>> {
         val response = bmcModificationService.requestBmcModification(request)
         return BaseResponse.of(response, "BMC 수정 완료")
@@ -102,7 +108,7 @@ class BmcController(
 
     @GetMapping("/canvases/{id}/history")
     override fun getBmcModificationHistory(
-        @PathVariable id: UUID
+        @PathVariable id: UUID,
     ): ResponseEntity<BaseResponse<List<BmcModificationResponse>>> {
         val history = bmcModificationService.getBmcModificationHistory(id)
         return BaseResponse.of(history, "BMC 수정 히스토리 조회 성공")

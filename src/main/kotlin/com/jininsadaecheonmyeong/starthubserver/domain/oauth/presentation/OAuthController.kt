@@ -12,9 +12,13 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.view.RedirectView
-import java.util.*
+import java.util.UUID
 
 @Tag(name = "OAuth", description = "소셜 로그인 관련 API")
 @RestController
@@ -23,9 +27,8 @@ class OAuthController(
     private val oAuthService: OAuthService,
     private val oAuthProperties: OAuthProperties,
     private val cookieUtil: CookieUtil,
-    private val tokenProperties: TokenProperties
-): OAuthDocs {
-
+    private val tokenProperties: TokenProperties,
+) : OAuthDocs {
     @GetMapping("/state")
     override fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>> {
         val state = UUID.randomUUID().toString()
@@ -38,7 +41,7 @@ class OAuthController(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession,
-        response: HttpServletResponse
+        response: HttpServletResponse,
     ): RedirectView {
         validateState(session, state)
 
@@ -47,7 +50,7 @@ class OAuthController(
         addRefreshTokenToCookie(response, oAuthResponse.refresh)
 
         return RedirectView(
-            "${oAuthProperties.frontRedirectUri}?isFirstLogin=${oAuthResponse.isFirstLogin}"
+            "${oAuthProperties.frontRedirectUri}?isFirstLogin=${oAuthResponse.isFirstLogin}",
         )
     }
 
@@ -57,7 +60,7 @@ class OAuthController(
         @RequestParam state: String,
         @RequestParam platform: String,
         @RequestParam codeVerifier: String,
-        session: HttpSession
+        session: HttpSession,
     ): ResponseEntity<BaseResponse<OAuthResponse>> {
         validateState(session, state)
 
@@ -70,14 +73,14 @@ class OAuthController(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession,
-        response: HttpServletResponse
+        response: HttpServletResponse,
     ): RedirectView {
         validateState(session, state)
         val oAuthResponse = oAuthService.naverAuth(code)
         addRefreshTokenToCookie(response, oAuthResponse.refresh)
 
         return RedirectView(
-            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}"
+            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}",
         )
     }
 
@@ -86,26 +89,35 @@ class OAuthController(
         @RequestParam code: String,
         @RequestParam state: String,
         session: HttpSession,
-        response: HttpServletResponse
+        response: HttpServletResponse,
     ): RedirectView {
         validateState(session, state)
         val oAuthResponse = oAuthService.appleAuth(code)
         addRefreshTokenToCookie(response, oAuthResponse.refresh)
 
         return RedirectView(
-            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}"
+            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}",
         )
     }
 
-    private fun addAccessTokenToCookie(response: HttpServletResponse, accessToken: String) {
+    private fun addAccessTokenToCookie(
+        response: HttpServletResponse,
+        accessToken: String,
+    ) {
         cookieUtil.addCookie(response, "access", accessToken, tokenProperties.access, true)
     }
 
-    private fun addRefreshTokenToCookie(response: HttpServletResponse, refreshToken: String) {
+    private fun addRefreshTokenToCookie(
+        response: HttpServletResponse,
+        refreshToken: String,
+    ) {
         cookieUtil.addCookie(response, "refresh", refreshToken, tokenProperties.refresh, true)
     }
 
-    private fun validateState(session: HttpSession, state: String?) {
+    private fun validateState(
+        session: HttpSession,
+        state: String?,
+    ) {
         val sessionState = session.getAttribute("state") as? String
         if (state == null || sessionState == null || sessionState != state) {
             throw InvalidStateException("state 불일치")

@@ -7,14 +7,18 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestParam
-import java.util.*
+import java.util.UUID
 
-@Tag(name = "채팅",  description = "채팅 관련 API")
+@Tag(name = "채팅", description = "채팅 관련 API")
 interface ChatDocs {
-
     @Operation(summary = "채팅방 생성", description = "새로운 채팅방을 생성하거나 기존 채팅방을 가져옵니다.")
-    fun createOrGetRoom(@RequestParam user1Id: UUID, @RequestParam user2Id: UUID): ResponseEntity<BaseResponse<ChatRoomResponse>>
+    fun createOrGetRoom(
+        @RequestParam user1Id: UUID,
+        @RequestParam user2Id: UUID,
+    ): ResponseEntity<BaseResponse<ChatRoomResponse>>
 
     @Operation(summary = "채팅 조회", description = "채팅 내역을 가져옵니다.")
-    fun getMessages(@RequestParam roomId: Long): ResponseEntity<BaseResponse<List<ChatMessageResponse>>>
+    fun getMessages(
+        @RequestParam roomId: Long,
+    ): ResponseEntity<BaseResponse<List<ChatMessageResponse>>>
 }

@@ -7,5 +7,5 @@ enum class BusinessType(val displayName: String) {
     EDUCATION_EDUTECH("교육/에듀테크"),
     IT_SOFTWARE("IT/소프트웨어"),
     ECOMMERCE("전자상거래"),
-    ETC("기타")
+    ETC("기타"),
 }

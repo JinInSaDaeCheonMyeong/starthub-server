@@ -3,7 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationType
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class BmcModificationResponse(
     val id: UUID,
@@ -13,10 +13,13 @@ data class BmcModificationResponse(
     val isProcessed: Boolean,
     val aiResponse: String?,
     val createdAt: LocalDateTime,
-    val updatedBmc: BusinessModelCanvasResponse?
+    val updatedBmc: BusinessModelCanvasResponse?,
 ) {
     companion object {
-        fun from(modificationRequest: BmcModificationRequest, updatedBmc: BusinessModelCanvasResponse? = null): BmcModificationResponse {
+        fun from(
+            modificationRequest: BmcModificationRequest,
+            updatedBmc: BusinessModelCanvasResponse? = null,
+        ): BmcModificationResponse {
             return BmcModificationResponse(
                 id = modificationRequest.id!!,
                 bmcId = modificationRequest.businessModelCanvas.id!!,
@@ -25,7 +28,7 @@ data class BmcModificationResponse(
                 isProcessed = modificationRequest.isProcessed,
                 aiResponse = modificationRequest.aiResponse,
                 createdAt = modificationRequest.createdAt!!,
-                updatedBmc = updatedBmc
+                updatedBmc = updatedBmc,
             )
         }
     }
