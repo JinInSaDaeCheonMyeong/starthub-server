@@ -39,6 +39,7 @@ app:
     refresh: 604800000
 
 oauth:
+  front-redirect-uri: http://localhost:8080/oauth/callback
   google:
     client-id: ${GOOGLE_CLIENT_ID}
     client-secret: ${GOOGLE_CLIENT_SECRET}

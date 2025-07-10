@@ -4,11 +4,16 @@ import com.jininsadaecheonmyeong.starthubserver.domain.oauth.docs.OAuthDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.exception.InvalidStateException
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth.service.OAuthService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
+import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthResponse
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.properties.TokenProperties
+import com.jininsadaecheonmyeong.starthubserver.global.support.CookieUtil
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.servlet.view.RedirectView
 import java.util.*
 
 @Tag(name = "OAuth", description = "소셜 로그인 관련 API")
@@ -16,6 +21,9 @@ import java.util.*
 @RequestMapping("/oauth")
 class OAuthController(
     private val oAuthService: OAuthService,
+    private val oAuthProperties: OAuthProperties,
+    private val cookieUtil: CookieUtil,
+    private val tokenProperties: TokenProperties
 ): OAuthDocs {
 
     @GetMapping("/state")
@@ -29,12 +37,17 @@ class OAuthController(
     override fun googleAuthWeb(
         @RequestParam code: String,
         @RequestParam state: String,
-        session: HttpSession
-    ): ResponseEntity<BaseResponse<OAuthResponse>> {
+        session: HttpSession,
+        response: HttpServletResponse
+    ): RedirectView {
         validateState(session, state)
 
-        val response = oAuthService.googleAuthWeb(code)
-        return BaseResponse.of(response, "구글 웹 로그인 성공")
+        val oAuthResponse = oAuthService.googleAuthWeb(code)
+        addRefreshTokenToCookie(response, oAuthResponse.refresh)
+
+        return RedirectView(
+            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}"
+        )
     }
 
     @GetMapping("/google/app")
@@ -55,20 +68,36 @@ class OAuthController(
     override fun naverAuth(
         @RequestParam code: String,
         @RequestParam state: String,
-        session: HttpSession
-    ): ResponseEntity<BaseResponse<OAuthResponse>> {
+        session: HttpSession,
+        response: HttpServletResponse
+    ): RedirectView {
         validateState(session, state)
-        return BaseResponse.of(oAuthService.naverAuth(code), "네이버 로그인 성공")
+        val oAuthResponse = oAuthService.naverAuth(code)
+        addRefreshTokenToCookie(response, oAuthResponse.refresh)
+
+        return RedirectView(
+            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}"
+        )
     }
 
     @PostMapping("/apple")
     override fun appleAuth(
         @RequestParam code: String,
         @RequestParam state: String,
-        session: HttpSession
-    ): ResponseEntity<BaseResponse<OAuthResponse>> {
+        session: HttpSession,
+        response: HttpServletResponse
+    ): RedirectView {
         validateState(session, state)
-        return BaseResponse.of(oAuthService.appleAuth(code), "애플 로그인 성공")
+        val oAuthResponse = oAuthService.appleAuth(code)
+        addRefreshTokenToCookie(response, oAuthResponse.refresh)
+
+        return RedirectView(
+            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}"
+        )
+    }
+
+    private fun addRefreshTokenToCookie(response: HttpServletResponse, refreshToken: String) {
+        cookieUtil.addCookie(response, "refresh", refreshToken, tokenProperties.refresh, true)
     }
 
     private fun validateState(session: HttpSession, state: String?) {

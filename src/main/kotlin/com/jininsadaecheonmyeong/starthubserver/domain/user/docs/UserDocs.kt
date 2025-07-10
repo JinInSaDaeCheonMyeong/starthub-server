@@ -2,6 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.user.docs
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -20,4 +21,7 @@ interface UserDocs {
 
     @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.")
     fun reissue(@RequestBody request: RefreshRequest): ResponseEntity<BaseResponse<TokenResponse>>
+
+    @Operation(summary = "유저 프로필 업데이트", description = "최초 로그인 시 또는 마이페이지에서 사용자 프로필 정보를 업데이트합니다.")
+    fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>>
 }
