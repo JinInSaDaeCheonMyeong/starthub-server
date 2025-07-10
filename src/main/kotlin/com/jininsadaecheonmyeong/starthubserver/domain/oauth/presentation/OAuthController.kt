@@ -43,10 +43,11 @@ class OAuthController(
         validateState(session, state)
 
         val oAuthResponse = oAuthService.googleAuthWeb(code)
+        addAccessTokenToCookie(response, oAuthResponse.access)
         addRefreshTokenToCookie(response, oAuthResponse.refresh)
 
         return RedirectView(
-            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}"
+            "${oAuthProperties.frontRedirectUri}?isFirstLogin=${oAuthResponse.isFirstLogin}"
         )
     }
 
@@ -94,6 +95,10 @@ class OAuthController(
         return RedirectView(
             "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}"
         )
+    }
+
+    private fun addAccessTokenToCookie(response: HttpServletResponse, accessToken: String) {
+        cookieUtil.addCookie(response, "access", accessToken, tokenProperties.access, true)
     }
 
     private fun addRefreshTokenToCookie(response: HttpServletResponse, refreshToken: String) {
