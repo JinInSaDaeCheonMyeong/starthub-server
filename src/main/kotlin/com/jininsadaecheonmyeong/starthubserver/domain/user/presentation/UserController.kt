@@ -1,8 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.presentation
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UpdateUserProfileRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.docs.UserDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.user.service.UserService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
@@ -29,9 +30,16 @@ class UserController(
         BaseResponse.of(userService.reissue(request), "토큰 재발급 성공")
 
     @PatchMapping("/profile")
-    fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>> {
+    override fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>> {
         val currentUser = UserAuthenticationHolder.current()
-        userService.updateUserProfile(currentUser, request.username, request.interests, request.profileImage)
+        userService.updateUserProfile(currentUser, request)
         return BaseResponse.of("유저 프로필 설정 성공")
+    }
+
+    @GetMapping("/me")
+    override fun getUser(): ResponseEntity<BaseResponse<UserResponse>> {
+        val currentUser = UserAuthenticationHolder.current()
+        val user = userService.getUser(currentUser)
+        return BaseResponse.of(user, "유저 정보 조회 성공")
     }
 }

@@ -1,17 +1,18 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.service
 
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.TokenResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserInterest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserInterestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
@@ -45,9 +46,15 @@ class UserService (
     fun signIn(request: UserRequest): TokenResponse {
         val user: User = userRepository.findByEmail(request.email) ?: throw UserNotFoundException("찾을 수 없는 유저")
         if (!passwordEncoder.matches(request.password, user.password)) throw InvalidPasswordException("잘못된 비밀번호")
+        val isFirstLogin = user.isFirstLogin
+        if (isFirstLogin) {
+            user.isFirstLogin = false
+            userRepository.save(user)
+        }
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user)
+            refresh = tokenProvider.generateRefresh(user),
+            isFirstLogin = isFirstLogin
         )
     }
 
@@ -61,27 +68,30 @@ class UserService (
 
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user)
+            refresh = tokenProvider.generateRefresh(user),
+            isFirstLogin = false
         )
     }
 
-    @Transactional
-    fun updateUserProfile(
-        user: User,
-        username: String,
-        interests: List<BusinessType>,
-        profileImage: String
-    ) {
-        user.username = username
-        user.profileImage = profileImage
+    fun updateUserProfile(user: User, request: UpdateUserProfileRequest) {
+        user.username = request.username
+        user.introduction = request.introduction
+        user.birth = request.birth
+        user.gender = request.gender
+        user.profileImage = request.profileImage
         userRepository.save(user)
 
         userInterestRepository.deleteByUser(user)
 
-        val newInterests = interests.map { interestType ->
+        val newInterests = request.interests.map { interestType ->
             UserInterest(user = user, businessType = interestType)
         }
         userInterestRepository.saveAll(newInterests)
+    }
+
+    @Transactional(readOnly = true)
+    fun getUser(user: User): UserResponse {
+        return UserResponse(user)
     }
 
 }
