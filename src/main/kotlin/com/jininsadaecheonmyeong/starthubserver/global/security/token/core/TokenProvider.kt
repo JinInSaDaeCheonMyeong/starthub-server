@@ -6,14 +6,18 @@ import com.jininsadaecheonmyeong.starthubserver.global.security.token.properties
 import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Component
 import java.lang.System.currentTimeMillis
-import java.util.*
+import java.util.Date
 
 @Component
 class TokenProvider(
     private val properties: TokenProperties,
-    private val tokenRedisService: TokenRedisService
+    private val tokenRedisService: TokenRedisService,
 ) {
-    private fun generate(tokenType: TokenType, user: User, expire: Long): String {
+    private fun generate(
+        tokenType: TokenType,
+        user: User,
+        expire: Long,
+    ): String {
         return Jwts.builder()
             .claim("category", tokenType.value)
             .claim("email", user.email)
@@ -24,8 +28,7 @@ class TokenProvider(
             .compact()
     }
 
-    fun generateAccess(user: User): String
-            = generate(TokenType.ACCESS_TOKEN, user, properties.access)
+    fun generateAccess(user: User) = generate(TokenType.ACCESS_TOKEN, user, properties.access)
 
     fun generateRefresh(user: User): String {
         val refreshToken = generate(TokenType.REFRESH_TOKEN, user, properties.refresh)

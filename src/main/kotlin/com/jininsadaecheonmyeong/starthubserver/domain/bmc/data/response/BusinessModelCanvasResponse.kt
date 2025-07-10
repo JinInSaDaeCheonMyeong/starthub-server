@@ -2,7 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response
 
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class BusinessModelCanvasResponse(
     val id: UUID,
@@ -18,7 +18,7 @@ data class BusinessModelCanvasResponse(
     val revenueStreams: String?,
     val isCompleted: Boolean,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val updatedAt: LocalDateTime,
 ) {
     companion object {
         fun from(bmc: BusinessModelCanvas): BusinessModelCanvasResponse {
@@ -36,7 +36,7 @@ data class BusinessModelCanvasResponse(
                 revenueStreams = bmc.revenueStreams,
                 isCompleted = bmc.isCompleted,
                 createdAt = bmc.createdAt!!,
-                updatedAt = bmc.updatedAt!!
+                updatedAt = bmc.updatedAt!!,
             )
         }
     }

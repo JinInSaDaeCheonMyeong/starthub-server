@@ -1,19 +1,19 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.service
 
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationType
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.ModifyBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcModificationResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BusinessModelCanvasResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationType
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BusinessModelCanvasNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BmcModificationRequestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.user.support.UserAuthenticationHolder
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.logger
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
+import java.util.UUID
 
 @Service
 @Transactional
@@ -21,33 +21,35 @@ class BmcModificationService(
     private val chatModel: ChatModel,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val bmcModificationRequestRepository: BmcModificationRequestRepository,
-    private val userAuthenticationHolder: UserAuthenticationHolder
 ) {
     private val log = logger()
 
     fun requestBmcModification(request: ModifyBmcRequest): BmcModificationResponse {
-        val user = userAuthenticationHolder.current()
-        val bmc = businessModelCanvasRepository.findByIdAndDeletedFalse(request.bmcId)
-            .orElseThrow { BusinessModelCanvasNotFoundException("BMC를 찾을 수 없습니다.") }
+        val user = UserAuthenticationHolder.current()
+        val bmc =
+            businessModelCanvasRepository.findByIdAndDeletedFalse(request.bmcId)
+                .orElseThrow { BusinessModelCanvasNotFoundException("BMC를 찾을 수 없습니다.") }
 
         if (!bmc.isOwner(user)) {
             throw BusinessModelCanvasNotFoundException("접근 권한이 없습니다.")
         }
 
-        val modificationRequest = BmcModificationRequest(
-            user = user,
-            businessModelCanvas = bmc,
-            modificationRequest = request.modificationRequest,
-            requestType = request.requestType
-        )
+        val modificationRequest =
+            BmcModificationRequest(
+                user = user,
+                businessModelCanvas = bmc,
+                modificationRequest = request.modificationRequest,
+                requestType = request.requestType,
+            )
 
         val savedRequest = bmcModificationRequestRepository.save(modificationRequest)
 
         try {
-            val prompt = when (request.requestType) {
-                BmcModificationType.MODIFY -> generateModificationPrompt(bmc, request.modificationRequest)
-                BmcModificationType.REGENERATE -> generateRegenerationPrompt(bmc, request.modificationRequest)
-            }
+            val prompt =
+                when (request.requestType) {
+                    BmcModificationType.MODIFY -> generateModificationPrompt(bmc, request.modificationRequest)
+                    BmcModificationType.REGENERATE -> generateRegenerationPrompt(bmc, request.modificationRequest)
+                }
 
             val aiResponse = chatModel.call(prompt)
             val bmcElements = parseBmcResponse(aiResponse)
@@ -61,7 +63,7 @@ class BmcModificationService(
                 channels = bmcElements["CHANNELS"],
                 customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
                 costStructure = bmcElements["COST_STRUCTURE"],
-                revenueStreams = bmcElements["REVENUE_STREAMS"]
+                revenueStreams = bmcElements["REVENUE_STREAMS"],
             )
 
             val updatedBmc = businessModelCanvasRepository.save(bmc)
@@ -71,7 +73,6 @@ class BmcModificationService(
             log.info("BMC 수정 완료: bmcId={}, userId={}, requestType={}", request.bmcId, user.id, request.requestType)
 
             return BmcModificationResponse.from(savedRequest, BusinessModelCanvasResponse.from(updatedBmc))
-
         } catch (e: Exception) {
             log.error("BMC 수정 중 오류 발생: bmcId={}, userId={}, error={}", request.bmcId, user.id, e.message, e)
             throw RuntimeException("BMC 수정 중 오류가 발생했습니다. 다시 시도해주세요.", e)
@@ -80,9 +81,10 @@ class BmcModificationService(
 
     @Transactional(readOnly = true)
     fun getBmcModificationHistory(bmcId: UUID): List<BmcModificationResponse> {
-        val user = userAuthenticationHolder.current()
-        val bmc = businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
-            .orElseThrow { BusinessModelCanvasNotFoundException("BMC를 찾을 수 없습니다.") }
+        val user = UserAuthenticationHolder.current()
+        val bmc =
+            businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
+                .orElseThrow { BusinessModelCanvasNotFoundException("BMC를 찾을 수 없습니다.") }
 
         if (!bmc.isOwner(user)) {
             throw BusinessModelCanvasNotFoundException("접근 권한이 없습니다.")
@@ -92,7 +94,10 @@ class BmcModificationService(
         return modifications.map { BmcModificationResponse.from(it) }
     }
 
-    private fun generateModificationPrompt(bmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas, modificationRequest: String): String {
+    private fun generateModificationPrompt(
+        bmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        modificationRequest: String,
+    ): String {
         return buildString {
             appendLine("당신은 비즈니스 모델 캔버스(BMC) 전문가입니다.")
             appendLine("기존 BMC를 사용자의 요청에 따라 수정해주세요.")
@@ -128,7 +133,10 @@ class BmcModificationService(
         }
     }
 
-    private fun generateRegenerationPrompt(bmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas, additionalContext: String): String {
+    private fun generateRegenerationPrompt(
+        bmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        additionalContext: String,
+    ): String {
         return buildString {
             appendLine("당신은 비즈니스 모델 캔버스(BMC) 전문가입니다.")
             appendLine("기존 BMC를 참고하여 완전히 새로운 관점에서 BMC를 재생성해주세요.")
@@ -167,41 +175,45 @@ class BmcModificationService(
     private fun parseBmcResponse(response: String): Map<String, String> {
         val bmcElements = mutableMapOf<String, String>()
         val lines = response.lines()
-        
-        val keys = listOf(
-            "KEY_PARTNERS",
-            "KEY_ACTIVITIES", 
-            "KEY_RESOURCES",
-            "VALUE_PROPOSITION",
-            "CUSTOMER_RELATIONSHIPS",
-            "CHANNELS",
-            "CUSTOMER_SEGMENTS",
-            "COST_STRUCTURE",
-            "REVENUE_STREAMS"
-        )
-        
+
+        val keys =
+            listOf(
+                "KEY_PARTNERS",
+                "KEY_ACTIVITIES",
+                "KEY_RESOURCES",
+                "VALUE_PROPOSITION",
+                "CUSTOMER_RELATIONSHIPS",
+                "CHANNELS",
+                "CUSTOMER_SEGMENTS",
+                "COST_STRUCTURE",
+                "REVENUE_STREAMS",
+            )
+
         keys.forEach { key ->
             val content = extractContent(lines, key)
             if (content.isNotBlank()) {
                 bmcElements[key] = content
             }
         }
-        
+
         return bmcElements
     }
 
-    private fun extractContent(lines: List<String>, key: String): String {
+    private fun extractContent(
+        lines: List<String>,
+        key: String,
+    ): String {
         val startIndex = lines.indexOfFirst { it.startsWith("$key:") }
         if (startIndex == -1) return ""
-        
+
         val content = StringBuilder()
         var currentIndex = startIndex
-        
+
         val firstLine = lines[currentIndex].removePrefix("$key:").trim()
         if (firstLine.isNotEmpty()) {
             content.append(firstLine)
         }
-        
+
         currentIndex++
         while (currentIndex < lines.size) {
             val line = lines[currentIndex].trim()
@@ -209,21 +221,23 @@ class BmcModificationService(
                 currentIndex++
                 continue
             }
-            
-            if (line.contains(":") && line.split(":")[0].trim() in listOf(
-                "KEY_PARTNERS", "KEY_ACTIVITIES", "KEY_RESOURCES", "VALUE_PROPOSITION",
-                "CUSTOMER_RELATIONSHIPS", "CHANNELS", "CUSTOMER_SEGMENTS", "COST_STRUCTURE", "REVENUE_STREAMS"
-            )) {
+
+            if (line.contains(":") && line.split(":")[0].trim() in
+                listOf(
+                    "KEY_PARTNERS", "KEY_ACTIVITIES", "KEY_RESOURCES", "VALUE_PROPOSITION",
+                    "CUSTOMER_RELATIONSHIPS", "CHANNELS", "CUSTOMER_SEGMENTS", "COST_STRUCTURE", "REVENUE_STREAMS",
+                )
+            ) {
                 break
             }
-            
+
             if (content.isNotEmpty()) {
                 content.append("\n")
             }
             content.append(line)
             currentIndex++
         }
-        
+
         return content.toString().trim()
     }
 }

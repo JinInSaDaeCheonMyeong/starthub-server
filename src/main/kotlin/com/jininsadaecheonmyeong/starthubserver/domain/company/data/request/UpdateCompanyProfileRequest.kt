@@ -13,5 +13,5 @@ data class UpdateCompanyProfileRequest(
     val tel: String? = null,
     val address: String? = null,
     val employeeCount: Int? = null,
-    val logoImage: String? = null
+    val logoImage: String? = null,
 )

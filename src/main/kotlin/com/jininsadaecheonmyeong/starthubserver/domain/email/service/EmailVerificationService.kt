@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 @Service
 class EmailVerificationService(
     private val emailRepository: EmailRepository,
-    private val emailService: EmailService
+    private val emailService: EmailService,
 ) {
     @Transactional
     fun sendVerificationCode(email: String) {
@@ -25,12 +25,13 @@ class EmailVerificationService(
 
         val code = generateVerificationCode()
 
-        val emailVerification = existingEmail?.apply {
-            verificationCode = code
-        } ?: Email(
-            email = email,
-            verificationCode = code
-        )
+        val emailVerification =
+            existingEmail?.apply {
+                verificationCode = code
+            } ?: Email(
+                email = email,
+                verificationCode = code,
+            )
 
         emailRepository.save(emailVerification)
 
@@ -41,7 +42,10 @@ class EmailVerificationService(
         return String.format("%06d", SecureRandom().nextInt(1_000_000))
     }
 
-    fun verifyCode(email: String, code: String) {
+    fun verifyCode(
+        email: String,
+        code: String,
+    ) {
         val verification = emailRepository.findByEmailAndVerificationCode(email, code) ?: throw EmailNotFoundException("일치하지 않은 인증코드")
 
         if (verification.expirationDate.isBefore(LocalDateTime.now())) {

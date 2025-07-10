@@ -1,18 +1,18 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.TokenResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserInterest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserInterestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
-class UserService (
+class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val tokenProvider: TokenProvider,
@@ -34,7 +34,7 @@ class UserService (
     private val tokenParser: TokenParser,
     private val tokenRedisService: TokenRedisService,
     private val emailRepository: EmailRepository,
-    private val userInterestRepository: UserInterestRepository
+    private val userInterestRepository: UserInterestRepository,
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
@@ -54,26 +54,30 @@ class UserService (
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
             refresh = tokenProvider.generateRefresh(user),
-            isFirstLogin = isFirstLogin
+            isFirstLogin = isFirstLogin,
         )
     }
 
     fun reissue(request: RefreshRequest): TokenResponse {
         val email: String = tokenParser.findEmail(request.refresh)
         tokenValidator.validateAll(request.refresh, TokenType.REFRESH_TOKEN)
-        val user: User = userRepository.findByEmail(tokenParser.findEmail(request.refresh))
-            ?: throw UserNotFoundException("찾을 수 없는 유저")
+        val user: User =
+            userRepository.findByEmail(tokenParser.findEmail(request.refresh))
+                ?: throw UserNotFoundException("찾을 수 없는 유저")
 
         if (tokenRedisService.findByEmail(email)?.equals(request.refresh) != true) throw InvalidTokenException("유효하지 않은 리프레시 토큰")
 
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
             refresh = tokenProvider.generateRefresh(user),
-            isFirstLogin = false
+            isFirstLogin = false,
         )
     }
 
-    fun updateUserProfile(user: User, request: UpdateUserProfileRequest) {
+    fun updateUserProfile(
+        user: User,
+        request: UpdateUserProfileRequest,
+    ) {
         user.username = request.username
         user.introduction = request.introduction
         user.birth = request.birth
@@ -83,9 +87,10 @@ class UserService (
 
         userInterestRepository.deleteByUser(user)
 
-        val newInterests = request.interests.map { interestType ->
-            UserInterest(user = user, businessType = interestType)
-        }
+        val newInterests =
+            request.interests.map { interestType ->
+                UserInterest(user = user, businessType = interestType)
+            }
         userInterestRepository.saveAll(newInterests)
     }
 
@@ -93,5 +98,4 @@ class UserService (
     fun getUser(user: User): UserResponse {
         return UserResponse(user)
     }
-
 }

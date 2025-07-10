@@ -4,6 +4,7 @@ plugins {
     id("org.springframework.boot") version "3.5.3"
     kotlin("plugin.jpa") version "1.9.25"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
 
 val springAiVersion by extra("1.0.0")
@@ -35,7 +36,7 @@ dependencies {
     implementation("org.springframework.ai:spring-ai-starter-model-openai")
 
     // email
-    implementation ("org.springframework.boot:spring-boot-starter-mail")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
 
     // swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
@@ -50,6 +51,7 @@ dependencies {
 
     // redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.session:spring-session-data-redis")
 
     // testCode
     testImplementation("org.springframework.boot:spring-boot-starter-test")

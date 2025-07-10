@@ -2,8 +2,18 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
-import jakarta.persistence.*
-import java.util.*
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
+import java.util.UUID
 
 @Entity
 @Table(name = "bmc_questions")
@@ -11,55 +21,42 @@ class BmcQuestion(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID? = null,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_user_id", nullable = false)
     val user: User,
-
     @Column(nullable = false)
     var sessionId: String,
-
     @Column(nullable = false)
     var businessIdea: String,
-
     @Column(columnDefinition = "TEXT")
     var question1Answer: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var question2Answer: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var question3Answer: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var question4Answer: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var question5Answer: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var question6Answer: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var question7Answer: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var question8Answer: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var question9Answer: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var question10Answer: String? = null,
-
     @Column(nullable = false)
     var isCompleted: Boolean = false,
-
     @OneToOne(mappedBy = "bmcQuestion", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    var businessModelCanvas: BusinessModelCanvas? = null
+    var businessModelCanvas: BusinessModelCanvas? = null,
 ) : BaseEntity() {
-
-    fun updateAnswer(questionNumber: Int, answer: String) {
+    fun updateAnswer(
+        questionNumber: Int,
+        answer: String,
+    ) {
         when (questionNumber) {
             1 -> question1Answer = answer
             2 -> question2Answer = answer
@@ -101,7 +98,7 @@ class BmcQuestion(
             question7Answer,
             question8Answer,
             question9Answer,
-            question10Answer
+            question10Answer,
         )
     }
 

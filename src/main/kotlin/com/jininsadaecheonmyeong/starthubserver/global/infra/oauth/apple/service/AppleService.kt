@@ -13,32 +13,34 @@ import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.time.Instant
-import java.util.*
+import java.util.Base64
+import java.util.Date
 
 @Service
 class AppleService(
     private val appleProperties: AppleProperties,
     private val objectMapper: ObjectMapper,
-    webClientBuilder: WebClient.Builder
+    webClientBuilder: WebClient.Builder,
 ) {
     private val webClient = webClientBuilder.build()
 
     fun exchangeCodeForUserInfo(code: String): AppleUserInfo {
         val clientSecret = generateClientSecret()
 
-        val response = webClient.post()
-            .uri(appleProperties.tokenUri)
-            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .body(
-                BodyInserters.fromFormData("client_id", appleProperties.clientId)
-                    .with("client_secret", clientSecret)
-                    .with("code", code)
-                    .with("grant_type", appleProperties.grantType)
-                    .with("redirect_uri", appleProperties.redirectUri)
-            )
-            .retrieve()
-            .bodyToMono(Map::class.java)
-            .block() ?: throw IllegalStateException("애플 토큰 응답 실패")
+        val response =
+            webClient.post()
+                .uri(appleProperties.tokenUri)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(
+                    BodyInserters.fromFormData("client_id", appleProperties.clientId)
+                        .with("client_secret", clientSecret)
+                        .with("code", code)
+                        .with("grant_type", appleProperties.grantType)
+                        .with("redirect_uri", appleProperties.redirectUri),
+                )
+                .retrieve()
+                .bodyToMono(Map::class.java)
+                .block() ?: throw IllegalStateException("애플 토큰 응답 실패")
 
         val idToken = response["id_token"] as? String ?: throw IllegalStateException("id_token 누락")
 
@@ -59,7 +61,7 @@ class AppleService(
             email_verified = (payloadMap["email_verified"] as? Boolean) ?: false,
             given_name = payloadMap["given_name"] as? String,
             family_name = payloadMap["family_name"] as? String,
-            locale = payloadMap["locale"] as? String
+            locale = payloadMap["locale"] as? String,
         )
     }
 
@@ -69,24 +71,26 @@ class AppleService(
 
         val privateKey = parsePrivateKey(appleProperties.privateKey)
 
-        val jwtBuilder = Jwts.builder()
-            .json(JacksonSerializer(objectMapper))
-            .issuer(appleProperties.teamId)
-            .subject(appleProperties.clientId)
-            .audience().add("https://appleid.apple.com").and()
-            .issuedAt(Date.from(now))
-            .expiration(Date.from(exp))
-            .signWith(privateKey, Jwts.SIG.ES256)
-            .header().keyId(appleProperties.keyId).and()
+        val jwtBuilder =
+            Jwts.builder()
+                .json(JacksonSerializer(objectMapper))
+                .issuer(appleProperties.teamId)
+                .subject(appleProperties.clientId)
+                .audience().add("https://appleid.apple.com").and()
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(exp))
+                .signWith(privateKey, Jwts.SIG.ES256)
+                .header().keyId(appleProperties.keyId).and()
 
         return jwtBuilder.compact()
     }
 
     private fun parsePrivateKey(pem: String): PrivateKey {
-        val privateKeyPEM = pem
-            .replace("-----BEGIN PRIVATE KEY-----", "")
-            .replace("-----END PRIVATE KEY-----", "")
-            .replace("\\s+".toRegex(), "")
+        val privateKeyPEM =
+            pem
+                .replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replace("\\s+".toRegex(), "")
 
         val keyBytes = Base64.getDecoder().decode(privateKeyPEM)
         val keySpec = PKCS8EncodedKeySpec(keyBytes)

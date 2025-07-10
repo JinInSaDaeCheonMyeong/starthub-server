@@ -12,5 +12,5 @@ data class UpdateUserProfileRequest(
     val birth: LocalDate,
     val gender: UserGender,
     val interests: List<BusinessType>,
-    val profileImage: String
+    val profileImage: String,
 )
