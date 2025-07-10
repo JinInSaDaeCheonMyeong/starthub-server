@@ -9,7 +9,7 @@ class CookieUtil {
     fun createCookie(name: String, value: String, maxAge: Long, httpOnly: Boolean): ResponseCookie =
         ResponseCookie.from(name, value)
             .path("/")
-            .maxAge(maxAge / 1000) // ms to sec
+            .maxAge(maxAge / 1000)
             .httpOnly(httpOnly)
             .secure(true)
             .sameSite("None")
