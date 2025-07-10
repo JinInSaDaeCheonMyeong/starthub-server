@@ -1,7 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response
 
-import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcModificationRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcModificationType
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationType
 import java.time.LocalDateTime
 import java.util.*
 
