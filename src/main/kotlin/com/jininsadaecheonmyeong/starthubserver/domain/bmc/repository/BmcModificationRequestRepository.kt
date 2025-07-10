@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository
 
-import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcModificationRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import org.springframework.data.jpa.repository.JpaRepository

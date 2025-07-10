@@ -3,8 +3,8 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.service
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.ModifyBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcModificationResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BusinessModelCanvasResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcModificationRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcModificationType
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationType
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BusinessModelCanvasNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BmcModificationRequestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository

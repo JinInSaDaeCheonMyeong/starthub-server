@@ -1,6 +1,5 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request
 
-import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcModificationType
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
