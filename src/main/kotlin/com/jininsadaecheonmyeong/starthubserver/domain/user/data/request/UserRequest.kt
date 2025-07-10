@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.user.data
+package com.jininsadaecheonmyeong.starthubserver.domain.user.data.request
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType

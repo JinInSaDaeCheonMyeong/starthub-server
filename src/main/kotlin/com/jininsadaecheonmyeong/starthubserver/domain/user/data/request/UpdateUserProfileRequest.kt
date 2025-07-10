@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.user.data
+package com.jininsadaecheonmyeong.starthubserver.domain.user.data.request
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType

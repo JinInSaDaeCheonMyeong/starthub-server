@@ -1,17 +1,18 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.service
 
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UpdateUserProfileRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.TokenResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserInterest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserInterestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
@@ -86,6 +87,11 @@ class UserService (
             UserInterest(user = user, businessType = interestType)
         }
         userInterestRepository.saveAll(newInterests)
+    }
+
+    @Transactional(readOnly = true)
+    fun getUser(user: User): UserResponse {
+        return UserResponse(user)
     }
 
 }
