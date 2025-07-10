@@ -45,9 +45,15 @@ class UserService (
     fun signIn(request: UserRequest): TokenResponse {
         val user: User = userRepository.findByEmail(request.email) ?: throw UserNotFoundException("찾을 수 없는 유저")
         if (!passwordEncoder.matches(request.password, user.password)) throw InvalidPasswordException("잘못된 비밀번호")
+        val isFirstLogin = user.isFirstLogin
+        if (isFirstLogin) {
+            user.isFirstLogin = false
+            userRepository.save(user)
+        }
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user)
+            refresh = tokenProvider.generateRefresh(user),
+            isFirstLogin = isFirstLogin
         )
     }
 
@@ -61,7 +67,8 @@ class UserService (
 
         return TokenResponse(
             access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user)
+            refresh = tokenProvider.generateRefresh(user),
+            isFirstLogin = false
         )
     }
 
