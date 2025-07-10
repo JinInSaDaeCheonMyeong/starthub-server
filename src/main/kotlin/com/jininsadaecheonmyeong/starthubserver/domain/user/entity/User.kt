@@ -42,5 +42,8 @@ class User (
     var profileImage: String? = null,
 
     @Column(nullable = false)
-    var deleted: Boolean = false
+    var deleted: Boolean = false,
+
+    @Column(nullable = false)
+    var isFirstLogin: Boolean = true
 ) : BaseEntity()

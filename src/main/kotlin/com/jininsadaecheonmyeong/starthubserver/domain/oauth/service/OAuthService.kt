@@ -1,6 +1,5 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.service.AppleService
@@ -33,15 +32,16 @@ class OAuthService(
 
     private fun processOAuthLogin(info: OAuthUserInfo, provider: AuthType): OAuthResponse {
         val existingUser = userRepository.findByEmail(info.email)
-        val isFirstLogin = existingUser == null
         val user = existingUser ?: userRepository.save(info.toUser(provider))
-        return provideTokens(user, isFirstLogin)
-    }
-
-    private fun provideTokens(user: User, isFirstLogin: Boolean) =
-        OAuthResponse(
+        val isFirstLogin = user.isFirstLogin
+        if (isFirstLogin) {
+            user.isFirstLogin = false
+            userRepository.save(user)
+        }
+        return OAuthResponse(
             access = tokenProvider.generateAccess(user),
             refresh = tokenProvider.generateRefresh(user),
             isFirstLogin = isFirstLogin
         )
+    }
 }
