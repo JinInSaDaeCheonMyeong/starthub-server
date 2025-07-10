@@ -29,9 +29,9 @@ class UserController(
         BaseResponse.of(userService.reissue(request), "토큰 재발급 성공")
 
     @PatchMapping("/profile")
-    fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>> {
+    override fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>> {
         val currentUser = UserAuthenticationHolder.current()
-        userService.updateUserProfile(currentUser, request.username, request.interests, request.profileImage)
+        userService.updateUserProfile(currentUser, request)
         return BaseResponse.of("유저 프로필 설정 성공")
     }
 }

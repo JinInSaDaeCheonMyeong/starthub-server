@@ -4,10 +4,10 @@ import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotV
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserInterest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
@@ -72,20 +72,17 @@ class UserService (
         )
     }
 
-    @Transactional
-    fun updateUserProfile(
-        user: User,
-        username: String,
-        interests: List<BusinessType>,
-        profileImage: String
-    ) {
-        user.username = username
-        user.profileImage = profileImage
+    fun updateUserProfile(user: User, request: UpdateUserProfileRequest) {
+        user.username = request.username
+        user.introduction = request.introduction
+        user.birth = request.birth
+        user.gender = request.gender
+        user.profileImage = request.profileImage
         userRepository.save(user)
 
         userInterestRepository.deleteByUser(user)
 
-        val newInterests = interests.map { interestType ->
+        val newInterests = request.interests.map { interestType ->
             UserInterest(user = user, businessType = interestType)
         }
         userInterestRepository.saveAll(newInterests)
