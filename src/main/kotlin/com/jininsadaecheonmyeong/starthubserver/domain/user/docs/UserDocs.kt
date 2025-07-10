@@ -1,9 +1,10 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.docs
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.RefreshRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.TokenResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UpdateUserProfileRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.user.data.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.TokenResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -24,4 +25,7 @@ interface UserDocs {
 
     @Operation(summary = "유저 프로필 업데이트", description = "최초 로그인 시 또는 마이페이지에서 사용자 프로필 정보를 업데이트합니다.")
     fun updateUserProfile(@RequestBody request: UpdateUserProfileRequest): ResponseEntity<BaseResponse<Unit>>
+
+    @Operation(summary = "유저 정보 조회", description = "현재 로그인한 유저의 정보를 조회합니다.")
+    fun getUser(): ResponseEntity<BaseResponse<UserResponse>>
 }

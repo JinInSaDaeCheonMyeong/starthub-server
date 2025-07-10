@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.user.data
+package com.jininsadaecheonmyeong.starthubserver.domain.user.data.response
 
 data class TokenResponse(
     val access: String,
