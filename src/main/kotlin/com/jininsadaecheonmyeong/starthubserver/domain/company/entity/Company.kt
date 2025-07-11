@@ -82,8 +82,6 @@ class Company(
             address = this.address,
             employeeCount = this.employeeCount,
             logoImage = this.logoImage,
-            createdAt = this.createdAt,
-            updatedAt = this.updatedAt,
         )
     }
 

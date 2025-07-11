@@ -1,7 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.company.data.response
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
-import java.time.LocalDateTime
 import java.util.UUID
 
 data class CompanyResponse(
@@ -18,6 +17,4 @@ data class CompanyResponse(
     val address: String?,
     val employeeCount: Int,
     val logoImage: String?,
-    val createdAt: LocalDateTime?,
-    val updatedAt: LocalDateTime?,
 )

@@ -9,6 +9,8 @@ import com.jininsadaecheonmyeong.starthubserver.domain.chat.entity.toResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.exception.ChatRoomNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.repository.ChatMessageRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.repository.ChatRoomRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.CompanyNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -21,21 +23,22 @@ class ChatService(
     private val chatRoomRepository: ChatRoomRepository,
     private val chatMessageRepository: ChatMessageRepository,
     private val userRepository: UserRepository,
+    private val companyRepository: CompanyRepository,
     private val messagingTemplate: SimpMessagingTemplate,
 ) {
     @Transactional
     fun getOrCreateChatRoom(
-        user1Id: UUID,
-        user2Id: UUID,
+        companyId: Long,
+        userId: UUID,
     ): ChatRoomResponse {
-        val user1 = userRepository.findById(user1Id).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
-        val user2 = userRepository.findById(user2Id).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+        val company = companyRepository.findById(companyId).orElseThrow { CompanyNotFoundException("찾을 수 없는 기업") }
+        val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
 
         val room =
-            chatRoomRepository.findChatRoomByUsers(user1, user2)
-                ?: chatRoomRepository.save(ChatRoom(user1 = user1, user2 = user2))
+            chatRoomRepository.findChatRoomByCompanyAndUser(company, user)
+                ?: chatRoomRepository.save(ChatRoom(company = company, user = user))
 
-        return ChatRoomResponse(room.id, room.user1.id!!, room.user2.id!!)
+        return ChatRoomResponse(room.id, room.company.id!!, room.user.id!!)
     }
 
     @Transactional
