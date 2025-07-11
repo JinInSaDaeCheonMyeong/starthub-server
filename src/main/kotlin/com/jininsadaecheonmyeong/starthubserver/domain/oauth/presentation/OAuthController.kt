@@ -77,10 +77,11 @@ class OAuthController(
     ): RedirectView {
         validateState(session, state)
         val oAuthResponse = oAuthService.naverAuth(code)
+        addAccessTokenToCookie(response, oAuthResponse.access)
         addRefreshTokenToCookie(response, oAuthResponse.refresh)
 
         return RedirectView(
-            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}",
+            "${oAuthProperties.frontRedirectUri}?isFirstLogin=${oAuthResponse.isFirstLogin}",
         )
     }
 
@@ -93,10 +94,11 @@ class OAuthController(
     ): RedirectView {
         validateState(session, state)
         val oAuthResponse = oAuthService.appleAuth(code)
+        addAccessTokenToCookie(response, oAuthResponse.access)
         addRefreshTokenToCookie(response, oAuthResponse.refresh)
 
         return RedirectView(
-            "${oAuthProperties.frontRedirectUri}?access=${oAuthResponse.access}&isFirstLogin=${oAuthResponse.isFirstLogin}",
+            "${oAuthProperties.frontRedirectUri}?&isFirstLogin=${oAuthResponse.isFirstLogin}",
         )
     }
 
@@ -104,14 +106,14 @@ class OAuthController(
         response: HttpServletResponse,
         accessToken: String,
     ) {
-        cookieUtil.addCookie(response, "access", accessToken, tokenProperties.access, true)
+        cookieUtil.addCookie(response, "access_token", accessToken, tokenProperties.access, true)
     }
 
     private fun addRefreshTokenToCookie(
         response: HttpServletResponse,
         refreshToken: String,
     ) {
-        cookieUtil.addCookie(response, "refresh", refreshToken, tokenProperties.refresh, true)
+        cookieUtil.addCookie(response, "refresh_token", refreshToken, tokenProperties.refresh, true)
     }
 
     private fun validateState(
