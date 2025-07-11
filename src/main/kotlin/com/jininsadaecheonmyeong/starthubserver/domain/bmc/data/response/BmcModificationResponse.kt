@@ -27,7 +27,7 @@ data class BmcModificationResponse(
                 requestType = modificationRequest.requestType,
                 isProcessed = modificationRequest.isProcessed,
                 aiResponse = modificationRequest.aiResponse,
-                createdAt = modificationRequest.createdAt!!,
+                createdAt = modificationRequest.createdAt,
                 updatedBmc = updatedBmc,
             )
         }
