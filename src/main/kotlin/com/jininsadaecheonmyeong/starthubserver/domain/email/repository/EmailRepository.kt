@@ -10,4 +10,6 @@ interface EmailRepository : JpaRepository<Email, Long> {
         email: String,
         code: String?,
     ): Email?
+
+    fun existsByEmail(email: String): Boolean
 }

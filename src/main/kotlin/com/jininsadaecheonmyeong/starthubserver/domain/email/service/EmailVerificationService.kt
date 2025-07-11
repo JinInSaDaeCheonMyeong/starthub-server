@@ -19,9 +19,7 @@ class EmailVerificationService(
     fun sendVerificationCode(email: String) {
         val existingEmail = emailRepository.findByEmail(email)
 
-        if (existingEmail?.isVerified == true) {
-            throw EmailAlreadyVerifiedException("이미 인증된 이메일입니다.")
-        }
+        if (existingEmail?.isVerified == true) throw EmailAlreadyVerifiedException("이미 인증된 이메일입니다.")
 
         val code = generateVerificationCode()
 
@@ -54,5 +52,9 @@ class EmailVerificationService(
             verification.isVerified = true
             emailRepository.save(verification)
         }
+    }
+
+    fun checkEmailDuplicate(email: String): Boolean {
+        return emailRepository.existsByEmail(email)
     }
 }
