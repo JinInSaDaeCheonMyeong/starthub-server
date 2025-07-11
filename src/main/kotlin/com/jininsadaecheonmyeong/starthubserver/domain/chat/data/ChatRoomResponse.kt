@@ -4,6 +4,6 @@ import java.util.UUID
 
 data class ChatRoomResponse(
     val id: Long,
-    val companyId: Long,
     val userId: UUID,
+    val founderId: UUID,
 )

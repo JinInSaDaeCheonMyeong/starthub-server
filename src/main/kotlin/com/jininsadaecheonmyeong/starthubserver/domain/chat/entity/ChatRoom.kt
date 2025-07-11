@@ -1,6 +1,5 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.chat.entity
 
-import com.jininsadaecheonmyeong.starthubserver.domain.company.entity.Company
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -18,9 +17,9 @@ data class ChatRoom(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id")
-    val company: Company,
+    @JoinColumn(name = "user1_id")
+    val user1: User,
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    val user: User,
+    @JoinColumn(name = "user2_id")
+    val user2: User,
 )
