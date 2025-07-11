@@ -35,8 +35,8 @@ data class BusinessModelCanvasResponse(
                 costStructure = bmc.costStructure,
                 revenueStreams = bmc.revenueStreams,
                 isCompleted = bmc.isCompleted,
-                createdAt = bmc.createdAt!!,
-                updatedAt = bmc.updatedAt!!,
+                createdAt = bmc.createdAt,
+                updatedAt = bmc.updatedAt,
             )
         }
     }

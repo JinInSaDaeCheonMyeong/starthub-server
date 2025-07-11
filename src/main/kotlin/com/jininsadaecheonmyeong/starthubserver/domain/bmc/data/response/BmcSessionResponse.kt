@@ -19,7 +19,7 @@ data class BmcSessionResponse(
                 sessionId = bmcQuestion.sessionId,
                 businessIdea = bmcQuestion.businessIdea,
                 isCompleted = bmcQuestion.isCompleted,
-                createdAt = bmcQuestion.createdAt!!,
+                createdAt = bmcQuestion.createdAt,
                 questions =
                     (1..10).map { questionNumber ->
                         BmcQuestionResponse(

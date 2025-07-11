@@ -13,8 +13,8 @@ import java.util.UUID
 interface ChatDocs {
     @Operation(summary = "채팅방 생성", description = "새로운 채팅방을 생성하거나 기존 채팅방을 가져옵니다.")
     fun createOrGetRoom(
-        @RequestParam user1Id: UUID,
-        @RequestParam user2Id: UUID,
+        @RequestParam userId: UUID,
+        @RequestParam companyId: Long,
     ): ResponseEntity<BaseResponse<ChatRoomResponse>>
 
     @Operation(summary = "채팅 조회", description = "채팅 내역을 가져옵니다.")

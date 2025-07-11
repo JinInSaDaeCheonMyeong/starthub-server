@@ -19,5 +19,4 @@ data class CompanyResponse(
     val employeeCount: Int,
     val logoImage: String?,
     val createdAt: LocalDateTime?,
-    val updatedAt: LocalDateTime?,
 )
