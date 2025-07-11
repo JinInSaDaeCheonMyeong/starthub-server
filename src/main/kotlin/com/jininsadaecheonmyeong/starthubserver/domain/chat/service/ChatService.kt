@@ -28,17 +28,18 @@ class ChatService(
 ) {
     @Transactional
     fun getOrCreateChatRoom(
-        companyId: Long,
         userId: UUID,
+        companyId: Long,
     ): ChatRoomResponse {
-        val company = companyRepository.findById(companyId).orElseThrow { CompanyNotFoundException("찾을 수 없는 기업") }
         val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+        val company = companyRepository.findById(companyId).orElseThrow { CompanyNotFoundException("찾을 수 없는 기업") }
+        val founder = company.founder
 
         val room =
-            chatRoomRepository.findChatRoomByCompanyAndUser(company, user)
-                ?: chatRoomRepository.save(ChatRoom(company = company, user = user))
+            chatRoomRepository.findChatRoomByUsers(user, founder)
+                ?: chatRoomRepository.save(ChatRoom(user1 = user, user2 = founder))
 
-        return ChatRoomResponse(room.id, room.company.id!!, room.user.id!!)
+        return ChatRoomResponse(room.id, userId, founder.id!!)
     }
 
     @Transactional

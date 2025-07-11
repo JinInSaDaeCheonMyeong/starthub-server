@@ -20,9 +20,9 @@ class ChatController(
 ) : ChatDocs {
     @PostMapping("/room")
     override fun createOrGetRoom(
-        @RequestParam companyId: Long,
         @RequestParam userId: UUID,
-    ) = BaseResponse.of(chatService.getOrCreateChatRoom(companyId, userId), "채팅방 생성 성공")
+        @RequestParam companyId: Long,
+    ) = BaseResponse.of(chatService.getOrCreateChatRoom(userId, companyId), "채팅방 생성 성공")
 
     @GetMapping("/messages")
     override fun getMessages(
