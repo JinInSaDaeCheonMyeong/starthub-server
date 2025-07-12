@@ -2,6 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.AnswerQuestionRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.CreateBmcSessionRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcFormResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcSessionResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcQuestion
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcSessionNotFoundException
@@ -38,11 +39,7 @@ class BmcQuestionService(
                 .orElseThrow { BmcSessionNotFoundException("BMC 세션을 찾을 수 없습니다.") }
 
         bmcQuestion.updateAnswer(request.questionNumber, request.answer)
-
-        if (isSessionCompleted(bmcQuestion)) {
-            bmcQuestion.markAsCompleted()
-        }
-
+        if (isSessionCompleted(bmcQuestion)) bmcQuestion.markAsCompleted()
         val savedBmcQuestion = bmcQuestionRepository.save(bmcQuestion)
         return BmcSessionResponse.from(savedBmcQuestion)
     }
@@ -66,8 +63,8 @@ class BmcQuestionService(
     }
 
     @Transactional(readOnly = true)
-    fun getBmcQuestions(): List<String> {
-        return listOf(
+    fun getBmcQuestions(): List<BmcFormResponse> {
+        val questions = listOf(
             "당신의 사업 아이디어로 해결하고자 하는 핵심 문제는 무엇입니까?",
             "이 문제를 겪는 주요 고객층은 누구입니까? 구체적으로 설명해주세요.",
             "당신의 제품/서비스가 제공하는 핵심 가치는 무엇입니까?",
@@ -79,6 +76,10 @@ class BmcQuestionService(
             "주요 비용 구조는 어떻게 구성될 예정입니까?",
             "어떤 방식으로 수익을 창출할 계획입니까?",
         )
+
+        return questions.mapIndexed { i, q ->
+            BmcFormResponse(questionNumber = i.inc(), question = q)
+        }
     }
 
     private fun isSessionCompleted(bmcQuestion: BmcQuestion): Boolean {
