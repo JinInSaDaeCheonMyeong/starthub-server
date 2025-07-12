@@ -5,24 +5,13 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.Optional
-import java.util.UUID
 
 @Repository
-interface BmcQuestionRepository : JpaRepository<BmcQuestion, UUID> {
+interface BmcQuestionRepository : JpaRepository<BmcQuestion, Long> {
     fun findByIdAndUser(
-        id: UUID,
-        user: User,
-    ): Optional<BmcQuestion>
-
-    fun findBySessionIdAndUser(
-        sessionId: String,
+        id: Long,
         user: User,
     ): Optional<BmcQuestion>
 
     fun findAllByUserOrderByCreatedAtDesc(user: User): List<BmcQuestion>
-
-    fun existsBySessionIdAndUser(
-        sessionId: String,
-        user: User,
-    ): Boolean
 }

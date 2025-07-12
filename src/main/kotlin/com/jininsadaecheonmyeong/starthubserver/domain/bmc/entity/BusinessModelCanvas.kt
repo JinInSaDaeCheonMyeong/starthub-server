@@ -12,14 +12,13 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
-import java.util.UUID
 
 @Entity
 @Table(name = "business_model_canvas")
 class BusinessModelCanvas(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_user_id", nullable = false)
     val user: User,

@@ -5,15 +5,14 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.Optional
-import java.util.UUID
 
 @Repository
-interface BusinessModelCanvasRepository : JpaRepository<BusinessModelCanvas, UUID> {
-    fun findByIdAndDeletedFalse(id: UUID): Optional<BusinessModelCanvas>
+interface BusinessModelCanvasRepository : JpaRepository<BusinessModelCanvas, Long> {
+    fun findByIdAndDeletedFalse(id: Long): Optional<BusinessModelCanvas>
 
     fun findAllByUserAndDeletedFalse(user: User): List<BusinessModelCanvas>
 
     fun findAllByDeletedFalse(): List<BusinessModelCanvas>
 
-    fun existsByIdAndDeletedFalse(id: UUID): Boolean
+    fun existsByIdAndDeletedFalse(id: Long): Boolean
 }
