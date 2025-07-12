@@ -5,7 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModif
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.ModifyBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcModificationResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BusinessModelCanvasResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BusinessModelCanvasNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BmcModificationRequestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
@@ -28,11 +28,9 @@ class BmcModificationService(
         val user = UserAuthenticationHolder.current()
         val bmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(request.bmcId)
-                .orElseThrow { BusinessModelCanvasNotFoundException("BMC를 찾을 수 없습니다.") }
+                .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
 
-        if (!bmc.isOwner(user)) {
-            throw BusinessModelCanvasNotFoundException("접근 권한이 없습니다.")
-        }
+        if (!bmc.isOwner(user)) throw BmcNotFoundException("접근 권한이 없습니다.")
 
         val modificationRequest =
             BmcModificationRequest(
@@ -84,11 +82,9 @@ class BmcModificationService(
         val user = UserAuthenticationHolder.current()
         val bmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
-                .orElseThrow { BusinessModelCanvasNotFoundException("BMC를 찾을 수 없습니다.") }
+                .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
 
-        if (!bmc.isOwner(user)) {
-            throw BusinessModelCanvasNotFoundException("접근 권한이 없습니다.")
-        }
+        if (!bmc.isOwner(user)) throw BmcNotFoundException("접근 권한이 없습니다.")
 
         val modifications = bmcModificationRequestRepository.findByBusinessModelCanvasAndUserOrderByCreatedAtDesc(bmc, user)
         return modifications.map { BmcModificationResponse.from(it) }
@@ -210,9 +206,7 @@ class BmcModificationService(
         var currentIndex = startIndex
 
         val firstLine = lines[currentIndex].removePrefix("$key:").trim()
-        if (firstLine.isNotEmpty()) {
-            content.append(firstLine)
-        }
+        if (firstLine.isNotEmpty()) content.append(firstLine)
 
         currentIndex++
         while (currentIndex < lines.size) {
@@ -231,9 +225,7 @@ class BmcModificationService(
                 break
             }
 
-            if (content.isNotEmpty()) {
-                content.append("\n")
-            }
+            if (content.isNotEmpty()) content.append("\n")
             content.append(line)
             currentIndex++
         }
