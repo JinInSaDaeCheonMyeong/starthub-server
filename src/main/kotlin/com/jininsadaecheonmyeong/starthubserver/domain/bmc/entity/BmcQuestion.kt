@@ -13,16 +13,19 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
+import java.util.UUID
 
 @Entity
 @Table(name = "bmc_questions")
 class BmcQuestion(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @GeneratedValue(strategy = GenerationType.UUID)
+    val id: UUID? = null,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_user_id", nullable = false)
     val user: User,
+    @Column(nullable = false)
+    var sessionId: String,
     @Column(nullable = false)
     var businessIdea: String,
     @Column(columnDefinition = "TEXT")

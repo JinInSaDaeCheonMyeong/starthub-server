@@ -101,7 +101,9 @@ class BmcGenerationService(
         var currentIndex = startIndex
 
         val firstLine = lines[currentIndex].removePrefix("$key:").trim()
-        if (firstLine.isNotEmpty()) content.append(firstLine)
+        if (firstLine.isNotEmpty()) {
+            content.append(firstLine)
+        }
 
         currentIndex++
         while (currentIndex < lines.size) {
@@ -120,7 +122,9 @@ class BmcGenerationService(
                 break
             }
 
-            if (content.isNotEmpty()) content.append("\n")
+            if (content.isNotEmpty()) {
+                content.append("\n")
+            }
             content.append(line)
             currentIndex++
         }

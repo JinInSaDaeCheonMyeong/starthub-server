@@ -2,10 +2,11 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response
 
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcQuestion
 import java.time.LocalDateTime
+import java.util.UUID
 
 data class BmcSessionResponse(
-    val id: Long,
-    val sessionId: Long,
+    val id: UUID,
+    val sessionId: String,
     val businessIdea: String,
     val isCompleted: Boolean,
     val createdAt: LocalDateTime,
@@ -15,7 +16,7 @@ data class BmcSessionResponse(
         fun from(bmcQuestion: BmcQuestion): BmcSessionResponse {
             return BmcSessionResponse(
                 id = bmcQuestion.id!!,
-                sessionId = bmcQuestion.id!!,
+                sessionId = bmcQuestion.sessionId,
                 businessIdea = bmcQuestion.businessIdea,
                 isCompleted = bmcQuestion.isCompleted,
                 createdAt = bmcQuestion.createdAt,

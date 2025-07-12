@@ -3,10 +3,11 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.BmcModificationType
 import java.time.LocalDateTime
+import java.util.UUID
 
 data class BmcModificationResponse(
-    val id: Long,
-    val bmcId: Long,
+    val id: UUID,
+    val bmcId: UUID,
     val modificationRequest: String,
     val requestType: BmcModificationType,
     val isProcessed: Boolean,

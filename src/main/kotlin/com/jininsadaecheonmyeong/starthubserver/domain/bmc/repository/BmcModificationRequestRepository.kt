@@ -6,9 +6,10 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.Optional
+import java.util.UUID
 
 @Repository
-interface BmcModificationRequestRepository : JpaRepository<BmcModificationRequest, Long> {
+interface BmcModificationRequestRepository : JpaRepository<BmcModificationRequest, UUID> {
     fun findByBusinessModelCanvasAndUserOrderByCreatedAtDesc(
         bmc: BusinessModelCanvas,
         user: User,
@@ -17,7 +18,7 @@ interface BmcModificationRequestRepository : JpaRepository<BmcModificationReques
     fun findByUserOrderByCreatedAtDesc(user: User): List<BmcModificationRequest>
 
     fun findByIdAndUser(
-        id: Long,
+        id: UUID,
         user: User,
     ): Optional<BmcModificationRequest>
 }

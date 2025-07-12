@@ -3,10 +3,11 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
+import java.util.UUID
 
 data class ModifyBmcRequest(
     @field:NotNull(message = "BMC ID를 입력해주세요.")
-    val bmcId: Long,
+    val bmcId: UUID,
     @field:NotBlank(message = "수정 요청 내용을 입력해주세요.")
     @field:Size(min = 10, max = 1000, message = "수정 요청은 10자 이상 1000자 이하로 입력해주세요.")
     val modificationRequest: String,
