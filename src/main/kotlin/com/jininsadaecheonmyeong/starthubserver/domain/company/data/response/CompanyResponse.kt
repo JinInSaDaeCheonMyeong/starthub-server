@@ -2,7 +2,6 @@ package com.jininsadaecheonmyeong.starthubserver.domain.company.data.response
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import java.time.LocalDateTime
-import java.util.UUID
 
 data class CompanyResponse(
     val id: Long,
@@ -10,7 +9,7 @@ data class CompanyResponse(
     val companyDescription: String,
     val companyCategory: BusinessType,
     val businessDescription: String,
-    val founderId: UUID,
+    val founderId: Long,
     val founderName: String?,
     val companyUrl: String?,
     val contactEmail: String,
