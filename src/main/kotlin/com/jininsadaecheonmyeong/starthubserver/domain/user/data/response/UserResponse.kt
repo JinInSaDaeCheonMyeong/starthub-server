@@ -11,6 +11,7 @@ data class UserResponse(
     val birth: LocalDate?,
     val gender: UserGender?,
     val profileImage: String?,
+    val introduction: String?,
 ) {
     constructor(user: User) : this(
         id = user.id!!,
@@ -19,5 +20,6 @@ data class UserResponse(
         birth = user.birth,
         gender = user.gender,
         profileImage = user.profileImage,
+        introduction = user.introduction,
     )
 }
