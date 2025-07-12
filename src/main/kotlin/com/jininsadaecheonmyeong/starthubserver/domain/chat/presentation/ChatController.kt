@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @RestController
 @RequestMapping("/chat")
@@ -20,7 +19,7 @@ class ChatController(
 ) : ChatDocs {
     @PostMapping("/room")
     override fun createOrGetRoom(
-        @RequestParam userId: UUID,
+        @RequestParam userId: Long,
         @RequestParam companyId: Long,
     ) = BaseResponse.of(chatService.getOrCreateChatRoom(userId, companyId), "채팅방 생성 성공")
 
