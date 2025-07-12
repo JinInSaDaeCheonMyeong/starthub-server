@@ -75,7 +75,10 @@ class BmcQuestionService(
         )
 
         return questions.mapIndexed { i, q ->
-            BmcFormResponse(questionNumber = i.inc(), question = q)
+            BmcFormResponse(
+                questionNumber = i.inc(),
+                question = q
+            )
         }
     }
 
