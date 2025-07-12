@@ -16,7 +16,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepos
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class ChatService(
@@ -28,7 +27,7 @@ class ChatService(
 ) {
     @Transactional
     fun getOrCreateChatRoom(
-        userId: UUID,
+        userId: Long,
         companyId: Long,
     ): ChatRoomResponse {
         val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }

@@ -13,14 +13,13 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.LocalDate
-import java.util.UUID
 
 @Entity
 @Table(name = "users")
 class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: UUID? = null,
+    val id: Long? = null,
     @Column(nullable = false, unique = true)
     val email: String,
     var password: String? = null,
