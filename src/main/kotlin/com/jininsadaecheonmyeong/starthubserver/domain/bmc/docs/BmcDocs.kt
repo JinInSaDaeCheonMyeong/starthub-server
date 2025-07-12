@@ -17,7 +17,6 @@ import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
-import java.util.*
 
 @Tag(name = "BMC", description = "비즈니스 모델 캔버스 관련 API")
 interface BmcDocs {
@@ -88,7 +87,7 @@ interface BmcDocs {
         description = "특정 BMC를 삭제합니다. Soft Delete로 처리됩니다.",
     )
     fun deleteBmc(
-        @PathVariable id: UUID,
+        @PathVariable id: Long,
     ): ResponseEntity<BaseResponse<Unit>>
 
     @Operation(
@@ -102,7 +101,7 @@ interface BmcDocs {
 
     @Operation(summary = "BMC 세션 상세 조회", description = "특정 BMC 세션의 상세 정보를 조회합니다.")
     fun getBmcSession(
-        @PathVariable sessionId: String,
+        @PathVariable sessionId: Long,
     ): ResponseEntity<BaseResponse<BmcSessionResponse>>
 
     @Operation(
@@ -116,11 +115,11 @@ interface BmcDocs {
         description = "특정 BMC의 상세 정보를 조회합니다. 9개 요소의 상세 내용을 확인할 수 있습니다.",
     )
     fun getBmcs(
-        @PathVariable id: UUID,
+        @PathVariable id: Long,
     ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>>
 
     @Operation(summary = "BMC 수정 히스토리 조회", description = "특정 BMC의 수정 요청 히스토리를 조회합니다.")
     fun getBmcModificationHistory(
-        @PathVariable id: UUID,
+        @PathVariable id: Long,
     ): ResponseEntity<BaseResponse<List<BmcModificationResponse>>>
 }

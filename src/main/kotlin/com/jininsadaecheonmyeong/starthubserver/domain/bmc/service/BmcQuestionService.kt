@@ -10,7 +10,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BmcQuestio
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 @Transactional
@@ -19,12 +18,10 @@ class BmcQuestionService(
 ) {
     fun createBmcSession(request: CreateBmcSessionRequest): BmcSessionResponse {
         val user = UserAuthenticationHolder.current()
-        val sessionId = UUID.randomUUID().toString()
 
         val bmcQuestion =
             BmcQuestion(
                 user = user,
-                sessionId = sessionId,
                 businessIdea = request.businessIdea,
             )
 
@@ -35,7 +32,7 @@ class BmcQuestionService(
     fun answerQuestion(request: AnswerQuestionRequest): BmcSessionResponse {
         val user = UserAuthenticationHolder.current()
         val bmcQuestion =
-            bmcQuestionRepository.findBySessionIdAndUser(request.sessionId, user)
+            bmcQuestionRepository.findByIdAndUser(request.sessionId, user)
                 .orElseThrow { BmcSessionNotFoundException("BMC 세션을 찾을 수 없습니다.") }
 
         bmcQuestion.updateAnswer(request.questionNumber, request.answer)
@@ -45,10 +42,10 @@ class BmcQuestionService(
     }
 
     @Transactional(readOnly = true)
-    fun getBmcSession(sessionId: String): BmcSessionResponse {
+    fun getBmcSession(sessionId: Long): BmcSessionResponse {
         val user = UserAuthenticationHolder.current()
         val bmcQuestion =
-            bmcQuestionRepository.findBySessionIdAndUser(sessionId, user)
+            bmcQuestionRepository.findByIdAndUser(sessionId, user)
                 .orElseThrow { BmcSessionNotFoundException("BMC 세션을 찾을 수 없습니다.") }
 
         return BmcSessionResponse.from(bmcQuestion)
@@ -86,9 +83,9 @@ class BmcQuestionService(
         return bmcQuestion.getAllAnswers().all { it != null && it.isNotBlank() }
     }
 
-    fun getBmcQuestionEntity(sessionId: String): BmcQuestion {
+    fun getBmcQuestionEntity(sessionId: Long): BmcQuestion {
         val user = UserAuthenticationHolder.current()
-        return bmcQuestionRepository.findBySessionIdAndUser(sessionId, user)
+        return bmcQuestionRepository.findByIdAndUser(sessionId, user)
             .orElseThrow { BmcSessionNotFoundException("BMC 세션을 찾을 수 없습니다.") }
     }
 }
