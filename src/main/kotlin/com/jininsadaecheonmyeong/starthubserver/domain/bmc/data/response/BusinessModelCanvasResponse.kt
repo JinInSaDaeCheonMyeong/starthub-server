@@ -2,10 +2,9 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response
 
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import java.time.LocalDateTime
-import java.util.UUID
 
 data class BusinessModelCanvasResponse(
-    val id: UUID,
+    val id: Long,
     val title: String,
     val keyPartners: String?,
     val keyActivities: String?,

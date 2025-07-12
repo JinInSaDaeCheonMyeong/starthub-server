@@ -19,7 +19,7 @@ import java.util.UUID
 @Table(name = "users")
 class User(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: UUID? = null,
     @Column(nullable = false, unique = true)
     val email: String,

@@ -13,7 +13,6 @@ import com.jininsadaecheonmyeong.starthubserver.logger
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 @Transactional
@@ -78,7 +77,7 @@ class BmcModificationService(
     }
 
     @Transactional(readOnly = true)
-    fun getBmcModificationHistory(bmcId: UUID): List<BmcModificationResponse> {
+    fun getBmcModificationHistory(bmcId: Long): List<BmcModificationResponse> {
         val user = UserAuthenticationHolder.current()
         val bmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
