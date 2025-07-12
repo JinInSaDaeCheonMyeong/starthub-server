@@ -3,15 +3,15 @@ package com.jininsadaecheonmyeong.starthubserver.domain.user.data.response
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserGender
 import java.time.LocalDate
-import java.util.UUID
 
 data class UserResponse(
-    val id: UUID,
+    val id: Long,
     val email: String,
     val username: String?,
     val birth: LocalDate?,
     val gender: UserGender?,
     val profileImage: String?,
+    val introduction: String?,
 ) {
     constructor(user: User) : this(
         id = user.id!!,
@@ -20,5 +20,6 @@ data class UserResponse(
         birth = user.birth,
         gender = user.gender,
         profileImage = user.profileImage,
+        introduction = user.introduction,
     )
 }
