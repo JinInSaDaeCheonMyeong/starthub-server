@@ -7,13 +7,12 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestParam
-import java.util.UUID
 
 @Tag(name = "채팅", description = "채팅 관련 API")
 interface ChatDocs {
     @Operation(summary = "채팅방 생성", description = "새로운 채팅방을 생성하거나 기존 채팅방을 가져옵니다.")
     fun createOrGetRoom(
-        @RequestParam userId: UUID,
+        @RequestParam userId: Long,
         @RequestParam companyId: Long,
     ): ResponseEntity<BaseResponse<ChatRoomResponse>>
 
