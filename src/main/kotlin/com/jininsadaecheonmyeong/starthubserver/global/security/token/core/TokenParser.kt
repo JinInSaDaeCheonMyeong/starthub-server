@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class TokenParser(
-    private val properties: TokenProperties
+    private val properties: TokenProperties,
 ) {
     fun findType(token: String): TokenType {
         return TokenType.toTokenType(createClaims(token)["category"].toString())

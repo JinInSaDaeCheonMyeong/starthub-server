@@ -1,10 +1,13 @@
 plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.2.3"
+    id("org.springframework.boot") version "3.5.3"
     kotlin("plugin.jpa") version "1.9.25"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
+
+val springAiVersion by extra("1.0.0")
 
 group = "com.JinInSaDaeCheonMyeong"
 version = "0.0.1-SNAPSHOT"
@@ -29,21 +32,26 @@ dependencies {
     // websocket + stomp
     implementation("org.springframework.boot:spring-boot-starter-websocket")
 
+    // ai
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+
     // email
-    implementation ("org.springframework.boot:spring-boot-starter-mail")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
 
     // swagger
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
 
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")
 
     // database
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
     runtimeOnly("com.mysql:mysql-connector-j")
 
     // redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.session:spring-session-data-redis")
 
     // testCode
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -79,6 +87,11 @@ kotlin {
     jvmToolchain(21)
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
+    }
+}
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
     }
 }
 
