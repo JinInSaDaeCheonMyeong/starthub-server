@@ -8,6 +8,9 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.docs.UserDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.user.service.UserService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import com.jininsadaecheonmyeong.starthubserver.global.security.util.PlatformAuthenticationHelper
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/user")
 class UserController(
     private val userService: UserService,
+    private val platformAuthenticationHelper: PlatformAuthenticationHelper,
 ) : UserDocs {
     @PostMapping("/sign-up")
     override fun signUp(
@@ -28,10 +32,56 @@ class UserController(
     ) = BaseResponse.of(userService.signUp(request), "회원가입 성공")
 
     @PostMapping("/sign-in")
-    override fun signIn(request: UserRequest) = BaseResponse.of(userService.signIn(request), "로그인 성공")
+    override fun signIn(
+        request: UserRequest,
+        httpRequest: HttpServletRequest,
+        httpResponse: HttpServletResponse,
+    ): ResponseEntity<BaseResponse<Any>> {
+        val tokenResponse = userService.signIn(request)
+
+        return when {
+            platformAuthenticationHelper.isWebPlatform(httpRequest) -> {
+                platformAuthenticationHelper.setTokenCookies(
+                    httpResponse,
+                    tokenResponse.access,
+                    tokenResponse.refresh,
+                )
+                BaseResponse.of(
+                    mapOf("isFirstLogin" to tokenResponse.isFirstLogin),
+                    "로그인 성공",
+                )
+            }
+            else -> {
+                BaseResponse.of(tokenResponse, "로그인 성공")
+            }
+        }
+    }
 
     @PostMapping("/reissue")
-    override fun reissue(request: RefreshRequest) = BaseResponse.of(userService.reissue(request), "토큰 재발급 성공")
+    override fun reissue(
+        request: RefreshRequest,
+        httpRequest: HttpServletRequest,
+        httpResponse: HttpServletResponse,
+    ): ResponseEntity<BaseResponse<Any>> {
+        val tokenResponse = userService.reissue(request)
+
+        return when {
+            platformAuthenticationHelper.isWebPlatform(httpRequest) -> {
+                platformAuthenticationHelper.setTokenCookies(
+                    httpResponse,
+                    tokenResponse.access,
+                    tokenResponse.refresh,
+                )
+                BaseResponse.of(
+                    mapOf("isFirstLogin" to tokenResponse.isFirstLogin),
+                    "토큰 재발급 성공",
+                )
+            }
+            else -> {
+                BaseResponse.of(tokenResponse, "토큰 재발급 성공")
+            }
+        }
+    }
 
     @PatchMapping("/profile")
     override fun updateUserProfile(
