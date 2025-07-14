@@ -1,4 +1,3 @@
-
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response
 
 import java.time.LocalDateTime

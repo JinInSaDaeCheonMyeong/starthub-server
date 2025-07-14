@@ -1,4 +1,3 @@
-
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.CompanyNotFoundException
@@ -16,10 +15,13 @@ import com.jininsadaecheonmyeong.starthubserver.domain.recruit.repository.Recrui
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.repository.RecruitTechStackRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.repository.TechStackRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Transactional(readOnly = true)
 class RecruitService(
     private val recruitRepository: RecruitRepository,
     private val companyRepository: CompanyRepository,
@@ -54,20 +56,6 @@ class RecruitService(
         return savedRecruit.toResponse(techStacks.map { it.name })
     }
 
-    @Transactional(readOnly = true)
-    fun getRecruit(recruitId: Long): RecruitResponse {
-        val recruit =
-            recruitRepository.findByIdAndDeletedFalse(recruitId)
-                .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
-        val techStacks = getTechStacksForRecruit(recruit)
-        return recruit.toResponse(techStacks)
-    }
-
-    @Transactional(readOnly = true)
-    fun getAllRecruits(): List<RecruitSummaryResponse> {
-        return recruitRepository.findAllByDeletedFalse().map { it.toSummaryResponse() }
-    }
-
     @Transactional
     fun updateRecruit(
         recruitId: Long,
@@ -82,23 +70,19 @@ class RecruitService(
             throw NotRecruitWriterException("채용 공고 작성자만 수정할 수 있습니다.")
         }
 
-        request.title?.let { recruit.title = it }
-        request.content?.let { recruit.content = it }
-        request.startDate?.let { recruit.startDate = it }
-        request.endDate?.let { recruit.endDate = it }
-        request.desiredCareer?.let { recruit.desiredCareer = it }
-        request.workType?.let { recruit.workType = it }
-        request.jobType?.let { recruit.jobType = it }
-        request.requiredPeople?.let { recruit.requiredPeople = it }
+        recruit.title = request.title
+        recruit.content = request.content
+        recruit.startDate = request.startDate
+        recruit.endDate = request.endDate
+        recruit.desiredCareer = request.desiredCareer
+        recruit.workType = request.workType
+        recruit.jobType = request.jobType
+        recruit.requiredPeople = request.requiredPeople
 
-        val techStacks =
-            request.techStack?.let {
-                updateRecruitTechStacks(recruit, it)
-                it
-            } ?: getTechStacksForRecruit(recruit)
+        val techStacks = updateRecruitTechStacks(recruit, request.techStack)
 
         val updatedRecruit = recruitRepository.save(recruit)
-        return updatedRecruit.toResponse(techStacks)
+        return updatedRecruit.toResponse(techStacks.map { it.name })
     }
 
     @Transactional
@@ -114,6 +98,37 @@ class RecruitService(
 
         recruit.delete()
         recruitRepository.save(recruit)
+    }
+
+    @Transactional
+    fun closeRecruit(recruitId: Long) {
+        val recruit =
+            recruitRepository.findByIdAndDeletedFalse(recruitId)
+                .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
+
+        val user = UserAuthenticationHolder.current()
+        if (recruit.writer.id != user.id) {
+            throw NotRecruitWriterException("채용 공고 작성자만 마감할 수 있습니다.")
+        }
+
+        recruit.close()
+        recruitRepository.save(recruit)
+    }
+
+    fun getAllRecruits(
+        page: Int,
+        size: Int,
+    ): Page<RecruitSummaryResponse> {
+        val pageable = PageRequest.of(page, size)
+        return recruitRepository.findAllByDeletedFalse(pageable).map { it.toSummaryResponse() }
+    }
+
+    fun getRecruit(recruitId: Long): RecruitResponse {
+        val recruit =
+            recruitRepository.findByIdAndDeletedFalse(recruitId)
+                .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
+        val techStacks = getTechStacksForRecruit(recruit)
+        return recruit.toResponse(techStacks)
     }
 
     private fun saveAndGetTechStacks(techStackNames: List<String>): List<TechStack> {
@@ -138,10 +153,10 @@ class RecruitService(
     private fun updateRecruitTechStacks(
         recruit: Recruit,
         techStackNames: List<String>,
-    ) {
-        val existingRecruitTechStacks = recruitTechStackRepository.findByRecruit(recruit)
-        recruitTechStackRepository.deleteAll(existingRecruitTechStacks)
+    ): List<TechStack> {
+        recruitTechStackRepository.deleteAll(recruitTechStackRepository.findByRecruit(recruit))
         val techStacks = saveAndGetTechStacks(techStackNames)
         saveRecruitTechStacks(recruit, techStacks)
+        return techStacks
     }
 }

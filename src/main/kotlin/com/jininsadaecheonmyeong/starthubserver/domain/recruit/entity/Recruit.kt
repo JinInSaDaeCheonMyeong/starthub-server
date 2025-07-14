@@ -1,4 +1,3 @@
-
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity
 
 import com.jininsadaecheonmyeong.starthubserver.domain.company.entity.Company
@@ -60,8 +59,6 @@ class Recruit(
     fun close() {
         this.isClosed = true
     }
-
-    fun isClosed(): Boolean = isClosed
 
     fun toResponse(techStack: List<String>): RecruitResponse {
         return RecruitResponse(
