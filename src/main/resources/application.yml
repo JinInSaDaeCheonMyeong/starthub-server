@@ -88,3 +88,7 @@ oauth:
 discord:
   webhook:
     url: ${DISCORD_WEBHOOK_URL}
+
+gcs:
+  bucket-name: ${GCS_BUCKET_NAME}
+  credentials-path: ${GCS_CREDENTIALS_PATH}

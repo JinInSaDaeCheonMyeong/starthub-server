@@ -3,6 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.user.docs
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.ProfileImageResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -12,6 +13,8 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.multipart.MultipartFile
 
 @Tag(name = "유저", description = "사용자 관련 API")
 interface UserDocs {
@@ -47,4 +50,9 @@ interface UserDocs {
 
     @Operation(summary = "유저 정보 조회", description = "현재 로그인한 유저의 정보를 조회합니다.")
     fun getUser(): ResponseEntity<BaseResponse<UserResponse>>
+
+    @Operation(summary = "프로필 사진 업로드", description = "프로필 사진을 업로드합니다. 파일은 MultipartFile 형식으로 전송되어야 합니다.")
+    fun uploadProfileImage(
+        @RequestParam("file") file: MultipartFile,
+    ): ResponseEntity<BaseResponse<ProfileImageResponse>>
 }

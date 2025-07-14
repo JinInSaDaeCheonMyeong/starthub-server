@@ -67,6 +67,9 @@ dependencies {
     // webflux
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
+    // gcs
+    implementation("com.google.cloud:google-cloud-storage:2.36.1")
+
     // etc
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 }

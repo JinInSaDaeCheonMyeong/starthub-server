@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRep
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.ProfileImageResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
@@ -15,14 +16,19 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTok
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserInterestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenRedisService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import com.jininsadaecheonmyeong.starthubserver.global.service.GcsService
+import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
 
 @Service
 @Transactional
@@ -35,6 +41,7 @@ class UserService(
     private val tokenRedisService: TokenRedisService,
     private val emailRepository: EmailRepository,
     private val userInterestRepository: UserInterestRepository,
+    private val gcsService: GcsService,
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
@@ -97,5 +104,23 @@ class UserService(
     @Transactional(readOnly = true)
     fun getUser(user: User): UserResponse {
         return UserResponse(user)
+    }
+
+    fun updateProfileImage(
+        user: User,
+        imageUrl: String,
+    ) {
+        user.profileImage = imageUrl
+        userRepository.save(user)
+    }
+
+    fun uploadProfileImage(
+        file: MultipartFile,
+    ): ResponseEntity<BaseResponse<ProfileImageResponse>> {
+        val currentUser = UserAuthenticationHolder.current()
+        val imageUrl = gcsService.uploadFile(file, "profile-images")
+        updateProfileImage(currentUser, imageUrl)
+        val response = ProfileImageResponse(imageUrl)
+        return BaseResponse.of(response, "프로필 이미지 업로드 성공")
     }
 }

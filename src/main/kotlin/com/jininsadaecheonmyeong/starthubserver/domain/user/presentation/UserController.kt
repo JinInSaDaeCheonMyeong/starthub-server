@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/user")
@@ -98,4 +100,9 @@ class UserController(
         val user = userService.getUser(currentUser)
         return BaseResponse.of(user, "유저 정보 조회 성공")
     }
+
+    @PostMapping("/profile-image")
+    override fun uploadProfileImage(
+        @RequestParam("file") file: MultipartFile,
+    ) = userService.uploadProfileImage(file)
 }

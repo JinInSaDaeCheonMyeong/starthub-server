@@ -25,6 +25,12 @@ jobs:
           touch ./src/main/resources/application.yml
           echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
 
+      - name: make gcs-key.json
+        run: |
+          mkdir -p ./src/main/resources
+          touch ./src/main/resources/gcs-key.json
+          echo "${{ secrets.GCS_KEY }}" > ./src/main/resources/gcs-key.json
+
       - name: Build with Gradle
         run: ./gradlew build
 
