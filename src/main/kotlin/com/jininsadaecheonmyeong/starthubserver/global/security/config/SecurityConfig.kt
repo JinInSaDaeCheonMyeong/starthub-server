@@ -1,7 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.config
 
 import com.jininsadaecheonmyeong.starthubserver.global.security.filter.TokenExceptionFilter
-import com.jininsadaecheonmyeong.starthubserver.global.security.filter.TokenFilter
+import com.jininsadaecheonmyeong.starthubserver.global.security.filter.PlatformAuthenticationFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -17,7 +17,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
-    private val tokenFilter: TokenFilter,
+    private val platformAuthenticationFilter: PlatformAuthenticationFilter,
     private val tokenExceptionFilter: TokenExceptionFilter,
 ) {
     @Bean
@@ -35,8 +35,8 @@ class SecurityConfig(
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .anyRequest().permitAll() // TODO Remove it
             }
-            .addFilterAfter(tokenFilter, UsernamePasswordAuthenticationFilter::class.java)
-            .addFilterBefore(tokenExceptionFilter, TokenFilter::class.java)
+            .addFilterAfter(platformAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(tokenExceptionFilter, PlatformAuthenticationFilter::class.java)
         return http.build()
     }
 
