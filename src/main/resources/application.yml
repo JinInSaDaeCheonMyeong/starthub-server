@@ -1,3 +1,11 @@
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: None
+        secure: true
+        path: /
+
 spring:
   application:
     name: starthub-server
@@ -20,6 +28,14 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
 
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4.1-mini
+          temperature: 0.7
+
   mail:
     host: ${EMAIL_HOST:smtp.gmail.com}
     port: ${EMAIL_PORT:587}
@@ -35,10 +51,11 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET}
-    access: 3600000
+    access: 86400000
     refresh: 604800000
 
 oauth:
+  front-redirect-uri: http://localhost:8080/oauth/callback
   google:
     client-id: ${GOOGLE_CLIENT_ID}
     client-secret: ${GOOGLE_CLIENT_SECRET}
@@ -67,3 +84,7 @@ oauth:
     redirect-uri: ${APPLE_REDIRECT_URL}
     token-uri: https://appleid.apple.com/auth/token
     grant-type: authorization_code
+
+discord:
+  webhook:
+    url: ${DISCORD_WEBHOOK_URL}

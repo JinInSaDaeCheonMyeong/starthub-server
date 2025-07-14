@@ -18,17 +18,17 @@ class SwaggerConfig {
                 Info()
                     .title("StartHub-Server API")
                     .description("Kotlin API")
-                    .version("1.0.0")
+                    .version("1.0.0"),
             )
             .addSecurityItem(
                 SecurityRequirement()
-                    .addList("Authorization")
+                    .addList("Authorization"),
             )
             .servers(
                 listOf(
                     Server().url("https://api.start-hub.kr").description("Production Server"),
-                    Server().url("http://localhost:8080").description("Development Server")
-                )
+                    Server().url("http://localhost:8080").description("Development Server"),
+                ),
             )
             .components(
                 Components()
@@ -39,8 +39,8 @@ class SwaggerConfig {
                             .scheme("bearer")
                             .bearerFormat("Authorization")
                             .`in`(SecurityScheme.In.HEADER)
-                            .name("Authorization")
-                    )
+                            .name("Authorization"),
+                    ),
             )
     }
 }

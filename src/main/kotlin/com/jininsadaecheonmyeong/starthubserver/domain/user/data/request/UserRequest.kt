@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.user.data
+package com.jininsadaecheonmyeong.starthubserver.domain.user.data.request
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
@@ -8,10 +8,9 @@ import jakarta.validation.constraints.Pattern
 data class UserRequest(
     @field:Email(message = "올바르지 않은 이메일 형식")
     val email: String,
-
     @field:Pattern(
         regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,16}$",
-        message = "비밀번호는 8~16자리이며, 문자, 숫자, 특수문자를 모두 포함해야 합니다."
+        message = "비밀번호는 8~16자리이며, 문자, 숫자, 특수문자를 모두 포함해야 합니다.",
     )
     val password: String,
 ) {
@@ -19,7 +18,7 @@ data class UserRequest(
         return User(
             email = email,
             password = password,
-            provider = AuthType.LOCAL
+            provider = AuthType.LOCAL,
         )
     }
 }

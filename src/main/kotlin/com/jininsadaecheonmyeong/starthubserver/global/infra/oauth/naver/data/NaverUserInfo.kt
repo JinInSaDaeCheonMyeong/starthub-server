@@ -4,8 +4,8 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthU
 
 data class NaverUserInfo(
     val id: String,
-    override val name : String,
-    override val email : String
+    override val name: String,
+    override val email: String,
 ) : OAuthUserInfo {
     override val sub: String get() = id
 }

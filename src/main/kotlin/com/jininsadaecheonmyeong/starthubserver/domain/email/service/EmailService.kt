@@ -23,7 +23,10 @@ class EmailService(
     private val log = logger()
 
     @Async
-    fun sendEmail(email: String, code: String) {
+    fun sendEmail(
+        email: String,
+        code: String,
+    ) {
         try {
             val message: MimeMessage = javaMailSender.createMimeMessage()
             val helper = MimeMessageHelper(message, true, "UTF-8")
@@ -48,7 +51,10 @@ class EmailService(
         }
     }
 
-    private fun logEmailError(email: String, exception: Exception) {
+    private fun logEmailError(
+        email: String,
+        exception: Exception,
+    ) {
         log.error("{}에게 인증 이메일 전송 실패: {}", email, exception.message)
     }
 }

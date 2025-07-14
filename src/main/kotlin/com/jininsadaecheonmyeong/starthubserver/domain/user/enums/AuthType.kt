@@ -4,5 +4,5 @@ enum class AuthType {
     LOCAL,
     GOOGLE,
     NAVER,
-    APPLE
+    APPLE,
 }

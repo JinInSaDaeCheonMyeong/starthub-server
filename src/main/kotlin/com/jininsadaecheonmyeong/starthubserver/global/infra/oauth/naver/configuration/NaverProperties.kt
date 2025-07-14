@@ -9,5 +9,5 @@ class NaverProperties(
     val redirectUri: String,
     val tokenUri: String,
     val userInfoUri: String,
-    val grantType: String
+    val grantType: String,
 )
