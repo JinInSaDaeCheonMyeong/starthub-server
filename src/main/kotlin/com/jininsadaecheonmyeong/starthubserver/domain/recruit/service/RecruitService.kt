@@ -46,7 +46,7 @@ class RecruitService(
                 workType = request.workType,
                 jobType = request.jobType,
                 requiredPeople = request.requiredPeople,
-                businessType = request.businessType,
+                businessType = company.companyCategory,
                 tags = request.tags,
             )
 
@@ -79,7 +79,6 @@ class RecruitService(
         recruit.workType = request.workType
         recruit.jobType = request.jobType
         recruit.requiredPeople = request.requiredPeople
-        recruit.businessType = request.businessType
         recruit.tags = request.tags
 
         val techStacks = updateRecruitTechStacks(recruit, request.techStack)
