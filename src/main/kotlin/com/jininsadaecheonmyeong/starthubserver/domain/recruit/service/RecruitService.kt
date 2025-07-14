@@ -5,7 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.Compan
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.CreateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.UpdateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitSummaryResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.Recruit
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.RecruitTechStack
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.TechStack
@@ -118,7 +118,7 @@ class RecruitService(
     fun getAllRecruits(
         page: Int,
         size: Int,
-    ): Page<RecruitSummaryResponse> {
+    ): Page<RecruitPreviewResponse> {
         val pageable = PageRequest.of(page, size)
         return recruitRepository.findAllByDeletedFalse(pageable).map { it.toSummaryResponse() }
     }

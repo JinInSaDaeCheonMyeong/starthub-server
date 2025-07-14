@@ -3,7 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.recruit.docs
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.CreateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.UpdateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitSummaryResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -138,7 +138,7 @@ interface RecruitDocs {
     fun getAllRecruits(
         @RequestParam page: Int,
         @RequestParam size: Int,
-    ): ResponseEntity<BaseResponse<Page<RecruitSummaryResponse>>>
+    ): ResponseEntity<BaseResponse<Page<RecruitPreviewResponse>>>
 
     @Operation(
         summary = "채용 공고 상세 조회",

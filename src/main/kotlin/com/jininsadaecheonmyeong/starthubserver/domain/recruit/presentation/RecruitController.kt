@@ -3,7 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.recruit.presentation
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.CreateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.UpdateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitSummaryResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.docs.RecruitDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.service.RecruitService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
@@ -60,7 +60,7 @@ class RecruitController(
     override fun getAllRecruits(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
-    ): ResponseEntity<BaseResponse<Page<RecruitSummaryResponse>>> {
+    ): ResponseEntity<BaseResponse<Page<RecruitPreviewResponse>>> {
         return BaseResponse.of(recruitService.getAllRecruits(page, size), "채용 공고 목록 조회 성공")
     }
 
