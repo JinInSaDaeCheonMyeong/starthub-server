@@ -1,7 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.config
 
-import com.jininsadaecheonmyeong.starthubserver.global.security.filter.TokenExceptionFilter
 import com.jininsadaecheonmyeong.starthubserver.global.security.filter.PlatformAuthenticationFilter
+import com.jininsadaecheonmyeong.starthubserver.global.security.filter.TokenExceptionFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class PlatformAuthenticationHelper {
-    
     companion object {
         private const val PLATFORM_HEADER = "X-Platform"
         private const val WEB_PLATFORM = "web"
@@ -33,7 +32,7 @@ class PlatformAuthenticationHelper {
     fun setTokenCookies(
         response: HttpServletResponse,
         accessToken: String,
-        refreshToken: String
+        refreshToken: String,
     ) {
         setTokenCookie(response, ACCESS_TOKEN_COOKIE_NAME, accessToken)
         setTokenCookie(response, REFRESH_TOKEN_COOKIE_NAME, refreshToken)
@@ -42,16 +41,17 @@ class PlatformAuthenticationHelper {
     private fun setTokenCookie(
         response: HttpServletResponse,
         cookieName: String,
-        tokenValue: String
+        tokenValue: String,
     ) {
-        val cookie = ResponseCookie.from(cookieName, tokenValue)
-            .httpOnly(true)
-            .secure(true)
-            .sameSite("Lax")
-            .maxAge(COOKIE_MAX_AGE.toLong())
-            .path(COOKIE_PATH)
-            .build()
-        
+        val cookie =
+            ResponseCookie.from(cookieName, tokenValue)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Lax")
+                .maxAge(COOKIE_MAX_AGE.toLong())
+                .path(COOKIE_PATH)
+                .build()
+
         response.addHeader("Set-Cookie", cookie.toString())
     }
 
@@ -60,15 +60,19 @@ class PlatformAuthenticationHelper {
         clearTokenCookie(response, REFRESH_TOKEN_COOKIE_NAME)
     }
 
-    private fun clearTokenCookie(response: HttpServletResponse, cookieName: String) {
-        val cookie = ResponseCookie.from(cookieName, "")
-            .httpOnly(true)
-            .secure(true)
-            .sameSite("Lax")
-            .maxAge(0)
-            .path(COOKIE_PATH)
-            .build()
-        
+    private fun clearTokenCookie(
+        response: HttpServletResponse,
+        cookieName: String,
+    ) {
+        val cookie =
+            ResponseCookie.from(cookieName, "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Lax")
+                .maxAge(0)
+                .path(COOKIE_PATH)
+                .build()
+
         response.addHeader("Set-Cookie", cookie.toString())
     }
 }
