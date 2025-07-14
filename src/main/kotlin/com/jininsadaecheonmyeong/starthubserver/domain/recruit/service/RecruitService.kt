@@ -4,8 +4,8 @@ import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.Company
 import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.CreateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.UpdateRecruitRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.Recruit
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.RecruitTechStack
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.TechStack
