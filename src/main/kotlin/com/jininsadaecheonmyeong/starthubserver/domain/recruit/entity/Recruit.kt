@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.company.entity.Company
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -49,6 +50,9 @@ class Recruit(
     var isClosed: Boolean = false,
     @Column(nullable = false)
     var deleted: Boolean = false,
+    @Column(nullable = false)
+    var businessType: BusinessType,
+    var tags: List<String>?,
 ) : BaseEntity() {
     fun delete() {
         this.deleted = true

@@ -1,6 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request
 
-data class CreateRecruitRequest(
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
+
+data class RecruitRequest(
     val title: String,
     val content: String,
     val companyId: Long,
@@ -11,4 +13,6 @@ data class CreateRecruitRequest(
     val jobType: String,
     val requiredPeople: Int,
     val techStack: List<String>,
+    val businessType: BusinessType,
+    val tags: List<String>?,
 )

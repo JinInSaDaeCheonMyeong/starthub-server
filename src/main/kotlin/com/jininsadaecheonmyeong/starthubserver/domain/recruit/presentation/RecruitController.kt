@@ -1,13 +1,11 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.presentation
 
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.CreateRecruitRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.UpdateRecruitRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.RecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.docs.RecruitDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.service.RecruitService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
-import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -21,13 +19,13 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/recruits")
+@RequestMapping("/recruits")
 class RecruitController(
     private val recruitService: RecruitService,
 ) : RecruitDocs {
     @PostMapping
     override fun createRecruit(
-        @RequestBody @Valid request: CreateRecruitRequest,
+        @RequestBody request: RecruitRequest,
     ): ResponseEntity<BaseResponse<RecruitResponse>> {
         return BaseResponse.of(recruitService.createRecruit(request), "채용 공고 생성 성공")
     }
@@ -35,7 +33,7 @@ class RecruitController(
     @PatchMapping("/{id}")
     override fun updateRecruit(
         @PathVariable id: Long,
-        @RequestBody @Valid request: UpdateRecruitRequest,
+        @RequestBody request: RecruitRequest,
     ): ResponseEntity<BaseResponse<RecruitResponse>> {
         return BaseResponse.of(recruitService.updateRecruit(id, request), "채용 공고 수정 성공")
     }

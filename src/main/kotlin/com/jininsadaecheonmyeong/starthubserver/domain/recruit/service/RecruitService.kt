@@ -2,8 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.recruit.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.CompanyNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.CreateRecruitRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.UpdateRecruitRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.RecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.Recruit
@@ -29,7 +28,7 @@ class RecruitService(
     private val recruitTechStackRepository: RecruitTechStackRepository,
 ) {
     @Transactional
-    fun createRecruit(request: CreateRecruitRequest): RecruitResponse {
+    fun createRecruit(request: RecruitRequest): RecruitResponse {
         val user = UserAuthenticationHolder.current()
         val company =
             companyRepository.findByIdAndDeletedFalse(request.companyId)
@@ -47,6 +46,8 @@ class RecruitService(
                 workType = request.workType,
                 jobType = request.jobType,
                 requiredPeople = request.requiredPeople,
+                businessType = request.businessType,
+                tags = request.tags,
             )
 
         val savedRecruit = recruitRepository.save(recruit)
@@ -59,7 +60,7 @@ class RecruitService(
     @Transactional
     fun updateRecruit(
         recruitId: Long,
-        request: UpdateRecruitRequest,
+        request: RecruitRequest,
     ): RecruitResponse {
         val recruit =
             recruitRepository.findByIdAndDeletedFalse(recruitId)
@@ -78,6 +79,8 @@ class RecruitService(
         recruit.workType = request.workType
         recruit.jobType = request.jobType
         recruit.requiredPeople = request.requiredPeople
+        recruit.businessType = request.businessType
+        recruit.tags = request.tags
 
         val techStacks = updateRecruitTechStacks(recruit, request.techStack)
 
