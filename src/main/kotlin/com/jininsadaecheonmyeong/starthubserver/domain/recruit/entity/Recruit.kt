@@ -1,8 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity
 
 import com.jininsadaecheonmyeong.starthubserver.domain.company.entity.Company
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.Column
