@@ -21,7 +21,6 @@ class PlatformAuthenticationFilter(
     private val tokenParser: TokenParser,
     private val userRepository: UserRepository,
 ) : OncePerRequestFilter() {
-    
     companion object {
         private const val TOKEN_SECURE_TYPE = "Bearer "
         private const val ACCESS_TOKEN_COOKIE_NAME = "access_token"
@@ -61,13 +60,13 @@ class PlatformAuthenticationFilter(
                 }
             }
         }
-        
+
         filterChain.doFilter(request, response)
     }
 
     private fun extractTokenFromHeader(request: HttpServletRequest): String? {
         val authorizationHeader = request.getHeader("Authorization")
-        
+
         return if (!authorizationHeader.isNullOrEmpty() && authorizationHeader.startsWith(TOKEN_SECURE_TYPE)) {
             authorizationHeader.removePrefix(TOKEN_SECURE_TYPE)
         } else {

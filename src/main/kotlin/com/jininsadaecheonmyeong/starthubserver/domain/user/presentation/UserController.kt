@@ -35,20 +35,20 @@ class UserController(
     override fun signIn(
         request: UserRequest,
         httpRequest: HttpServletRequest,
-        httpResponse: HttpServletResponse
+        httpResponse: HttpServletResponse,
     ): ResponseEntity<BaseResponse<Any>> {
         val tokenResponse = userService.signIn(request)
-        
+
         return when {
             platformAuthenticationHelper.isWebPlatform(httpRequest) -> {
                 platformAuthenticationHelper.setTokenCookies(
                     httpResponse,
                     tokenResponse.access,
-                    tokenResponse.refresh
+                    tokenResponse.refresh,
                 )
                 BaseResponse.of(
                     mapOf("isFirstLogin" to tokenResponse.isFirstLogin),
-                    "로그인 성공"
+                    "로그인 성공",
                 )
             }
             else -> {
@@ -61,20 +61,20 @@ class UserController(
     override fun reissue(
         request: RefreshRequest,
         httpRequest: HttpServletRequest,
-        httpResponse: HttpServletResponse
+        httpResponse: HttpServletResponse,
     ): ResponseEntity<BaseResponse<Any>> {
         val tokenResponse = userService.reissue(request)
-        
+
         return when {
             platformAuthenticationHelper.isWebPlatform(httpRequest) -> {
                 platformAuthenticationHelper.setTokenCookies(
                     httpResponse,
                     tokenResponse.access,
-                    tokenResponse.refresh
+                    tokenResponse.refresh,
                 )
                 BaseResponse.of(
                     mapOf("isFirstLogin" to tokenResponse.isFirstLogin),
-                    "토큰 재발급 성공"
+                    "토큰 재발급 성공",
                 )
             }
             else -> {
