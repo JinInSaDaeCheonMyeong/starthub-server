@@ -2,8 +2,8 @@ package com.jininsadaecheonmyeong.starthubserver.domain.recruit.presentation
 
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.CreateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.UpdateRecruitRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.docs.RecruitDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.service.RecruitService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
