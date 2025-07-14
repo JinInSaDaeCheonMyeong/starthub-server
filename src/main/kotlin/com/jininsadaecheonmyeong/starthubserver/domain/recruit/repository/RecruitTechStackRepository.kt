@@ -1,4 +1,3 @@
-
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.repository
 
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.Recruit

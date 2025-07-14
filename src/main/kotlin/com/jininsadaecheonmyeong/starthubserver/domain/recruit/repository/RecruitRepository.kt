@@ -2,12 +2,14 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.repository
 
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.Recruit
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import java.util.Optional
 
 interface RecruitRepository : JpaRepository<Recruit, Long> {
-    fun findAllByDeletedFalse(): List<Recruit>
+    fun findAllByDeletedFalse(pageable: Pageable): Page<Recruit>
 
     @Query(
         "SELECT r FROM Recruit r " +

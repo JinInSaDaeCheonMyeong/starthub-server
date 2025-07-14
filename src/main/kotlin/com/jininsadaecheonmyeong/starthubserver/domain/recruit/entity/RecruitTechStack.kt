@@ -1,4 +1,3 @@
-
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity
 
 import jakarta.persistence.Entity

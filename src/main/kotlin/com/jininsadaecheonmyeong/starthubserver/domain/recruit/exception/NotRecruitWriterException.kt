@@ -1,4 +1,3 @@
-
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.exception
 
 import com.jininsadaecheonmyeong.starthubserver.global.exception.CustomException
