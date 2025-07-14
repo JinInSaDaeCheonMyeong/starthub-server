@@ -1,22 +1,25 @@
+
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response
 
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity.RecruitPosition
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.enums.RecruitRole
+import java.time.LocalDateTime
 
 data class RecruitResponse(
     val id: Long,
-    val role: RecruitRole,
-    val count: Int,
-    val description: String,
-    val closed: Boolean
-) {
-    companion object {
-        fun from(entity: RecruitPosition) = RecruitResponse(
-            id = entity.id!!,
-            role = entity.role,
-            count = entity.count,
-            description = entity.description,
-            closed = entity.closed
-        )
-    }
-}
+    val title: String,
+    val content: String,
+    val writerId: Long,
+    val writerNickname: String,
+    val companyId: Long,
+    val companyName: String,
+    val startDate: String,
+    val endDate: String,
+    val desiredCareer: String,
+    val workType: String,
+    val jobType: String,
+    val requiredPeople: Int,
+    val viewCount: Int,
+    val isClosed: Boolean,
+    val techStack: List<String>,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime,
+)
