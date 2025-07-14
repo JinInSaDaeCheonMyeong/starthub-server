@@ -2,7 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response
 
 import java.time.LocalDateTime
 
-data class RecruitSummaryResponse(
+data class RecruitPreviewResponse(
     val id: Long,
     val title: String,
     val companyName: String,

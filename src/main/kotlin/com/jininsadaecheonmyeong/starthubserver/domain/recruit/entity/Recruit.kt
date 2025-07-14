@@ -2,7 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity
 
 import com.jininsadaecheonmyeong.starthubserver.domain.company.entity.Company
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitSummaryResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.Column
@@ -83,8 +83,8 @@ class Recruit(
         )
     }
 
-    fun toSummaryResponse(): RecruitSummaryResponse {
-        return RecruitSummaryResponse(
+    fun toSummaryResponse(): RecruitPreviewResponse {
+        return RecruitPreviewResponse(
             id = this.id!!,
             title = this.title,
             companyName = this.company.companyName,
