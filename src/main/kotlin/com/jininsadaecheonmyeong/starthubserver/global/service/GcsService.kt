@@ -45,17 +45,9 @@ class GcsService(
     }
 
     private fun validateFile(file: MultipartFile) {
-        if (file.isEmpty) {
-            throw IllegalArgumentException("업로드할 파일이 없습니다")
-        }
-
-        if (file.size > maxFileSize) {
-            throw IllegalArgumentException("파일 크기가 5MB를 초과했습니다")
-        }
-
-        if (file.contentType !in allowedImageTypes) {
-            throw IllegalArgumentException("지원하지 않는 파일 형식입니다. (지원 형식: JPG, PNG, GIF, WebP)")
-        }
+        if (file.isEmpty) throw IllegalArgumentException("업로드할 파일이 없습니다")
+        if (file.size > maxFileSize) throw IllegalArgumentException("파일 크기가 5MB를 초과했습니다")
+        if (file.contentType !in allowedImageTypes) throw IllegalArgumentException("지원하지 않는 파일 형식입니다. (지원 형식: JPG, PNG, GIF, WebP)")
     }
 
     private fun generateFileName(
