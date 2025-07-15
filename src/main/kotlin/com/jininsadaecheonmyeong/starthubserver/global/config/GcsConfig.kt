@@ -18,7 +18,7 @@ class GcsConfig {
         return StorageOptions.newBuilder()
             .setCredentials(
                 ServiceAccountCredentials.fromStream(
-                    ClassPathResource(credentialsPath).inputStream
+                    ClassPathResource(credentialsPath).inputStream,
                 ),
             )
             .build()

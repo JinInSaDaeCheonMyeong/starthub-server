@@ -114,9 +114,7 @@ class UserService(
         userRepository.save(user)
     }
 
-    fun uploadProfileImage(
-        file: MultipartFile,
-    ): ResponseEntity<BaseResponse<ProfileImageResponse>> {
+    fun uploadProfileImage(file: MultipartFile): ResponseEntity<BaseResponse<ProfileImageResponse>> {
         val currentUser = UserAuthenticationHolder.current()
         val imageUrl = gcsService.uploadFile(file, "profile-images")
         updateProfileImage(currentUser, imageUrl)
