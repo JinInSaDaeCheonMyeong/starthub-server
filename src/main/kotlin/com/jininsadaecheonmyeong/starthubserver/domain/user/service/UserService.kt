@@ -98,4 +98,8 @@ class UserService(
     fun getUser(user: User): UserResponse {
         return UserResponse(user)
     }
+
+    fun signOut(user: User) {
+        tokenRedisService.deleteRefreshToken(user.email)
+    }
 }

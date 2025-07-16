@@ -47,4 +47,10 @@ interface UserDocs {
 
     @Operation(summary = "유저 정보 조회", description = "현재 로그인한 유저의 정보를 조회합니다.")
     fun getUser(): ResponseEntity<BaseResponse<UserResponse>>
+
+    @Operation(summary = "로그아웃", description = "현재 로그인한 유저를 로그아웃 처리합니다.")
+    fun signOut(
+        @Parameter(hidden = true) httpRequest: HttpServletRequest,
+        @Parameter(hidden = true) httpResponse: HttpServletResponse,
+    ): ResponseEntity<BaseResponse<Unit>>
 }

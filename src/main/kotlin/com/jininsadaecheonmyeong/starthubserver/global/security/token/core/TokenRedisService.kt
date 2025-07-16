@@ -20,4 +20,8 @@ class TokenRedisService(
     fun findByEmail(email: String): String? {
         return redisTemplate.opsForValue()["refreshToken:$email"]
     }
+
+    fun deleteRefreshToken(email: String) {
+        redisTemplate.delete("refreshToken:$email")
+    }
 }

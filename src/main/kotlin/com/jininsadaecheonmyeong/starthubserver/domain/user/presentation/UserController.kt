@@ -98,4 +98,19 @@ class UserController(
         val user = userService.getUser(currentUser)
         return BaseResponse.of(user, "유저 정보 조회 성공")
     }
+
+    @PostMapping("/sign-out")
+    override fun signOut(
+        httpRequest: HttpServletRequest,
+        httpResponse: HttpServletResponse,
+    ): ResponseEntity<BaseResponse<Unit>> {
+        val currentUser = UserAuthenticationHolder.current()
+        userService.signOut(currentUser)
+
+        if (platformAuthenticationHelper.isWebPlatform(httpRequest)) {
+            platformAuthenticationHelper.clearTokenCookies(httpResponse)
+        }
+
+        return BaseResponse.of("로그아웃 성공")
+    }
 }
