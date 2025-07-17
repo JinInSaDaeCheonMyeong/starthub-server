@@ -39,7 +39,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-mail")
 
     // swagger
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
+    implementation("io.swagger.core.v3:swagger-core-jakarta:2.2.30")
+    implementation("org.apache.commons:commons-lang3:3.18.0")
 
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")
