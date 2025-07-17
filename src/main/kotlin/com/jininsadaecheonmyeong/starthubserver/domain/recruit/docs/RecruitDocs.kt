@@ -18,9 +18,7 @@ interface RecruitDocs {
         summary = "채용 공고 생성",
         description = "새로운 채용 공고를 생성합니다.",
     )
-    fun createRecruit(
-        request: CreateRecruitRequest,
-    ): ResponseEntity<BaseResponse<RecruitResponse>>
+    fun createRecruit(request: CreateRecruitRequest): ResponseEntity<BaseResponse<RecruitResponse>>
 
     @Operation(
         summary = "채용 공고 수정",

@@ -24,9 +24,7 @@ class RecruitController(
     private val recruitService: RecruitService,
 ) : RecruitDocs {
     @PostMapping
-    override fun createRecruit(
-        request: CreateRecruitRequest,
-    ): ResponseEntity<BaseResponse<RecruitResponse>> {
+    override fun createRecruit(request: CreateRecruitRequest): ResponseEntity<BaseResponse<RecruitResponse>> {
         return BaseResponse.of(recruitService.createRecruit(request), "채용 공고 생성 성공")
     }
 
