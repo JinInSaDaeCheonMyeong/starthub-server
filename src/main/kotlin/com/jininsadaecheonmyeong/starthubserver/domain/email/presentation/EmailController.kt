@@ -2,8 +2,8 @@ package com.jininsadaecheonmyeong.starthubserver.domain.email.presentation
 
 import com.jininsadaecheonmyeong.starthubserver.domain.email.data.EmailSendRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.email.data.EmailVerifyRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.email.service.EmailVerificationService
 import com.jininsadaecheonmyeong.starthubserver.domain.email.docs.EmailDocs
+import com.jininsadaecheonmyeong.starthubserver.domain.email.service.EmailVerificationService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
