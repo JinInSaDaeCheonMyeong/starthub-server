@@ -15,6 +15,7 @@ import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -113,4 +114,9 @@ class UserController(
 
         return BaseResponse.of("로그아웃 성공")
     }
+
+    @GetMapping("/{userId}/profile")
+    override fun getUserProfile(
+        @PathVariable userId: Long,
+    ) = BaseResponse.of(userService.getUserProfile(userId), "유저 프로필 조회 성공")
 }

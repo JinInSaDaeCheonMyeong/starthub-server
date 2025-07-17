@@ -17,16 +17,12 @@ class PlatformAuthenticationHelper {
         private const val COOKIE_PATH = "/"
     }
 
-    fun getPlatform(request: HttpServletRequest): String? {
-        return request.getHeader(PLATFORM_HEADER)
-    }
-
     fun isWebPlatform(request: HttpServletRequest): Boolean {
-        return getPlatform(request) == WEB_PLATFORM
+        return request.getHeader(PLATFORM_HEADER) == WEB_PLATFORM
     }
 
     fun isAppPlatform(request: HttpServletRequest): Boolean {
-        return getPlatform(request) == APP_PLATFORM
+        return request.getHeader(PLATFORM_HEADER) == APP_PLATFORM
     }
 
     fun setTokenCookies(

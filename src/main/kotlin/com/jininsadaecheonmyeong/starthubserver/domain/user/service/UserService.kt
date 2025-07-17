@@ -1,11 +1,13 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.service
 
+import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.TokenResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserProfileResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserInterest
@@ -35,6 +37,7 @@ class UserService(
     private val tokenRedisService: TokenRedisService,
     private val emailRepository: EmailRepository,
     private val userInterestRepository: UserInterestRepository,
+    private val companyRepository: CompanyRepository,
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
@@ -101,5 +104,16 @@ class UserService(
 
     fun signOut(user: User) {
         tokenRedisService.deleteRefreshToken(user.email)
+    }
+
+    @Transactional(readOnly = true)
+    fun getUserProfile(userId: Long): UserProfileResponse {
+        val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+        val companies = companyRepository.findByFounderAndDeletedFalse(user)
+        return UserProfileResponse(
+            username = user.username,
+            profileImage = user.profileImage,
+            companyIds = companies.mapNotNull { it.id },
+        )
     }
 }
