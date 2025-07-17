@@ -11,4 +11,7 @@ interface ChatRoomRepository : JpaRepository<ChatRoom, Long> {
         user1: User,
         user2: User,
     ): ChatRoom?
+
+    @Query("SELECT cr FROM ChatRoom cr WHERE cr.user1 = :user OR cr.user2 = :user")
+    fun findChatRoomsByUser(user: User): List<ChatRoom>
 }

@@ -20,4 +20,7 @@ interface ChatDocs {
     fun getMessages(
         @RequestParam roomId: Long,
     ): ResponseEntity<BaseResponse<List<ChatMessageResponse>>>
+
+    @Operation(summary = "나의 채팅방 목록 조회", description = "현재 로그인한 사용자가 속한 모든 채팅방 목록을 조회합니다.")
+    fun getUserChatRooms(): ResponseEntity<BaseResponse<List<ChatRoomResponse>>>
 }
