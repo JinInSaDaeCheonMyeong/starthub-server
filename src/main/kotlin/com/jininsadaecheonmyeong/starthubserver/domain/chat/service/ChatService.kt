@@ -13,6 +13,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.Company
 import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -69,5 +70,12 @@ class ChatService(
     fun getMessages(roomId: Long): List<ChatMessageResponse> {
         val messages = chatMessageRepository.findByRoomIdOrderBySentAtAsc(roomId)
         return messages.map { it.toResponse() }
+    }
+
+    @Transactional(readOnly = true)
+    fun getMyChatRooms(): List<ChatRoomResponse> {
+        val user = UserAuthenticationHolder.current()
+        val rooms = chatRoomRepository.findChatRoomsByUser(user)
+        return rooms.map { ChatRoomResponse(it.id, it.user1.id!!, it.user2.id!!) }
     }
 }
