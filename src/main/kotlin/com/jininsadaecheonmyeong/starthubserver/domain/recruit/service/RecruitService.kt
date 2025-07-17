@@ -123,10 +123,12 @@ class RecruitService(
         return recruitRepository.findAllByDeletedFalse(pageable).map { it.toSummaryResponse() }
     }
 
+    @Transactional
     fun getRecruit(recruitId: Long): RecruitResponse {
         val recruit =
             recruitRepository.findByIdAndDeletedFalse(recruitId)
                 .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
+        recruit.viewCount++
         val techStacks = getTechStacksForRecruit(recruit)
         return recruit.toResponse(techStacks)
     }
