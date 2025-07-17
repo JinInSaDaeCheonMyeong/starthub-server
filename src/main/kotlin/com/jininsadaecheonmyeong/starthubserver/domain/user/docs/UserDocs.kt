@@ -3,6 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.user.docs
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserProfileResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
 
 @Tag(name = "유저", description = "사용자 관련 API")
@@ -53,4 +55,9 @@ interface UserDocs {
         @Parameter(hidden = true) httpRequest: HttpServletRequest,
         @Parameter(hidden = true) httpResponse: HttpServletResponse,
     ): ResponseEntity<BaseResponse<Unit>>
+
+    @Operation(summary = "유저 프로필 조회", description = "유저 ID로 프로필을 조회합니다.")
+    fun getUserProfile(
+        @Parameter(description = "유저 ID") @PathVariable userId: Long,
+    ): ResponseEntity<BaseResponse<UserProfileResponse>>
 }
