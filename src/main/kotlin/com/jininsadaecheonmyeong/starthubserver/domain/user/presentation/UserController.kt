@@ -28,12 +28,12 @@ class UserController(
 ) : UserDocs {
     @PostMapping("/sign-up")
     override fun signUp(
-        @Valid request: UserRequest,
+        @Valid @RequestBody request: UserRequest,
     ) = BaseResponse.of(userService.signUp(request), "회원가입 성공")
 
     @PostMapping("/sign-in")
     override fun signIn(
-        request: UserRequest,
+        @RequestBody request: UserRequest,
         httpRequest: HttpServletRequest,
         httpResponse: HttpServletResponse,
     ): ResponseEntity<BaseResponse<Any>> {
@@ -59,7 +59,7 @@ class UserController(
 
     @PostMapping("/reissue")
     override fun reissue(
-        request: RefreshRequest,
+        @RequestBody request: RefreshRequest,
         httpRequest: HttpServletRequest,
         httpResponse: HttpServletResponse,
     ): ResponseEntity<BaseResponse<Any>> {
