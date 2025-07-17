@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.view.RedirectView
 
+import io.swagger.v3.oas.annotations.tags.Tag
+
+@Tag(name = "OAuth", description = "소셜 로그인 관련 API")
 interface OAuthDocs {
     @Operation(summary = "state 발급", description = "OAuth를 사용하기 위한 state를 발급합니다.")
     fun generateOAuthState(session: HttpSession): ResponseEntity<BaseResponse<String>>

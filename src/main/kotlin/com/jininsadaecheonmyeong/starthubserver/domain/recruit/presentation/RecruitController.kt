@@ -42,16 +42,14 @@ class RecruitController(
     override fun deleteRecruit(
         @PathVariable id: Long,
     ): ResponseEntity<BaseResponse<Unit>> {
-        recruitService.deleteRecruit(id)
-        return BaseResponse.of("채용 공고 삭제 성공")
+        return BaseResponse.of(recruitService.deleteRecruit(id), "채용 공고 삭제 성공")
     }
 
     @PatchMapping("/{id}/close")
     override fun closeRecruit(
         @PathVariable id: Long,
     ): ResponseEntity<BaseResponse<Unit>> {
-        recruitService.closeRecruit(id)
-        return BaseResponse.of("채용 공고 마감 성공")
+        return BaseResponse.of(recruitService.closeRecruit(id), "채용 공고 마감 성공")
     }
 
     @GetMapping

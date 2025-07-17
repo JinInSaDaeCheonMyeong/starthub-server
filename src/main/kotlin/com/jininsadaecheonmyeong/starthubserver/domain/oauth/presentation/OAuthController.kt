@@ -8,7 +8,6 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthP
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthResponse
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.properties.TokenProperties
 import com.jininsadaecheonmyeong.starthubserver.global.support.CookieUtil
-import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.view.RedirectView
 import java.util.UUID
 
-@Tag(name = "OAuth", description = "소셜 로그인 관련 API")
 @RestController
 @RequestMapping("/oauth")
 class OAuthController(
