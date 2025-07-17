@@ -29,7 +29,7 @@ class ChatController(
     ) = BaseResponse.of(chatService.getMessages(roomId), "채팅 내역 조회 성공")
 
     @GetMapping("/my")
-    override fun getMyChatRooms() = BaseResponse.of(chatService.getMyChatRooms(), "나의 채팅방 목록 조회 성공")
+    override fun getUserChatRooms() = BaseResponse.of(chatService.getMyChatRooms(), "나의 채팅방 목록 조회 성공")
 
     @MessageMapping("/send")
     fun saveAndSendMessage(
