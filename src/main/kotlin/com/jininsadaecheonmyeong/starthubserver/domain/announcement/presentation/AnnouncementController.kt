@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/v1/k-startup")
+@RequestMapping("/announcements")
 class AnnouncementController(
     private val announcementService: AnnouncementService,
 ) : AnnouncementDocs {

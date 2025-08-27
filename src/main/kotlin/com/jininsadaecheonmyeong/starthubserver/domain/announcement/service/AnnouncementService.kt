@@ -28,25 +28,19 @@ class AnnouncementService(
         val consecutivePageLimit = 1
 
         while (true) {
-            if (consecutivePagesWithNoNewSaves >= consecutivePageLimit) {
-                break
-            }
+            if (consecutivePagesWithNoNewSaves >= consecutivePageLimit) break
 
             try {
                 val urlWithPage = "$K_STARTUP_URL?page=$page"
                 val doc = Jsoup.connect(urlWithPage).get()
                 val announcements = doc.select("div.board_list-wrap .notice")
 
-                if (announcements.isEmpty()) {
-                    break
-                }
+                if (announcements.isEmpty()) break
 
                 var newAnnouncementsOnPage = 0
 
                 for (element in announcements) {
-                    if (element.text().contains("등록된 데이터가 없습니다.")) {
-                        continue
-                    }
+                    if (element.text().contains("등록된 데이터가 없습니다.")) continue
 
                     val titleElement = element.selectFirst("p.tit")
                     val linkElement = element.selectFirst(".middle a")
