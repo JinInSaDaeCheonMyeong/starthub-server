@@ -69,6 +69,9 @@ dependencies {
     // webflux
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
+    // jsoup
+    implementation("org.jsoup:jsoup:1.17.2")
+
     // etc
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 }
