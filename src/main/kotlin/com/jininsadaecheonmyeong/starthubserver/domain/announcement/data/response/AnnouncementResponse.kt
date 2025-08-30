@@ -7,14 +7,18 @@ data class AnnouncementResponse(
     val url: String,
     val organization: String,
     val receptionPeriod: String,
+    val likeCount: Int,
+    val isLiked: Boolean,
 ) {
     companion object {
-        fun from(announcement: Announcement) =
+        fun from(announcement: Announcement, isLiked: Boolean) =
             AnnouncementResponse(
                 title = announcement.title,
                 url = announcement.url,
                 organization = announcement.organization,
                 receptionPeriod = announcement.receptionPeriod,
+                likeCount = announcement.likeCount,
+                isLiked = isLiked,
             )
     }
 }

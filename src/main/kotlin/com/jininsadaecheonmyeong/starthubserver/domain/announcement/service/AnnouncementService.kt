@@ -2,7 +2,10 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Announcement
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import org.jsoup.Jsoup
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -15,6 +18,8 @@ import java.time.format.DateTimeFormatter
 @Transactional(readOnly = true)
 class AnnouncementService(
     private val repository: AnnouncementRepository,
+    private val userRepository: UserRepository,
+    private val announcementLikeRepository: AnnouncementLikeRepository,
 ) {
     companion object {
         private const val K_STARTUP_URL = "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do"
@@ -87,14 +92,19 @@ class AnnouncementService(
         }
     }
 
-    fun findAllAnnouncements(pageable: Pageable): Page<AnnouncementResponse> {
-        return repository.findAllByIsDeletedFalse(pageable)
-            .map { AnnouncementResponse.from(it) }
+    fun findAllAnnouncements(userId: Long?, pageable: Pageable): Page<AnnouncementResponse> {
+        val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE, pageable)
+        val user = userId?.let { userRepository.findById(it).orElse(null) }
+
+        return announcements.map { announcement ->
+            val isLiked = user?.let { announcementLikeRepository.existsByUserAndAnnouncement(it, announcement) } ?: false
+            AnnouncementResponse.from(announcement, isLiked)
+        }
     }
 
     @Transactional
     fun softDeleteExpiredAnnouncements() {
-        val announcements = repository.findAllByIsDeletedFalse()
+        val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE)
         val today = LocalDate.now()
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -102,7 +112,7 @@ class AnnouncementService(
             val endDateString = announcement.receptionPeriod.split("~")[1].trim()
             val endDate = LocalDate.parse(endDateString, formatter)
             if (endDate.isBefore(today)) {
-                announcement.isDeleted = true
+                announcement.status = AnnouncementStatus.INACTIVE
                 repository.save(announcement)
             }
         }

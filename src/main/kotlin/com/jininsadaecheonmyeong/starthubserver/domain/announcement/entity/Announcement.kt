@@ -1,8 +1,11 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity
 
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -22,6 +25,9 @@ class Announcement(
     val organization: String,
     @Column(name = "reception_period", nullable = false)
     val receptionPeriod: String,
-    @Column(name = "is_deleted", nullable = false)
-    var isDeleted: Boolean = false,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    var status: AnnouncementStatus = AnnouncementStatus.ACTIVE,
+    @Column(name = "like_count", nullable = false)
+    var likeCount: Int = 0,
 ) : BaseEntity()
