@@ -10,7 +10,18 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface AnnouncementLikeRepository : JpaRepository<AnnouncementLike, Long> {
-    fun findByUserAndAnnouncement(user: User, announcement: Announcement): AnnouncementLike?
-    fun existsByUserAndAnnouncement(user: User, announcement: Announcement): Boolean
-    fun findByUserOrderByCreatedAtDesc(user: User, pageable: Pageable): Page<AnnouncementLike>
+    fun findByUserAndAnnouncement(
+        user: User,
+        announcement: Announcement,
+    ): AnnouncementLike?
+
+    fun existsByUserAndAnnouncement(
+        user: User,
+        announcement: Announcement,
+    ): Boolean
+
+    fun findByUserOrderByCreatedAtDesc(
+        user: User,
+        pageable: Pageable,
+    ): Page<AnnouncementLike>
 }

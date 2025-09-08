@@ -25,10 +25,11 @@ class AnnouncementLikeService(
             throw LikeAlreadyExistsException("이미 좋아요를 누른 공고")
         }
 
-        val like = AnnouncementLike(
-            user = user,
-            announcement = announcement
-        )
+        val like =
+            AnnouncementLike(
+                user = user,
+                announcement = announcement,
+            )
 
         announcementLikeRepository.save(like)
 
@@ -41,8 +42,9 @@ class AnnouncementLikeService(
         val announcement =
             announcementRepository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
 
-        val like = announcementLikeRepository.findByUserAndAnnouncement(user, announcement)
-            ?: throw LikeNotFoundException("좋아요를 누르지 않은 공고")
+        val like =
+            announcementLikeRepository.findByUserAndAnnouncement(user, announcement)
+                ?: throw LikeNotFoundException("좋아요를 누르지 않은 공고")
 
         announcementLikeRepository.delete(like)
 

@@ -5,8 +5,8 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs.Announc
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementLikeService
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
+import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import org.springdoc.core.annotations.ParameterObject
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -21,16 +21,18 @@ class AnnouncementController(
 ) : AnnouncementDocs {
     override fun getAllAnnouncements(
         @ParameterObject pageable: Pageable,
-    ): ResponseEntity<BaseResponse<Page<AnnouncementResponse>>> {
+    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>> {
         val announcements = announcementService.findAllAnnouncements(pageable)
-        return BaseResponse.of(announcements, "공고 조회 성공")
+        val response = CustomPageResponse.from(announcements)
+        return BaseResponse.of(response, "공고 조회 성공")
     }
 
     override fun getLikedAnnouncements(
         @ParameterObject pageable: Pageable,
-    ): ResponseEntity<BaseResponse<Page<AnnouncementResponse>>> {
+    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>> {
         val announcements = announcementService.findLikedAnnouncementsByUser(pageable)
-        return BaseResponse.of(announcements, "좋아요 누른 공고 조회 성공")
+        val response = CustomPageResponse.from(announcements)
+        return BaseResponse.of(response, "좋아요 누른 공고 조회 성공")
     }
 
     override fun addLike(

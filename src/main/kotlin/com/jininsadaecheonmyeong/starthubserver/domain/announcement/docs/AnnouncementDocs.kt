@@ -2,10 +2,10 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
+import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springdoc.core.annotations.ParameterObject
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -22,7 +22,7 @@ interface AnnouncementDocs {
     @GetMapping
     fun getAllAnnouncements(
         @ParameterObject pageable: Pageable,
-    ): ResponseEntity<BaseResponse<Page<AnnouncementResponse>>>
+    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
 
     @Operation(
         summary = "좋아요 누른 공고 조회",
@@ -31,7 +31,7 @@ interface AnnouncementDocs {
     @GetMapping("/my-likes")
     fun getLikedAnnouncements(
         @ParameterObject pageable: Pageable,
-    ): ResponseEntity<BaseResponse<Page<AnnouncementResponse>>>
+    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
 
     @Operation(
         summary = "공고 좋아요 추가",
