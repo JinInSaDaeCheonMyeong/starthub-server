@@ -13,7 +13,5 @@ interface AnnouncementRepository : JpaRepository<Announcement, Long> {
 
     fun findAllByStatus(status: AnnouncementStatus, pageable: Pageable): Page<Announcement>
 
-    fun findAllByStatusOrderByLikeCountDesc(status: AnnouncementStatus, pageable: Pageable): Page<Announcement>
-
     fun findAllByStatus(status: AnnouncementStatus): List<Announcement>
 }
