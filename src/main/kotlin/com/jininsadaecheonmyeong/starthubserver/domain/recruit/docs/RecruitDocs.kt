@@ -5,9 +5,9 @@ import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.Upda
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
+import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
@@ -52,7 +52,7 @@ interface RecruitDocs {
     fun getAllRecruits(
         @RequestParam page: Int,
         @RequestParam size: Int,
-    ): ResponseEntity<BaseResponse<Page<RecruitPreviewResponse>>>
+    ): ResponseEntity<BaseResponse<CustomPageResponse<RecruitPreviewResponse>>>
 
     @Operation(
         summary = "채용 공고 상세 조회",

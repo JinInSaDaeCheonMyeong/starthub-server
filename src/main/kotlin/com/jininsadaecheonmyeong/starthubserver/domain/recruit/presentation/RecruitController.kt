@@ -7,7 +7,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.Rec
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.docs.RecruitDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.service.RecruitService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
-import org.springframework.data.domain.Page
+import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -54,8 +54,10 @@ class RecruitController(
     override fun getAllRecruits(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
-    ): ResponseEntity<BaseResponse<Page<RecruitPreviewResponse>>> {
-        return BaseResponse.of(recruitService.getAllRecruits(page, size), "채용 공고 목록 조회 성공")
+    ): ResponseEntity<BaseResponse<CustomPageResponse<RecruitPreviewResponse>>> {
+        val recruitsPage = recruitService.getAllRecruits(page, size)
+        val response = CustomPageResponse.from(recruitsPage)
+        return BaseResponse.of(response, "채용 공고 목록 조회 성공")
     }
 
     @GetMapping("/{id}")
