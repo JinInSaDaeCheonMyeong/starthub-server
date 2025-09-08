@@ -5,7 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Annou
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.jsoup.Jsoup
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -18,7 +18,6 @@ import java.time.format.DateTimeFormatter
 @Transactional(readOnly = true)
 class AnnouncementService(
     private val repository: AnnouncementRepository,
-    private val userRepository: UserRepository,
     private val announcementLikeRepository: AnnouncementLikeRepository,
 ) {
     companion object {
@@ -92,12 +91,12 @@ class AnnouncementService(
         }
     }
 
-    fun findAllAnnouncements(userId: Long?, pageable: Pageable): Page<AnnouncementResponse> {
+    fun findAllAnnouncements(pageable: Pageable): Page<AnnouncementResponse> {
         val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE, pageable)
-        val user = userId?.let { userRepository.findById(it).orElse(null) }
+        val user = UserAuthenticationHolder.current()
 
         return announcements.map { announcement ->
-            val isLiked = user?.let { announcementLikeRepository.existsByUserAndAnnouncement(it, announcement) } ?: false
+            val isLiked = user.let { announcementLikeRepository.existsByUserAndAnnouncement(it, announcement) }
             AnnouncementResponse.from(announcement, isLiked)
         }
     }
@@ -115,6 +114,15 @@ class AnnouncementService(
                 announcement.status = AnnouncementStatus.INACTIVE
                 repository.save(announcement)
             }
+        }
+    }
+
+    fun findLikedAnnouncementsByUser(pageable: Pageable): Page<AnnouncementResponse> {
+        val user = UserAuthenticationHolder.current()
+        val likedAnnouncements = announcementLikeRepository.findByUserOrderByCreatedAtDesc(user, pageable)
+
+        return likedAnnouncements.map {
+            AnnouncementResponse.from(it.announcement, isLiked = true)
         }
     }
 }

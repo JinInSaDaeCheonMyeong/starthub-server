@@ -9,7 +9,6 @@ import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -21,26 +20,30 @@ class AnnouncementController(
     private val announcementLikeService: AnnouncementLikeService,
 ) : AnnouncementDocs {
     override fun getAllAnnouncements(
-        @AuthenticationPrincipal userId: Long?,
         @ParameterObject pageable: Pageable,
     ): ResponseEntity<BaseResponse<Page<AnnouncementResponse>>> {
-        val announcements = announcementService.findAllAnnouncements(userId, pageable)
+        val announcements = announcementService.findAllAnnouncements(pageable)
         return BaseResponse.of(announcements, "공고 조회 성공")
     }
 
+    override fun getLikedAnnouncements(
+        @ParameterObject pageable: Pageable,
+    ): ResponseEntity<BaseResponse<Page<AnnouncementResponse>>> {
+        val announcements = announcementService.findLikedAnnouncementsByUser(pageable)
+        return BaseResponse.of(announcements, "좋아요 누른 공고 조회 성공")
+    }
+
     override fun addLike(
-        @AuthenticationPrincipal userId: Long,
         @PathVariable announcementId: Long,
     ): ResponseEntity<BaseResponse<Unit>> {
-        announcementLikeService.addLike(userId, announcementId)
+        announcementLikeService.addLike(announcementId)
         return BaseResponse.of(Unit, "좋아요 추가 성공")
     }
 
     override fun removeLike(
-        @AuthenticationPrincipal userId: Long,
         @PathVariable announcementId: Long,
     ): ResponseEntity<BaseResponse<Unit>> {
-        announcementLikeService.removeLike(userId, announcementId)
+        announcementLikeService.removeLike(announcementId)
         return BaseResponse.of(Unit, "좋아요 삭제 성공")
     }
 }

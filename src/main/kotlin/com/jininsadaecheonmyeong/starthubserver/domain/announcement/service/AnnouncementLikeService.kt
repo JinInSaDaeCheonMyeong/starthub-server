@@ -6,8 +6,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.Li
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.LikeNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
-import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -15,11 +14,10 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class AnnouncementLikeService(
     private val announcementLikeRepository: AnnouncementLikeRepository,
-    private val userRepository: UserRepository,
     private val announcementRepository: AnnouncementRepository,
 ) {
-    fun addLike(userId: Long, announcementId: Long) {
-        val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+    fun addLike(announcementId: Long) {
+        val user = UserAuthenticationHolder.current()
         val announcement =
             announcementRepository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
 
@@ -38,8 +36,8 @@ class AnnouncementLikeService(
         announcementRepository.save(announcement)
     }
 
-    fun removeLike(userId: Long, announcementId: Long) {
-        val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+    fun removeLike(announcementId: Long) {
+        val user = UserAuthenticationHolder.current()
         val announcement =
             announcementRepository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
 
