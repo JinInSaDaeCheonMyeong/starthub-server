@@ -39,5 +39,8 @@ out/
 ### Kotlin ###
 .kotlin
 
+### gcs ###
+gcs-key.json
+
 .DS_Store
 .env
