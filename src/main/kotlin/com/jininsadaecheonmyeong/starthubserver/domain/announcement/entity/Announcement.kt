@@ -30,4 +30,20 @@ class Announcement(
     var status: AnnouncementStatus = AnnouncementStatus.ACTIVE,
     @Column(name = "like_count", nullable = false)
     var likeCount: Int = 0,
+    @Column(name = "support_field")
+    var supportField: String? = null,
+    @Column(name = "target_age")
+    var targetAge: String? = null,
+    @Column(name = "contact_number")
+    var contactNumber: String? = null,
+    @Column(name = "region")
+    var region: String? = null,
+    @Column(name = "organization_type")
+    var organizationType: String? = null,
+    @Column(name = "startup_history")
+    var startupHistory: String? = null,
+    @Column(name = "department_in_charge")
+    var departmentInCharge: String? = null,
+    @Column(columnDefinition = "TEXT")
+    var content: String? = null,
 ) : BaseEntity()
