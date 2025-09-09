@@ -8,6 +8,14 @@ data class AnnouncementResponse(
     val organization: String,
     val receptionPeriod: String,
     val likeCount: Int,
+    val supportField: String,
+    val targetAge: String,
+    val contactNumber: String,
+    val region: String,
+    val organizationType: String,
+    val startupHistory: String,
+    val departmentInCharge: String,
+    val content: String,
     val isLiked: Boolean,
 ) {
     companion object {
@@ -20,6 +28,14 @@ data class AnnouncementResponse(
             organization = announcement.organization,
             receptionPeriod = announcement.receptionPeriod,
             likeCount = announcement.likeCount,
+            supportField = announcement.supportField,
+            targetAge = announcement.targetAge,
+            contactNumber = announcement.contactNumber,
+            region = announcement.region,
+            organizationType = announcement.organizationType,
+            startupHistory = announcement.startupHistory,
+            departmentInCharge = announcement.departmentInCharge,
+            content = announcement.content,
             isLiked = isLiked,
         )
     }

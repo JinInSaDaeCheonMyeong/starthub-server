@@ -22,7 +22,6 @@ class AnnouncementService(
 ) {
     companion object {
         private const val K_STARTUP_URL = "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do"
-        private const val BASE_URL = "https://www.k-startup.go.kr"
     }
 
     @Transactional
@@ -35,9 +34,9 @@ class AnnouncementService(
             if (consecutivePagesWithNoNewSaves >= consecutivePageLimit) break
 
             try {
-                val urlWithPage = "$K_STARTUP_URL?page=$page"
-                val doc = Jsoup.connect(urlWithPage).get()
-                val announcements = doc.select("div.board_list-wrap .notice")
+                val listUrl = "$K_STARTUP_URL?page=$page"
+                val listDoc = Jsoup.connect(listUrl).get()
+                val announcements = listDoc.select("div.board_list-wrap .notice")
 
                 if (announcements.isEmpty()) break
 
@@ -48,29 +47,47 @@ class AnnouncementService(
 
                     val titleElement = element.selectFirst("p.tit")
                     val linkElement = element.selectFirst(".middle a")
-                    val infoElements = element.select("div.bottom span.list")
 
-                    if (titleElement != null && linkElement != null && infoElements.size >= 5) {
-                        val title = titleElement.text()
+                    if (titleElement != null && linkElement != null) {
                         val href = linkElement.attr("href")
                         val announcementId = href.filter { it.isDigit() }
 
                         if (announcementId.isNotBlank()) {
-                            val absoluteUrl = "$BASE_URL/web/contents/bizpbanc-view.do?pbancSn=$announcementId"
+                            val detailUrl = "$K_STARTUP_URL?schM=view&pbancSn=$announcementId"
 
-                            if (!repository.existsByUrl(absoluteUrl)) {
-                                val organization = infoElements[1].text()
-                                val startDate = infoElements[3].text().replace("시작일자", "").trim()
-                                val endDate = infoElements[4].text().replace("마감일자", "").trim()
-                                val receptionPeriod = "$startDate ~ $endDate"
+                            if (!repository.existsByUrl(detailUrl)) {
+                                val detailDoc = Jsoup.connect(detailUrl).get()
 
-                                val announcement =
-                                    Announcement(
-                                        title = title,
-                                        url = absoluteUrl,
-                                        organization = organization,
-                                        receptionPeriod = receptionPeriod,
-                                    )
+                                fun extractText(selector: String): String? {
+                                    return detailDoc.selectFirst(selector)?.text()?.trim()
+                                }
+
+                                val title = detailDoc.selectFirst("div.title h3")?.text() ?: titleElement.text()
+                                val organization = extractText("li.dot_list:has(p.tit:contains(기관명)) p.txt") ?: ""
+                                val receptionPeriod = extractText("li.dot_list:has(p.tit:contains(접수기간)) p.txt") ?: ""
+                                val supportField = extractText("li.dot_list:has(p.tit:contains(지원분야)) p.txt") ?: ""
+                                val targetAge = extractText("li.dot_list:has(p.tit:contains(대상연령)) p.txt") ?: ""
+                                val contactNumber = extractText("li.dot_list:has(p.tit:contains(연락처)) p.txt") ?: ""
+                                val region = extractText("li.dot_list:has(p.tit:contains(지역)) p.txt") ?: ""
+                                val organizationType = extractText("li.dot_list:has(p.tit:contains(기관구분)) p.txt") ?: ""
+                                val startupHistory = extractText("li.dot_list:has(p.tit:contains(창업업력)) p.txt") ?: ""
+                                val departmentInCharge = extractText("li.dot_list:has(p.tit:contains(담당부서)) p.txt") ?: ""
+                                val content = detailDoc.selectFirst("div.information_list-wrap")?.html() ?: ""
+
+                                val announcement = Announcement(
+                                    title = title,
+                                    url = detailUrl,
+                                    organization = organization,
+                                    receptionPeriod = receptionPeriod,
+                                    supportField = supportField,
+                                    targetAge = targetAge,
+                                    contactNumber = contactNumber,
+                                    region = region,
+                                    organizationType = organizationType,
+                                    startupHistory = startupHistory,
+                                    departmentInCharge = departmentInCharge,
+                                    content = content
+                                )
                                 repository.save(announcement)
                                 newAnnouncementsOnPage++
                             }
@@ -121,8 +138,6 @@ class AnnouncementService(
         val user = UserAuthenticationHolder.current()
         val likedAnnouncements = announcementLikeRepository.findByUserOrderByCreatedAtDesc(user, pageable)
 
-        return likedAnnouncements.map {
-            AnnouncementResponse.from(it.announcement, isLiked = true)
-        }
+        return likedAnnouncements.map { AnnouncementResponse.from(it.announcement, isLiked = true) }
     }
 }
