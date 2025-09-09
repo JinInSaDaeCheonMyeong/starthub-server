@@ -31,19 +31,19 @@ class Announcement(
     @Column(name = "like_count", nullable = false)
     var likeCount: Int = 0,
     @Column(name = "support_field")
-    var supportField: String? = null,
+    var supportField: String,
     @Column(name = "target_age")
-    var targetAge: String? = null,
+    var targetAge: String,
     @Column(name = "contact_number")
-    var contactNumber: String? = null,
+    var contactNumber: String,
     @Column(name = "region")
-    var region: String? = null,
+    var region: String,
     @Column(name = "organization_type")
-    var organizationType: String? = null,
+    var organizationType: String,
     @Column(name = "startup_history")
-    var startupHistory: String? = null,
+    var startupHistory: String,
     @Column(name = "department_in_charge")
-    var departmentInCharge: String? = null,
+    var departmentInCharge: String,
     @Column(columnDefinition = "TEXT")
-    var content: String? = null,
+    var content: String,
 ) : BaseEntity()
