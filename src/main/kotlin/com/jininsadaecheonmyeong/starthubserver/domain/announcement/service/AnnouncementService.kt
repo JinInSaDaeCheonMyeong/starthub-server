@@ -74,20 +74,21 @@ class AnnouncementService(
                                 val departmentInCharge = extractText("li.dot_list:has(p.tit:contains(담당부서)) p.txt") ?: ""
                                 val content = detailDoc.selectFirst("div.information_list-wrap")?.html() ?: ""
 
-                                val announcement = Announcement(
-                                    title = title,
-                                    url = detailUrl,
-                                    organization = organization,
-                                    receptionPeriod = receptionPeriod,
-                                    supportField = supportField,
-                                    targetAge = targetAge,
-                                    contactNumber = contactNumber,
-                                    region = region,
-                                    organizationType = organizationType,
-                                    startupHistory = startupHistory,
-                                    departmentInCharge = departmentInCharge,
-                                    content = content
-                                )
+                                val announcement =
+                                    Announcement(
+                                        title = title,
+                                        url = detailUrl,
+                                        organization = organization,
+                                        receptionPeriod = receptionPeriod,
+                                        supportField = supportField,
+                                        targetAge = targetAge,
+                                        contactNumber = contactNumber,
+                                        region = region,
+                                        organizationType = organizationType,
+                                        startupHistory = startupHistory,
+                                        departmentInCharge = departmentInCharge,
+                                        content = content,
+                                    )
                                 repository.save(announcement)
                                 newAnnouncementsOnPage++
                             }
