@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.security.filter.PlatformA
 import com.jininsadaecheonmyeong.starthubserver.global.security.filter.TokenExceptionFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -29,11 +30,12 @@ class SecurityConfig(
             .cors { it.configurationSource(corsConfigurationSource()) }
             .authorizeHttpRequests { request ->
                 request
-                    .requestMatchers("/user/*").permitAll()
-                    .requestMatchers("/oauth/*").permitAll()
+                    .requestMatchers("/user/**").permitAll()
+                    .requestMatchers("/oauth/**").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
-                    .anyRequest().permitAll() // TODO Remove it
+                    .requestMatchers(HttpMethod.GET, "/announcements/**").permitAll()
+                    .anyRequest().permitAll() //TODO Remove it
             }
             .addFilterAfter(platformAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(tokenExceptionFilter, PlatformAuthenticationFilter::class.java)

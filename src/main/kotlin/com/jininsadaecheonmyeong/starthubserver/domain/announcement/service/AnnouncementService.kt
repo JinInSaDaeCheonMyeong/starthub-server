@@ -1,6 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.AnnouncementNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
@@ -111,11 +113,9 @@ class AnnouncementService(
 
     fun findAllAnnouncements(pageable: Pageable): Page<AnnouncementResponse> {
         val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE, pageable)
-        val user = UserAuthenticationHolder.current()
 
         return announcements.map { announcement ->
-            val isLiked = user.let { announcementLikeRepository.existsByUserAndAnnouncement(it, announcement) }
-            AnnouncementResponse.from(announcement, isLiked)
+            AnnouncementResponse.from(announcement)
         }
     }
 
@@ -139,6 +139,12 @@ class AnnouncementService(
         val user = UserAuthenticationHolder.current()
         val likedAnnouncements = announcementLikeRepository.findByUserOrderByCreatedAtDesc(user, pageable)
 
-        return likedAnnouncements.map { AnnouncementResponse.from(it.announcement, isLiked = true) }
+        return likedAnnouncements.map { AnnouncementResponse.from(it.announcement) }
+    }
+
+    fun getAnnouncementDetail(announcementId: Long): AnnouncementDetailResponse {
+        val announcement =
+            repository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
+        return AnnouncementDetailResponse(announcement)
     }
 }
