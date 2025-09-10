@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs
 
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
@@ -50,4 +51,13 @@ interface AnnouncementDocs {
     fun removeLike(
         @PathVariable announcementId: Long,
     ): ResponseEntity<BaseResponse<Unit>>
+
+    @Operation(
+        summary = "공고 상세 조회",
+        description = "특정 공고의 상세 정보를 조회합니다.",
+    )
+    @GetMapping("/{announcementId}")
+    fun getAnnouncementDetail(
+        @PathVariable announcementId: Long,
+    ): ResponseEntity<BaseResponse<AnnouncementDetailResponse>>
 }

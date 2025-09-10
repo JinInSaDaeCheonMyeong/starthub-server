@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.presentation
 
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs.AnnouncementDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementLikeService
@@ -47,5 +48,10 @@ class AnnouncementController(
     ): ResponseEntity<BaseResponse<Unit>> {
         announcementLikeService.removeLike(announcementId)
         return BaseResponse.of(Unit, "좋아요 삭제 성공")
+    }
+
+    override fun getAnnouncementDetail(announcementId: Long): ResponseEntity<BaseResponse<AnnouncementDetailResponse>> {
+        val response = announcementService.getAnnouncementDetail(announcementId)
+        return BaseResponse.of(response, "공고 상세 조회 성공")
     }
 }
