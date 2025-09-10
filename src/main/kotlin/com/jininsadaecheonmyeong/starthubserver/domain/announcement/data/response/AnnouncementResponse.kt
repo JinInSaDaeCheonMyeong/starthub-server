@@ -3,6 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.respon
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Announcement
 
 data class AnnouncementResponse(
+    val id: Long,
     val title: String,
     val url: String,
     val organization: String,
