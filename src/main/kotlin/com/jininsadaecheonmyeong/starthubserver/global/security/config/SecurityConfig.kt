@@ -35,7 +35,7 @@ class SecurityConfig(
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/announcements/**").permitAll()
-                    .anyRequest().permitAll() //TODO Remove it
+                    .anyRequest().permitAll() // TODO Remove it
             }
             .addFilterAfter(platformAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(tokenExceptionFilter, PlatformAuthenticationFilter::class.java)
