@@ -3,7 +3,12 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Announcement
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementAgeGroup
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementBusinessExperience
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementRegion
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementSupportCategory
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementTarget
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.AnnouncementNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
@@ -146,5 +151,28 @@ class AnnouncementService(
         val announcement =
             repository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
         return AnnouncementDetailResponse(announcement)
+    }
+
+    fun searchAnnouncements(
+        title: String?,
+        supportCategory: AnnouncementSupportCategory?,
+        region: AnnouncementRegion?,
+        target: AnnouncementTarget?,
+        ageGroup: AnnouncementAgeGroup?,
+        businessExperience: AnnouncementBusinessExperience?,
+        pageable: Pageable
+    ): Page<AnnouncementResponse> {
+        val announcements = repository.searchAnnouncements(
+            title = title,
+            supportField = supportCategory?.name,
+            region = region?.name,
+            targetAge = ageGroup?.name,
+            startupHistory = businessExperience?.name,
+            pageable = pageable
+        )
+
+        return announcements.map { announcement ->
+            AnnouncementResponse.from(announcement)
+        }
     }
 }

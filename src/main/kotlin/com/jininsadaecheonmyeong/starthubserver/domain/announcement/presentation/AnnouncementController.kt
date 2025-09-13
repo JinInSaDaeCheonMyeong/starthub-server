@@ -3,6 +3,11 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.presentatio
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs.AnnouncementDocs
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementAgeGroup
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementBusinessExperience
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementRegion
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementSupportCategory
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementTarget
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementLikeService
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
@@ -12,6 +17,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -53,5 +59,27 @@ class AnnouncementController(
     override fun getAnnouncementDetail(announcementId: Long): ResponseEntity<BaseResponse<AnnouncementDetailResponse>> {
         val response = announcementService.getAnnouncementDetail(announcementId)
         return BaseResponse.of(response, "공고 상세 조회 성공")
+    }
+
+    override fun searchAnnouncements(
+        @RequestParam(required = false) title: String?,
+        @RequestParam(required = false) supportCategory: AnnouncementSupportCategory?,
+        @RequestParam(required = false) region: AnnouncementRegion?,
+        @RequestParam(required = false) target: AnnouncementTarget?,
+        @RequestParam(required = false) ageGroup: AnnouncementAgeGroup?,
+        @RequestParam(required = false) businessExperience: AnnouncementBusinessExperience?,
+        @ParameterObject pageable: Pageable,
+    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>> {
+        val announcements = announcementService.searchAnnouncements(
+            title = title,
+            supportCategory = supportCategory,
+            region = region,
+            target = target,
+            ageGroup = ageGroup,
+            businessExperience = businessExperience,
+            pageable = pageable
+        )
+        val response = CustomPageResponse.from(announcements)
+        return BaseResponse.of(response, "공고 검색 성공")
     }
 }
