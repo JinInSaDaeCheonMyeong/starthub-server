@@ -25,23 +25,23 @@ class BusinessModelCanvas(
     @Column(nullable = false)
     var title: String,
     @Column(columnDefinition = "TEXT")
-    var keyPartners: String? = null,
-    @Column(columnDefinition = "TEXT")
-    var keyActivities: String? = null,
-    @Column(columnDefinition = "TEXT")
-    var keyResources: String? = null,
+    var customerSegments: String? = null,
     @Column(columnDefinition = "TEXT")
     var valueProposition: String? = null,
     @Column(columnDefinition = "TEXT")
-    var customerRelationships: String? = null,
-    @Column(columnDefinition = "TEXT")
     var channels: String? = null,
     @Column(columnDefinition = "TEXT")
-    var customerSegments: String? = null,
-    @Column(columnDefinition = "TEXT")
-    var costStructure: String? = null,
+    var customerRelationships: String? = null,
     @Column(columnDefinition = "TEXT")
     var revenueStreams: String? = null,
+    @Column(columnDefinition = "TEXT")
+    var keyResources: String? = null,
+    @Column(columnDefinition = "TEXT")
+    var keyActivities: String? = null,
+    @Column(columnDefinition = "TEXT")
+    var keyPartners: String? = null,
+    @Column(columnDefinition = "TEXT")
+    var costStructure: String? = null,
     @Column(nullable = false)
     var isCompleted: Boolean = false,
     @Column(nullable = false)
@@ -54,26 +54,26 @@ class BusinessModelCanvas(
 
     fun updateCanvas(
         title: String? = null,
-        keyPartners: String? = null,
-        keyActivities: String? = null,
-        keyResources: String? = null,
-        valueProposition: String? = null,
-        customerRelationships: String? = null,
-        channels: String? = null,
         customerSegments: String? = null,
-        costStructure: String? = null,
+        valueProposition: String? = null,
+        channels: String? = null,
+        customerRelationships: String? = null,
         revenueStreams: String? = null,
+        keyResources: String? = null,
+        keyActivities: String? = null,
+        keyPartners: String? = null,
+        costStructure: String? = null,
     ) {
         title?.let { this.title = it }
-        keyPartners?.let { this.keyPartners = it }
-        keyActivities?.let { this.keyActivities = it }
-        keyResources?.let { this.keyResources = it }
-        valueProposition?.let { this.valueProposition = it }
-        customerRelationships?.let { this.customerRelationships = it }
-        channels?.let { this.channels = it }
         customerSegments?.let { this.customerSegments = it }
-        costStructure?.let { this.costStructure = it }
+        valueProposition?.let { this.valueProposition = it }
+        channels?.let { this.channels = it }
+        customerRelationships?.let { this.customerRelationships = it }
         revenueStreams?.let { this.revenueStreams = it }
+        keyResources?.let { this.keyResources = it }
+        keyActivities?.let { this.keyActivities = it }
+        keyPartners?.let { this.keyPartners = it }
+        costStructure?.let { this.costStructure = it }
     }
 
     fun markAsCompleted() {

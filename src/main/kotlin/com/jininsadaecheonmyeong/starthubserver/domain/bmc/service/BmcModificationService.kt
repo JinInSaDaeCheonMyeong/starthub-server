@@ -52,15 +52,15 @@ class BmcModificationService(
             val bmcElements = parseBmcResponse(aiResponse)
 
             bmc.updateCanvas(
-                keyPartners = bmcElements["KEY_PARTNERS"],
-                keyActivities = bmcElements["KEY_ACTIVITIES"],
-                keyResources = bmcElements["KEY_RESOURCES"],
-                valueProposition = bmcElements["VALUE_PROPOSITION"],
-                customerRelationships = bmcElements["CUSTOMER_RELATIONSHIPS"],
-                channels = bmcElements["CHANNELS"],
                 customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
-                costStructure = bmcElements["COST_STRUCTURE"],
+                valueProposition = bmcElements["VALUE_PROPOSITION"],
+                channels = bmcElements["CHANNELS"],
+                customerRelationships = bmcElements["CUSTOMER_RELATIONSHIPS"],
                 revenueStreams = bmcElements["REVENUE_STREAMS"],
+                keyResources = bmcElements["KEY_RESOURCES"],
+                keyActivities = bmcElements["KEY_ACTIVITIES"],
+                keyPartners = bmcElements["KEY_PARTNERS"],
+                costStructure = bmcElements["COST_STRUCTURE"],
             )
 
             val updatedBmc = businessModelCanvasRepository.save(bmc)
@@ -99,15 +99,15 @@ class BmcModificationService(
             appendLine()
             appendLine("현재 BMC:")
             appendLine("제목: ${bmc.title}")
-            appendLine("1. 핵심 파트너: ${bmc.keyPartners ?: "없음"}")
-            appendLine("2. 핵심 활동: ${bmc.keyActivities ?: "없음"}")
-            appendLine("3. 핵심 자원: ${bmc.keyResources ?: "없음"}")
-            appendLine("4. 제공 가치: ${bmc.valueProposition ?: "없음"}")
-            appendLine("5. 고객 관계: ${bmc.customerRelationships ?: "없음"}")
-            appendLine("6. 채널: ${bmc.channels ?: "없음"}")
-            appendLine("7. 목표 고객: ${bmc.customerSegments ?: "없음"}")
-            appendLine("8. 비용 구조: ${bmc.costStructure ?: "없음"}")
-            appendLine("9. 수익 구조: ${bmc.revenueStreams ?: "없음"}")
+            appendLine("1. 목표 고객: ${bmc.customerSegments ?: "없음"}")
+            appendLine("2. 제공 가치: ${bmc.valueProposition ?: "없음"}")
+            appendLine("3. 채널: ${bmc.channels ?: "없음"}")
+            appendLine("4. 고객 관계: ${bmc.customerRelationships ?: "없음"}")
+            appendLine("5. 수익 구조: ${bmc.revenueStreams ?: "없음"}")
+            appendLine("6. 핵심 자원: ${bmc.keyResources ?: "없음"}")
+            appendLine("7. 핵심 활동: ${bmc.keyActivities ?: "없음"}")
+            appendLine("8. 핵심 파트너: ${bmc.keyPartners ?: "없음"}")
+            appendLine("9. 비용 구조: ${bmc.costStructure ?: "없음"}")
             appendLine()
             appendLine("수정 요청:")
             appendLine(modificationRequest)
@@ -116,15 +116,15 @@ class BmcModificationService(
             appendLine("수정이 필요하지 않은 부분은 기존 내용을 그대로 유지해주세요.")
             appendLine()
             appendLine("응답 형식:")
-            appendLine("KEY_PARTNERS: (내용)")
-            appendLine("KEY_ACTIVITIES: (내용)")
-            appendLine("KEY_RESOURCES: (내용)")
-            appendLine("VALUE_PROPOSITION: (내용)")
-            appendLine("CUSTOMER_RELATIONSHIPS: (내용)")
-            appendLine("CHANNELS: (내용)")
             appendLine("CUSTOMER_SEGMENTS: (내용)")
-            appendLine("COST_STRUCTURE: (내용)")
+            appendLine("VALUE_PROPOSITION: (내용)")
+            appendLine("CHANNELS: (내용)")
+            appendLine("CUSTOMER_RELATIONSHIPS: (내용)")
             appendLine("REVENUE_STREAMS: (내용)")
+            appendLine("KEY_RESOURCES: (내용)")
+            appendLine("KEY_ACTIVITIES: (내용)")
+            appendLine("KEY_PARTNERS: (내용)")
+            appendLine("COST_STRUCTURE: (내용)")
         }
     }
 
@@ -138,15 +138,15 @@ class BmcModificationService(
             appendLine()
             appendLine("기존 BMC (참고용):")
             appendLine("제목: ${bmc.title}")
-            appendLine("1. 핵심 파트너: ${bmc.keyPartners ?: "없음"}")
-            appendLine("2. 핵심 활동: ${bmc.keyActivities ?: "없음"}")
-            appendLine("3. 핵심 자원: ${bmc.keyResources ?: "없음"}")
-            appendLine("4. 제공 가치: ${bmc.valueProposition ?: "없음"}")
-            appendLine("5. 고객 관계: ${bmc.customerRelationships ?: "없음"}")
-            appendLine("6. 채널: ${bmc.channels ?: "없음"}")
-            appendLine("7. 목표 고객: ${bmc.customerSegments ?: "없음"}")
-            appendLine("8. 비용 구조: ${bmc.costStructure ?: "없음"}")
-            appendLine("9. 수익 구조: ${bmc.revenueStreams ?: "없음"}")
+            appendLine("1. 목표 고객: ${bmc.customerSegments ?: "없음"}")
+            appendLine("2. 제공 가치: ${bmc.valueProposition ?: "없음"}")
+            appendLine("3. 채널: ${bmc.channels ?: "없음"}")
+            appendLine("4. 고객 관계: ${bmc.customerRelationships ?: "없음"}")
+            appendLine("5. 수익 구조: ${bmc.revenueStreams ?: "없음"}")
+            appendLine("6. 핵심 자원: ${bmc.keyResources ?: "없음"}")
+            appendLine("7. 핵심 활동: ${bmc.keyActivities ?: "없음"}")
+            appendLine("8. 핵심 파트너: ${bmc.keyPartners ?: "없음"}")
+            appendLine("9. 비용 구조: ${bmc.costStructure ?: "없음"}")
             appendLine()
             appendLine("추가 고려사항:")
             appendLine(additionalContext)
@@ -155,15 +155,15 @@ class BmcModificationService(
             appendLine("기존 아이디어는 유지하되, 더 나은 접근 방식과 전략을 제시해주세요.")
             appendLine()
             appendLine("응답 형식:")
-            appendLine("KEY_PARTNERS: (내용)")
-            appendLine("KEY_ACTIVITIES: (내용)")
-            appendLine("KEY_RESOURCES: (내용)")
-            appendLine("VALUE_PROPOSITION: (내용)")
-            appendLine("CUSTOMER_RELATIONSHIPS: (내용)")
-            appendLine("CHANNELS: (내용)")
             appendLine("CUSTOMER_SEGMENTS: (내용)")
-            appendLine("COST_STRUCTURE: (내용)")
+            appendLine("VALUE_PROPOSITION: (내용)")
+            appendLine("CHANNELS: (내용)")
+            appendLine("CUSTOMER_RELATIONSHIPS: (내용)")
             appendLine("REVENUE_STREAMS: (내용)")
+            appendLine("KEY_RESOURCES: (내용)")
+            appendLine("KEY_ACTIVITIES: (내용)")
+            appendLine("KEY_PARTNERS: (내용)")
+            appendLine("COST_STRUCTURE: (내용)")
         }
     }
 
@@ -173,15 +173,15 @@ class BmcModificationService(
 
         val keys =
             listOf(
-                "KEY_PARTNERS",
-                "KEY_ACTIVITIES",
-                "KEY_RESOURCES",
-                "VALUE_PROPOSITION",
-                "CUSTOMER_RELATIONSHIPS",
-                "CHANNELS",
                 "CUSTOMER_SEGMENTS",
-                "COST_STRUCTURE",
+                "VALUE_PROPOSITION",
+                "CHANNELS",
+                "CUSTOMER_RELATIONSHIPS",
                 "REVENUE_STREAMS",
+                "KEY_RESOURCES",
+                "KEY_ACTIVITIES",
+                "KEY_PARTNERS",
+                "COST_STRUCTURE",
             )
 
         keys.forEach { key ->
@@ -217,8 +217,8 @@ class BmcModificationService(
 
             if (line.contains(":") && line.split(":")[0].trim() in
                 listOf(
-                    "KEY_PARTNERS", "KEY_ACTIVITIES", "KEY_RESOURCES", "VALUE_PROPOSITION",
-                    "CUSTOMER_RELATIONSHIPS", "CHANNELS", "CUSTOMER_SEGMENTS", "COST_STRUCTURE", "REVENUE_STREAMS",
+                    "CUSTOMER_SEGMENTS", "VALUE_PROPOSITION", "CHANNELS", "CUSTOMER_RELATIONSHIPS",
+                    "REVENUE_STREAMS", "KEY_RESOURCES", "KEY_ACTIVITIES", "KEY_PARTNERS", "COST_STRUCTURE",
                 )
             ) {
                 break

@@ -40,15 +40,15 @@ class BmcGenerationService(
                 BusinessModelCanvas(
                     user = user,
                     title = request.title,
-                    keyPartners = bmcElements["KEY_PARTNERS"],
-                    keyActivities = bmcElements["KEY_ACTIVITIES"],
-                    keyResources = bmcElements["KEY_RESOURCES"],
-                    valueProposition = bmcElements["VALUE_PROPOSITION"],
-                    customerRelationships = bmcElements["CUSTOMER_RELATIONSHIPS"],
-                    channels = bmcElements["CHANNELS"],
                     customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
-                    costStructure = bmcElements["COST_STRUCTURE"],
+                    valueProposition = bmcElements["VALUE_PROPOSITION"],
+                    channels = bmcElements["CHANNELS"],
+                    customerRelationships = bmcElements["CUSTOMER_RELATIONSHIPS"],
                     revenueStreams = bmcElements["REVENUE_STREAMS"],
+                    keyResources = bmcElements["KEY_RESOURCES"],
+                    keyActivities = bmcElements["KEY_ACTIVITIES"],
+                    keyPartners = bmcElements["KEY_PARTNERS"],
+                    costStructure = bmcElements["COST_STRUCTURE"],
                     isCompleted = true,
                     bmcQuestion = bmcQuestion,
                 )
@@ -69,15 +69,15 @@ class BmcGenerationService(
 
         val keys =
             listOf(
-                "KEY_PARTNERS",
-                "KEY_ACTIVITIES",
-                "KEY_RESOURCES",
-                "VALUE_PROPOSITION",
-                "CUSTOMER_RELATIONSHIPS",
-                "CHANNELS",
                 "CUSTOMER_SEGMENTS",
-                "COST_STRUCTURE",
+                "VALUE_PROPOSITION",
+                "CHANNELS",
+                "CUSTOMER_RELATIONSHIPS",
                 "REVENUE_STREAMS",
+                "KEY_RESOURCES",
+                "KEY_ACTIVITIES",
+                "KEY_PARTNERS",
+                "COST_STRUCTURE",
             )
 
         keys.forEach { key ->
@@ -113,8 +113,8 @@ class BmcGenerationService(
 
             if (line.contains(":") && line.split(":")[0].trim() in
                 listOf(
-                    "KEY_PARTNERS", "KEY_ACTIVITIES", "KEY_RESOURCES", "VALUE_PROPOSITION",
-                    "CUSTOMER_RELATIONSHIPS", "CHANNELS", "CUSTOMER_SEGMENTS", "COST_STRUCTURE", "REVENUE_STREAMS",
+                    "CUSTOMER_SEGMENTS", "VALUE_PROPOSITION", "CHANNELS", "CUSTOMER_RELATIONSHIPS",
+                    "REVENUE_STREAMS", "KEY_RESOURCES", "KEY_ACTIVITIES", "KEY_PARTNERS", "COST_STRUCTURE",
                 )
             ) {
                 break
