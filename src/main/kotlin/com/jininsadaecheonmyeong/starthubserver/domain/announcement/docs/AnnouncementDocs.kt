@@ -2,11 +2,6 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementAgeGroup
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementBusinessExperience
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementRegion
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementSupportCategory
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementTarget
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -36,7 +31,7 @@ interface AnnouncementDocs {
         summary = "좋아요 누른 공고 조회",
         description = "현재 로그인한 사용자가 좋아요를 누른 공고 목록을 최신순으로 조회합니다.",
     )
-    @GetMapping("/my-likes")
+    @GetMapping("/likes")
     fun getLikedAnnouncements(
         @ParameterObject pageable: Pageable,
     ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
@@ -75,11 +70,11 @@ interface AnnouncementDocs {
     @GetMapping("/search")
     fun searchAnnouncements(
         @Parameter(description = "제목으로 검색") @RequestParam(required = false) title: String?,
-        @Parameter(description = "지원분야 필터") @RequestParam(required = false) supportCategory: AnnouncementSupportCategory?,
-        @Parameter(description = "지역 필터") @RequestParam(required = false) region: AnnouncementRegion?,
-        @Parameter(description = "대상 필터") @RequestParam(required = false) target: AnnouncementTarget?,
-        @Parameter(description = "연령대 필터") @RequestParam(required = false) ageGroup: AnnouncementAgeGroup?,
-        @Parameter(description = "창업업력 필터") @RequestParam(required = false) businessExperience: AnnouncementBusinessExperience?,
+        @Parameter(description = "지원분야 필터") @RequestParam(required = false) supportField: String?,
+        @Parameter(description = "지역 필터") @RequestParam(required = false) targetRegion: String?,
+        @Parameter(description = "대상 필터") @RequestParam(required = false) targetGroup: String?,
+        @Parameter(description = "연령 필터") @RequestParam(required = false) targetAge: String?,
+        @Parameter(description = "창업업력 필터") @RequestParam(required = false) businessExperience: String?,
         @ParameterObject pageable: Pageable,
     ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
 }

@@ -20,21 +20,25 @@ interface AnnouncementRepository : JpaRepository<Announcement, Long> {
 
     fun findAllByStatus(status: AnnouncementStatus): List<Announcement>
 
-    @Query("""
-        SELECT a FROM Announcement a 
+    @Query(
+        """
+        SELECT a FROM Announcement a
         WHERE a.status = 'ACTIVE'
         AND (:title IS NULL OR LOWER(a.title) LIKE LOWER(CONCAT('%', :title, '%')))
-        AND (:supportField IS NULL OR a.supportField = :supportField)
-        AND (:region IS NULL OR a.region = :region)
-        AND (:targetAge IS NULL OR a.targetAge = :targetAge)
-        AND (:startupHistory IS NULL OR a.startupHistory = :startupHistory)
-    """)
+        AND (:supportField IS NULL OR LOWER(a.supportField) LIKE LOWER(CONCAT('%', :supportField, '%')))
+        AND (:targetRegion IS NULL OR LOWER(a.region) LIKE LOWER(CONCAT('%', :targetRegion, '%')))
+        AND (:targetGroup IS NULL OR LOWER(a.organizationType) LIKE LOWER(CONCAT('%', :targetGroup, '%')))
+        AND (:targetAge IS NULL OR LOWER(a.targetAge) LIKE LOWER(CONCAT('%', :targetAge, '%')))
+        AND (:businessExperience IS NULL OR LOWER(a.startupHistory) LIKE LOWER(CONCAT('%', :businessExperience, '%')))
+        """,
+    )
     fun searchAnnouncements(
         @Param("title") title: String?,
         @Param("supportField") supportField: String?,
-        @Param("region") region: String?,
+        @Param("targetRegion") targetRegion: String?,
+        @Param("targetGroup") targetGroup: String?,
         @Param("targetAge") targetAge: String?,
-        @Param("startupHistory") startupHistory: String?,
-        pageable: Pageable
+        @Param("businessExperience") businessExperience: String?,
+        pageable: Pageable,
     ): Page<Announcement>
 }
