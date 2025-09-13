@@ -141,4 +141,8 @@ class AnnouncementService(
 
         return likedAnnouncements.map { AnnouncementResponse.from(it.announcement, isLiked = true) }
     }
+    
+    fun getAnnouncementsFromLastHours(hours: Long): List<Announcement> {
+        return repository.findRecentAnnouncements(hours)
+    }
 }

@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.Busines
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcSessionNotCompletedException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.service.UserChangeTrackingService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.logger
 import org.springframework.ai.chat.model.ChatModel
@@ -18,6 +19,7 @@ class BmcGenerationService(
     private val bmcQuestionService: BmcQuestionService,
     private val bmcPromptService: BmcPromptService,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
+    private val userChangeTrackingService: UserChangeTrackingService,
 ) {
     private val log = logger()
 
@@ -55,6 +57,9 @@ class BmcGenerationService(
 
             val savedBmc = businessModelCanvasRepository.save(businessModelCanvas)
             log.info("BMC 생성 완료: sessionId={}, userId={}, bmcId={}", request.sessionId, user.id, savedBmc.id)
+
+            // 사용자 관심사 변경 추적
+            userChangeTrackingService.markUserForUpdate(user.id!!, "BMC_CREATED")
 
             return BusinessModelCanvasResponse.from(savedBmc)
         } catch (e: Exception) {

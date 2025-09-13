@@ -10,4 +10,6 @@ interface UserInterestRepository : JpaRepository<UserInterest, Long> {
     @Modifying
     @Query("DELETE FROM UserInterest ui WHERE ui.user = :user")
     fun deleteByUser(user: User)
+    
+    fun findByUserId(userId: Long): List<UserInterest>
 }

@@ -38,6 +38,7 @@ class UserService(
     private val emailRepository: EmailRepository,
     private val userInterestRepository: UserInterestRepository,
     private val companyRepository: CompanyRepository,
+    private val userChangeTrackingService: UserChangeTrackingService,
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
@@ -95,6 +96,9 @@ class UserService(
                 UserInterest(user = user, businessType = interestType)
             }
         userInterestRepository.saveAll(newInterests)
+        
+        // 사용자 프로필 변경 추적
+        userChangeTrackingService.markUserForUpdate(user.id!!, "USER_PROFILE_UPDATED")
     }
 
     @Transactional(readOnly = true)

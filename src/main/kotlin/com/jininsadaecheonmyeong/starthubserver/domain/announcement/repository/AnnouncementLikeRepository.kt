@@ -24,4 +24,6 @@ interface AnnouncementLikeRepository : JpaRepository<AnnouncementLike, Long> {
         user: User,
         pageable: Pageable,
     ): Page<AnnouncementLike>
+    
+    fun findByUserId(userId: Long): List<AnnouncementLike>
 }

@@ -8,6 +8,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.Busines
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BmcModificationRequestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.service.UserChangeTrackingService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.logger
 import org.springframework.ai.chat.model.ChatModel
@@ -20,6 +21,7 @@ class BmcModificationService(
     private val chatModel: ChatModel,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val bmcModificationRequestRepository: BmcModificationRequestRepository,
+    private val userChangeTrackingService: UserChangeTrackingService,
 ) {
     private val log = logger()
 
@@ -68,6 +70,9 @@ class BmcModificationService(
             bmcModificationRequestRepository.save(savedRequest)
 
             log.info("BMC 수정 완료: bmcId={}, userId={}, requestType={}", request.bmcId, user.id, request.requestType)
+
+            // 사용자 관심사 변경 추적
+            userChangeTrackingService.markUserForUpdate(user.id!!, "BMC_MODIFIED")
 
             return BmcModificationResponse.from(savedRequest, BusinessModelCanvasResponse.from(updatedBmc))
         } catch (e: Exception) {

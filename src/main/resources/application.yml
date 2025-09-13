@@ -88,3 +88,6 @@ oauth:
 discord:
   webhook:
     url: ${DISCORD_WEBHOOK_URL}
+
+fastapi:
+  base-url: ${FASTAPI_BASE_URL:http://localhost:8001}

@@ -6,6 +6,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.Li
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.LikeNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.service.UserChangeTrackingService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional
 class AnnouncementLikeService(
     private val announcementLikeRepository: AnnouncementLikeRepository,
     private val announcementRepository: AnnouncementRepository,
+    private val userChangeTrackingService: UserChangeTrackingService,
 ) {
     fun addLike(announcementId: Long) {
         val user = UserAuthenticationHolder.current()
@@ -35,6 +37,9 @@ class AnnouncementLikeService(
 
         announcement.likeCount++
         announcementRepository.save(announcement)
+        
+        // 사용자 관심사 변경 추적
+        userChangeTrackingService.markUserForUpdate(user.id!!, "ANNOUNCEMENT_LIKE_ADDED")
     }
 
     fun removeLike(announcementId: Long) {
@@ -50,5 +55,8 @@ class AnnouncementLikeService(
 
         announcement.likeCount--
         announcementRepository.save(announcement)
+        
+        // 사용자 관심사 변경 추적
+        userChangeTrackingService.markUserForUpdate(user.id!!, "ANNOUNCEMENT_LIKE_REMOVED")
     }
 }
