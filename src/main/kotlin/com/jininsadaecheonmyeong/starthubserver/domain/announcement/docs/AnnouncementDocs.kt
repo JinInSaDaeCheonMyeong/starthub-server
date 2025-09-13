@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.respons
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
 
 @Tag(name = "공고", description = "공고 관련 API")
 interface AnnouncementDocs {
@@ -29,7 +31,7 @@ interface AnnouncementDocs {
         summary = "좋아요 누른 공고 조회",
         description = "현재 로그인한 사용자가 좋아요를 누른 공고 목록을 최신순으로 조회합니다.",
     )
-    @GetMapping("/my-likes")
+    @GetMapping("/likes")
     fun getLikedAnnouncements(
         @ParameterObject pageable: Pageable,
     ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
@@ -60,4 +62,19 @@ interface AnnouncementDocs {
     fun getAnnouncementDetail(
         @PathVariable announcementId: Long,
     ): ResponseEntity<BaseResponse<AnnouncementDetailResponse>>
+
+    @Operation(
+        summary = "공고 검색",
+        description = "공고의 제목과 필터로 검색합니다. 여러 필터를 동시에 사용할 수 있습니다.",
+    )
+    @GetMapping("/search")
+    fun searchAnnouncements(
+        @Parameter(description = "제목으로 검색") @RequestParam(required = false) title: String?,
+        @Parameter(description = "지원분야 필터") @RequestParam(required = false) supportField: String?,
+        @Parameter(description = "지역 필터") @RequestParam(required = false) targetRegion: String?,
+        @Parameter(description = "대상 필터") @RequestParam(required = false) targetGroup: String?,
+        @Parameter(description = "연령 필터") @RequestParam(required = false) targetAge: String?,
+        @Parameter(description = "창업업력 필터") @RequestParam(required = false) businessExperience: String?,
+        @ParameterObject pageable: Pageable,
+    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
 }

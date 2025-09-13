@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -53,5 +54,28 @@ class AnnouncementController(
     override fun getAnnouncementDetail(announcementId: Long): ResponseEntity<BaseResponse<AnnouncementDetailResponse>> {
         val response = announcementService.getAnnouncementDetail(announcementId)
         return BaseResponse.of(response, "공고 상세 조회 성공")
+    }
+
+    override fun searchAnnouncements(
+        @RequestParam(required = false) title: String?,
+        @RequestParam(required = false) supportField: String?,
+        @RequestParam(required = false) targetRegion: String?,
+        @RequestParam(required = false) targetGroup: String?,
+        @RequestParam(required = false) targetAge: String?,
+        @RequestParam(required = false) businessExperience: String?,
+        @ParameterObject pageable: Pageable,
+    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>> {
+        val announcements =
+            announcementService.searchAnnouncements(
+                title = title,
+                supportField = supportField,
+                targetRegion = targetRegion,
+                targetGroup = targetGroup,
+                targetAge = targetAge,
+                businessExperience = businessExperience,
+                pageable = pageable,
+            )
+        val response = CustomPageResponse.from(announcements)
+        return BaseResponse.of(response, "공고 검색 성공")
     }
 }

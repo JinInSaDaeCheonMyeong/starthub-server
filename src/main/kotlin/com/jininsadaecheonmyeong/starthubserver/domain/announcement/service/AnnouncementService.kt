@@ -147,4 +147,29 @@ class AnnouncementService(
             repository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
         return AnnouncementDetailResponse(announcement)
     }
+
+    fun searchAnnouncements(
+        title: String?,
+        supportField: String?,
+        targetRegion: String?,
+        targetGroup: String?,
+        targetAge: String?,
+        businessExperience: String?,
+        pageable: Pageable,
+    ): Page<AnnouncementResponse> {
+        val announcements =
+            repository.searchAnnouncements(
+                title = title,
+                supportField = supportField,
+                targetRegion = targetRegion,
+                targetGroup = targetGroup,
+                targetAge = targetAge,
+                businessExperience = businessExperience,
+                pageable = pageable,
+            )
+
+        return announcements.map { announcement ->
+            AnnouncementResponse.from(announcement)
+        }
+    }
 }
