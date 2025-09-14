@@ -16,10 +16,10 @@ import jakarta.persistence.UniqueConstraint
 
 @Entity
 @Table(
-    name = "user_interests",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["user_id", "interest"])],
+    name = "user_startup_fields",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["user_id", "startup_field"])],
 )
-class UserInterest(
+class UserStartupField(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
@@ -27,6 +27,6 @@ class UserInterest(
     @JoinColumn(name = "user_id", nullable = false)
     val user: User,
     @Enumerated(EnumType.STRING)
-    @Column(name = "interest", nullable = false)
+    @Column(name = "startup_field", nullable = false)
     val businessType: BusinessType,
 )
