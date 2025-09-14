@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 data class BmcSessionResponse(
     val id: Long,
     val sessionId: Long,
-    val businessIdea: String,
+    val title: String,
     val isCompleted: Boolean,
     val createdAt: LocalDateTime,
     val questions: List<BmcQuestionResponse>,
@@ -16,7 +16,7 @@ data class BmcSessionResponse(
             return BmcSessionResponse(
                 id = bmcQuestion.id!!,
                 sessionId = bmcQuestion.id!!,
-                businessIdea = bmcQuestion.businessIdea,
+                title = bmcQuestion.title,
                 isCompleted = bmcQuestion.isCompleted,
                 createdAt = bmcQuestion.createdAt,
                 questions =

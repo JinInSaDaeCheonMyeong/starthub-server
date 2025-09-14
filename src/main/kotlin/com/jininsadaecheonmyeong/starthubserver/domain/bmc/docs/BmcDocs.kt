@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody
 interface BmcDocs {
     @Operation(
         summary = "BMC 세션 생성",
-        description = "새로운 BMC 대화 세션을 생성합니다. 사업 아이디어를 입력받아 세션을 시작합니다.",
+        description = "새로운 BMC 대화 세션을 생성합니다. 제목을 입력받아 세션을 시작합니다.",
     )
     @ApiResponses(
         value = [

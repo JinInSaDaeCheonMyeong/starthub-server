@@ -24,7 +24,7 @@ class BmcQuestion(
     @JoinColumn(name = "fk_user_id", nullable = false)
     val user: User,
     @Column(nullable = false)
-    var businessIdea: String,
+    var title: String,
     @Column(columnDefinition = "TEXT")
     var question1Answer: String? = null,
     @Column(columnDefinition = "TEXT")
