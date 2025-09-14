@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.AnswerQu
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.CreateBmcSessionRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.GenerateBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.ModifyBmcRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcFormResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcModificationResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcSessionResponse
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -112,5 +114,13 @@ class BmcController(
     ): ResponseEntity<BaseResponse<List<BmcModificationResponse>>> {
         val result = bmcModificationService.getBmcModificationHistory(id)
         return BaseResponse.of(result, "BMC 수정 히스토리 조회 성공")
+    }
+
+    @PutMapping("/canvases")
+    override fun updateBmc(
+        @Valid @RequestBody request: UpdateBmcRequest,
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>> {
+        val result = businessModelCanvasService.updateBusinessModelCanvas(request)
+        return BaseResponse.of(result, "BMC 수정 성공")
     }
 }

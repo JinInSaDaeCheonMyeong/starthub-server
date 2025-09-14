@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.AnswerQu
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.CreateBmcSessionRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.GenerateBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.ModifyBmcRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcFormResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcModificationResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcSessionResponse
@@ -122,4 +123,12 @@ interface BmcDocs {
     fun getBmcModificationHistory(
         @PathVariable id: Long,
     ): ResponseEntity<BaseResponse<List<BmcModificationResponse>>>
+
+    @Operation(
+        summary = "BMC 직접 수정",
+        description = "사용자가 직접 BMC 내용을 수정합니다. 수정하고 싶은 필드만 입력합니다.",
+    )
+    fun updateBmc(
+        @Valid @RequestBody request: UpdateBmcRequest,
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>>
 }
