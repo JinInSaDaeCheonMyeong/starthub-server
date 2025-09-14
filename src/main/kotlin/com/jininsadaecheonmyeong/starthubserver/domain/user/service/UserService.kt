@@ -10,13 +10,13 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.TokenR
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserProfileResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
-import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserInterest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserStartupField
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
-import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserInterestRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserStartupFieldRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenRedisService
@@ -36,7 +36,7 @@ class UserService(
     private val tokenParser: TokenParser,
     private val tokenRedisService: TokenRedisService,
     private val emailRepository: EmailRepository,
-    private val userInterestRepository: UserInterestRepository,
+    private val userStartupFieldRepository: UserStartupFieldRepository,
     private val companyRepository: CompanyRepository,
 ) {
     fun signUp(request: UserRequest) {
@@ -82,24 +82,46 @@ class UserService(
         request: UpdateUserProfileRequest,
     ) {
         user.username = request.username
-        user.introduction = request.introduction
         user.birth = request.birth
         user.gender = request.gender
-        user.profileImage = request.profileImage
+        user.startupStatus = request.startupStatus
+        user.companyName = request.companyName
+        user.companyDescription = request.companyDescription
+        user.numberOfEmployees = request.numberOfEmployees
+        user.companyWebsite = request.companyWebsite
+        user.startupLocation = request.startupLocation
+        user.annualRevenue = request.annualRevenue
+
         userRepository.save(user)
 
-        userInterestRepository.deleteByUser(user)
-
-        val newInterests =
-            request.interests.map { interestType ->
-                UserInterest(user = user, businessType = interestType)
-            }
-        userInterestRepository.saveAll(newInterests)
+        request.startupFields?.let { newInterests ->
+            userStartupFieldRepository.deleteByUser(user)
+            val userStartupFields =
+                newInterests.map { startupField ->
+                    UserStartupField(user = user, businessType = startupField)
+                }
+            userStartupFieldRepository.saveAll(userStartupFields)
+        }
     }
 
     @Transactional(readOnly = true)
     fun getUser(user: User): UserResponse {
-        return UserResponse(user)
+        val startupFields = userStartupFieldRepository.findByUser(user).map { it.businessType }
+        return UserResponse(
+            id = user.id!!,
+            email = user.email,
+            username = user.username,
+            birth = user.birth,
+            gender = user.gender,
+            startupStatus = user.startupStatus,
+            companyName = user.companyName,
+            companyDescription = user.companyDescription,
+            numberOfEmployees = user.numberOfEmployees,
+            companyWebsite = user.companyWebsite,
+            startupLocation = user.startupLocation,
+            annualRevenue = user.annualRevenue,
+            startupFields = startupFields,
+        )
     }
 
     fun signOut(user: User) {
@@ -110,10 +132,21 @@ class UserService(
     fun getUserProfile(userId: Long): UserProfileResponse {
         val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
         val companies = companyRepository.findByFounderAndDeletedFalse(user)
+        val startupFields = userStartupFieldRepository.findByUser(user).map { it.businessType }
         return UserProfileResponse(
             username = user.username,
             profileImage = user.profileImage,
             companyIds = companies.mapNotNull { it.id },
+            birth = user.birth,
+            gender = user.gender,
+            startupStatus = user.startupStatus,
+            companyName = user.companyName,
+            companyDescription = user.companyDescription,
+            numberOfEmployees = user.numberOfEmployees,
+            companyWebsite = user.companyWebsite,
+            startupLocation = user.startupLocation,
+            annualRevenue = user.annualRevenue,
+            startupFields = startupFields,
         )
     }
 }

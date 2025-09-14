@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.entity
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.StartupStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserGender
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserRole
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
@@ -29,7 +30,6 @@ class User(
     var birth: LocalDate? = null,
     @Enumerated(EnumType.STRING)
     var gender: UserGender? = null,
-    var introduction: String? = null,
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val provider: AuthType,
@@ -40,4 +40,13 @@ class User(
     var deleted: Boolean = false,
     @Column(nullable = false)
     var isFirstLogin: Boolean = true,
+    @Enumerated(EnumType.STRING)
+    var startupStatus: StartupStatus? = null,
+    var companyName: String? = null,
+    @Column(columnDefinition = "TEXT")
+    var companyDescription: String? = null,
+    var numberOfEmployees: Int? = null,
+    var companyWebsite: String? = null,
+    var startupLocation: String? = null,
+    var annualRevenue: Long? = null,
 ) : BaseEntity()

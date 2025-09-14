@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.data.response
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.StartupStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserGender
 import java.time.LocalDate
 
@@ -10,16 +11,12 @@ data class UserResponse(
     val username: String?,
     val birth: LocalDate?,
     val gender: UserGender?,
-    val profileImage: String?,
-    val introduction: String?,
-) {
-    constructor(user: User) : this(
-        id = user.id!!,
-        email = user.email,
-        username = user.username,
-        birth = user.birth,
-        gender = user.gender,
-        profileImage = user.profileImage,
-        introduction = user.introduction,
-    )
-}
+    val startupStatus: StartupStatus?,
+    val companyName: String?,
+    val companyDescription: String?,
+    val numberOfEmployees: Int?,
+    val companyWebsite: String?,
+    val startupLocation: String?,
+    val annualRevenue: Long?,
+    val startupFields: List<BusinessType>,
+)
