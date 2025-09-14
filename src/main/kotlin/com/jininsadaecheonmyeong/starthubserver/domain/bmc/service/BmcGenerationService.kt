@@ -39,7 +39,7 @@ class BmcGenerationService(
             val businessModelCanvas =
                 BusinessModelCanvas(
                     user = user,
-                    title = request.title,
+                    title = bmcQuestion.title,
                     customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
                     valueProposition = bmcElements["VALUE_PROPOSITION"],
                     channels = bmcElements["CHANNELS"],

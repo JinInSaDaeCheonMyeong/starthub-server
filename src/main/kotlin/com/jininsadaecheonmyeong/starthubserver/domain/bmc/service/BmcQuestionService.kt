@@ -22,7 +22,7 @@ class BmcQuestionService(
         val bmcQuestion =
             BmcQuestion(
                 user = user,
-                businessIdea = request.businessIdea,
+                title = request.title,
             )
 
         val savedBmcQuestion = bmcQuestionRepository.save(bmcQuestion)
@@ -63,8 +63,11 @@ class BmcQuestionService(
     fun getBmcQuestions(): List<BmcFormResponse> {
         val questions =
             listOf(
+                "사업 아이디어는 무엇인가요?\n" +
+                    "어떤 문제를 해결하거나 어떤 가치를 제공하는 사업인지 구체적으로 설명해주세요.\n" +
+                    "이 아이디어가 어떻게 시장에서 차별화될 수 있을지도 함께 말씀해주세요.",
                 "핵심 고객은 누구인가요? (Customer Segments + Problem)\n" +
-                    "우리 서비스/제품을 꼭 필요로 하는 ‘핵심 고객’은 누구이며, 그들이 해결하고 싶어 하는 가장 큰 문제·욕구는 무엇인가요?\n" +
+                    "우리 서비스/제품을 꼭 필요로 하는 '핵심 고객'은 누구이며, 그들이 해결하고 싶어 하는 가장 큰 문제·욕구는 무엇인가요?\n" +
                     "이들은 어떤 상황에서 어떤 불편을 가장 자주 겪고 있을까요?",
                 "고객에게 제공할 주요 가치와 해결책은 무엇인가요? (Value Proposition)\n" +
                     "이 문제를 해결하기 위해 우리가 제공하는 '핵심 가치'는 무엇인가요?\n" +

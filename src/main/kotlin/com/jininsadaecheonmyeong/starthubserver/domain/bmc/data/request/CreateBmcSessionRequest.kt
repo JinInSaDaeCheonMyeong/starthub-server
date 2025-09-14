@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
 data class CreateBmcSessionRequest(
-    @field:NotBlank(message = "사업 아이디어를 입력해주세요.")
-    @field:Size(min = 10, max = 500, message = "사업 아이디어는 10자 이상 500자 이하로 입력해주세요.")
-    val businessIdea: String,
+    @field:NotBlank(message = "제목을 입력해주세요.")
+    @field:Size(min = 1, max = 100, message = "제목은 1자 이상 100자 이하로 입력해주세요.")
+    val title: String,
 )
