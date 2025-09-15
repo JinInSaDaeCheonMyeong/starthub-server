@@ -120,13 +120,16 @@ class AnnouncementService(
     }
 
     @Transactional
-    fun softDeleteExpiredAnnouncements() {
+    fun deactivateExpiredAnnouncements() {
         val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE)
         val today = LocalDate.now()
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
         announcements.forEach { announcement ->
-            val endDateString = announcement.receptionPeriod.split("~")[1].trim()
+            var endDateString = announcement.receptionPeriod.split("~")[1].trim()
+            if (endDateString.contains(" ")) {
+                endDateString = endDateString.split(" ")[0]
+            }
             val endDate = LocalDate.parse(endDateString, formatter)
             if (endDate.isBefore(today)) {
                 announcement.status = AnnouncementStatus.INACTIVE

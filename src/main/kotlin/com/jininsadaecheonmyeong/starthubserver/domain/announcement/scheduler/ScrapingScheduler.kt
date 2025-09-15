@@ -14,7 +14,7 @@ class ScrapingScheduler(
     }
 
     @Scheduled(cron = "0 0 0 * * *")
-    fun runDailySoftDeletion() {
-        scrapingService.softDeleteExpiredAnnouncements()
+    fun runDailyDeactivation() {
+        scrapingService.deactivateExpiredAnnouncements()
     }
 }
