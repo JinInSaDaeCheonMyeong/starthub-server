@@ -182,17 +182,24 @@ class AnnouncementService(
                 businessExperience = businessExperience,
                 pageable = pageable,
             )
-        return if (includeLikeStatus) mapAnnouncementsToResponseWithLikeStatus(announcements) else announcements.map { AnnouncementResponse.from(it) }
+        return if (includeLikeStatus) {
+            mapAnnouncementsToResponseWithLikeStatus(announcements)
+        } else {
+            announcements.map {
+                AnnouncementResponse.from(it)
+            }
+        }
     }
 
     fun getRecommendedAnnouncements(accessToken: String): List<RecommendedAnnouncementResponse> {
-        val recommendationResponse = webClient.get()
-            .uri("$fastapiUrl/recommend")
-            .header(HttpHeaders.ACCEPT, "application/json")
-            .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
-            .retrieve()
-            .bodyToMono(RecommendationResponse::class.java)
-            .block()
+        val recommendationResponse =
+            webClient.get()
+                .uri("$fastapiUrl/recommend")
+                .header(HttpHeaders.ACCEPT, "application/json")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                .retrieve()
+                .bodyToMono(RecommendationResponse::class.java)
+                .block()
 
         if (recommendationResponse == null || recommendationResponse.recommendations.isEmpty()) {
             return emptyList()
@@ -209,7 +216,7 @@ class AnnouncementService(
         return sortedAnnouncements.map { announcement ->
             RecommendedAnnouncementResponse.from(
                 announcement = announcement,
-                score = scoreMap[announcement.title]
+                score = scoreMap[announcement.title],
             )
         }
     }

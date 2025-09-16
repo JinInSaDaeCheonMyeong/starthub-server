@@ -8,6 +8,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
-import jakarta.servlet.http.HttpServletRequest
 
 @Tag(name = "공고", description = "공고 관련 API")
 interface AnnouncementDocs {
@@ -87,7 +87,5 @@ interface AnnouncementDocs {
         description = "사용자의 창업 분야를 기반으로 추천된 공고 목록을 조회합니다.",
     )
     @GetMapping("/recommendations")
-    fun getRecommendedAnnouncements(
-        request: HttpServletRequest,
-    ): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>>
+    fun getRecommendedAnnouncements(request: HttpServletRequest): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>>
 }

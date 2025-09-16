@@ -85,7 +85,9 @@ class AnnouncementController(
         return BaseResponse.of(response, "공고 검색 성공")
     }
 
-    override fun getRecommendedAnnouncements(request: HttpServletRequest): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>> {
+    override fun getRecommendedAnnouncements(
+        request: HttpServletRequest,
+    ): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>> {
         val authHeader = request.getHeader(HttpHeaders.AUTHORIZATION)
         val accessToken = authHeader.substring(7)
         val response = announcementService.getRecommendedAnnouncements(accessToken)
