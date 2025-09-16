@@ -24,4 +24,9 @@ interface AnnouncementLikeRepository : JpaRepository<AnnouncementLike, Long> {
         user: User,
         pageable: Pageable,
     ): Page<AnnouncementLike>
+
+    fun findAllByUserAndAnnouncementIn(
+        user: User,
+        announcements: List<Announcement>,
+    ): List<AnnouncementLike>
 }

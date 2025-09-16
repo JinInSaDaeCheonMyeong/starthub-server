@@ -23,8 +23,9 @@ class AnnouncementController(
 ) : AnnouncementDocs {
     override fun getAllAnnouncements(
         @ParameterObject pageable: Pageable,
+        @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
     ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>> {
-        val announcements = announcementService.findAllAnnouncements(pageable)
+        val announcements = announcementService.findAllAnnouncements(pageable, includeLikeStatus)
         val response = CustomPageResponse.from(announcements)
         return BaseResponse.of(response, "공고 조회 성공")
     }
@@ -63,6 +64,7 @@ class AnnouncementController(
         @RequestParam(required = false) targetGroup: String?,
         @RequestParam(required = false) targetAge: String?,
         @RequestParam(required = false) businessExperience: String?,
+        @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
         @ParameterObject pageable: Pageable,
     ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>> {
         val announcements =
@@ -73,6 +75,7 @@ class AnnouncementController(
                 targetGroup = targetGroup,
                 targetAge = targetAge,
                 businessExperience = businessExperience,
+                includeLikeStatus = includeLikeStatus,
                 pageable = pageable,
             )
         val response = CustomPageResponse.from(announcements)

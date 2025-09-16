@@ -111,11 +111,15 @@ class AnnouncementService(
         }
     }
 
-    fun findAllAnnouncements(pageable: Pageable): Page<AnnouncementResponse> {
+    fun findAllAnnouncements(
+        pageable: Pageable,
+        includeLikeStatus: Boolean,
+    ): Page<AnnouncementResponse> {
         val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE, pageable)
-
-        return announcements.map { announcement ->
-            AnnouncementResponse.from(announcement)
+        return if (includeLikeStatus) {
+            mapAnnouncementsToResponseWithLikeStatus(announcements)
+        } else {
+            announcements.map { AnnouncementResponse.from(it) }
         }
     }
 
@@ -158,6 +162,7 @@ class AnnouncementService(
         targetGroup: String?,
         targetAge: String?,
         businessExperience: String?,
+        includeLikeStatus: Boolean,
         pageable: Pageable,
     ): Page<AnnouncementResponse> {
         val announcements =
@@ -170,9 +175,24 @@ class AnnouncementService(
                 businessExperience = businessExperience,
                 pageable = pageable,
             )
+        return if (includeLikeStatus) {
+            mapAnnouncementsToResponseWithLikeStatus(announcements)
+        } else {
+            announcements.map { AnnouncementResponse.from(it) }
+        }
+    }
+
+    private fun mapAnnouncementsToResponseWithLikeStatus(announcements: Page<Announcement>): Page<AnnouncementResponse> {
+        val user = UserAuthenticationHolder.current()
+        val announcementList = announcements.content
+        val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
+        val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
 
         return announcements.map { announcement ->
-            AnnouncementResponse.from(announcement)
+            AnnouncementResponse.from(
+                announcement = announcement,
+                isLiked = likedAnnouncementIds.contains(announcement.id),
+            )
         }
     }
 }
