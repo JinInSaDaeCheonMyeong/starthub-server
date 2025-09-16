@@ -116,23 +116,10 @@ class AnnouncementService(
         includeLikeStatus: Boolean,
     ): Page<AnnouncementResponse> {
         val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE, pageable)
-
-        if (!includeLikeStatus) {
-            return announcements.map { announcement ->
-                AnnouncementResponse.from(announcement)
-            }
-        }
-
-        val user = UserAuthenticationHolder.current()
-        val announcementList = announcements.content
-        val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
-        val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
-
-        return announcements.map { announcement ->
-            AnnouncementResponse.from(
-                announcement = announcement,
-                isLiked = likedAnnouncementIds.contains(announcement.id),
-            )
+        return if (includeLikeStatus) {
+            mapAnnouncementsToResponseWithLikeStatus(announcements)
+        } else {
+            announcements.map { AnnouncementResponse.from(it) }
         }
     }
 
@@ -188,13 +175,14 @@ class AnnouncementService(
                 businessExperience = businessExperience,
                 pageable = pageable,
             )
-
-        if (!includeLikeStatus) {
-            return announcements.map { announcement ->
-                AnnouncementResponse.from(announcement)
-            }
+        return if (includeLikeStatus) {
+            mapAnnouncementsToResponseWithLikeStatus(announcements)
+        } else {
+            announcements.map { AnnouncementResponse.from(it) }
         }
+    }
 
+    private fun mapAnnouncementsToResponseWithLikeStatus(announcements: Page<Announcement>): Page<AnnouncementResponse> {
         val user = UserAuthenticationHolder.current()
         val announcementList = announcements.content
         val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
