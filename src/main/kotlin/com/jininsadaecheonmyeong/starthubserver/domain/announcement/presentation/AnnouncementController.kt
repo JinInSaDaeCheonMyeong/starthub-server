@@ -2,6 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.presentatio
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementSimpleResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs.AnnouncementDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementLikeService
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementService
@@ -27,6 +28,12 @@ class AnnouncementController(
         val announcements = announcementService.findAllAnnouncements(pageable)
         val response = CustomPageResponse.from(announcements)
         return BaseResponse.of(response, "공고 조회 성공")
+    }
+
+    override fun getAllAnnouncementsWithLikeStatus(pageable: Pageable): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementSimpleResponse>>> {
+        val announcements = announcementService.getAllAnnouncementsWithLikeStatus(pageable)
+        val response = CustomPageResponse.from(announcements)
+        return BaseResponse.of(response, "좋아요 여부를 포함한 공고 조회 성공")
     }
 
     override fun getLikedAnnouncements(

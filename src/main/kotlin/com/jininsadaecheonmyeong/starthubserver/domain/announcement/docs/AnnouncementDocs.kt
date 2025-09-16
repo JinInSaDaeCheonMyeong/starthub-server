@@ -2,6 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementSimpleResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -20,12 +21,21 @@ import org.springframework.web.bind.annotation.RequestParam
 interface AnnouncementDocs {
     @Operation(
         summary = "전체 공고 조회",
-        description = "모집중인 공고를 전체 조회합니다. 인증된 사용자의 경우, 각 공고별 '좋아요' 여부를 함께 반환합니다.",
+        description = "모집중인 공고를 전체 조회합니다.",
     )
     @GetMapping
     fun getAllAnnouncements(
         @ParameterObject pageable: Pageable,
     ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
+
+    @Operation(
+        summary = "전체 공고 조회 (좋아요 여부 포함)",
+        description = "모집중인 공고를 전체 조회하며, 각 공고별 '좋아요' 여부를 함께 반환합니다.",
+    )
+    @GetMapping("/like")
+    fun getAllAnnouncementsWithLikeStatus(
+        @ParameterObject pageable: Pageable,
+    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementSimpleResponse>>>
 
     @Operation(
         summary = "좋아요 누른 공고 조회",

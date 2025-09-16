@@ -2,6 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementSimpleResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.AnnouncementNotFoundException
@@ -116,6 +117,22 @@ class AnnouncementService(
 
         return announcements.map { announcement ->
             AnnouncementResponse.from(announcement)
+        }
+    }
+
+    fun getAllAnnouncementsWithLikeStatus(pageable: Pageable): Page<AnnouncementSimpleResponse> {
+        val user = UserAuthenticationHolder.current()
+        val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE, pageable)
+        val announcementList = announcements.content
+
+        val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
+        val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
+
+        return announcements.map { announcement ->
+            AnnouncementSimpleResponse.from(
+                announcement = announcement,
+                isLiked = likedAnnouncementIds.contains(announcement.id),
+            )
         }
     }
 
