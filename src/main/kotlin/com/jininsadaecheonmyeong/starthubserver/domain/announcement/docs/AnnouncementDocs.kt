@@ -66,7 +66,7 @@ interface AnnouncementDocs {
 
     @Operation(
         summary = "공고 검색",
-        description = "공고의 제목과 필터로 검색합니다. 여러 필터를 동시에 사용할 수 있습니다.",
+        description = "공고의 제목과 필터로 검색합니다. 여러 필터를 동시에 사용할 수 있습니다. `includeLikeStatus` 파라미터를 true로 주면, 인증된 사용자의 경우 각 공고별 '좋아요' 여부를 함께 반환합니다.",
     )
     @GetMapping("/search")
     fun searchAnnouncements(
@@ -76,6 +76,7 @@ interface AnnouncementDocs {
         @Parameter(description = "대상 필터") @RequestParam(required = false) targetGroup: String?,
         @Parameter(description = "연령 필터") @RequestParam(required = false) targetAge: String?,
         @Parameter(description = "창업업력 필터") @RequestParam(required = false) businessExperience: String?,
+        @Parameter(description = "'좋아요' 여부 포함 여부") @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
         @ParameterObject pageable: Pageable,
     ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
 }

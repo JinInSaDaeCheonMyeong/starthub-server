@@ -64,6 +64,7 @@ class AnnouncementController(
         @RequestParam(required = false) targetGroup: String?,
         @RequestParam(required = false) targetAge: String?,
         @RequestParam(required = false) businessExperience: String?,
+        @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
         @ParameterObject pageable: Pageable,
     ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>> {
         val announcements =
@@ -74,6 +75,7 @@ class AnnouncementController(
                 targetGroup = targetGroup,
                 targetAge = targetAge,
                 businessExperience = businessExperience,
+                includeLikeStatus = includeLikeStatus,
                 pageable = pageable,
             )
         val response = CustomPageResponse.from(announcements)

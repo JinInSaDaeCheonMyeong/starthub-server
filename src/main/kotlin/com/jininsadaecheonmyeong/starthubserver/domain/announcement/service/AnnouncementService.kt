@@ -123,22 +123,16 @@ class AnnouncementService(
             }
         }
 
-        return try {
-            val user = UserAuthenticationHolder.current()
-            val announcementList = announcements.content
-            val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
-            val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
+        val user = UserAuthenticationHolder.current()
+        val announcementList = announcements.content
+        val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
+        val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
 
-            announcements.map { announcement ->
-                AnnouncementResponse.from(
-                    announcement = announcement,
-                    isLiked = likedAnnouncementIds.contains(announcement.id),
-                )
-            }
-        } catch (_: Exception) {
-            announcements.map { announcement ->
-                AnnouncementResponse.from(announcement)
-            }
+        return announcements.map { announcement ->
+            AnnouncementResponse.from(
+                announcement = announcement,
+                isLiked = likedAnnouncementIds.contains(announcement.id),
+            )
         }
     }
 
@@ -183,6 +177,7 @@ class AnnouncementService(
         targetGroup: String?,
         targetAge: String?,
         businessExperience: String?,
+        includeLikeStatus: Boolean,
         pageable: Pageable,
     ): Page<AnnouncementResponse> {
         val announcements =
@@ -196,8 +191,22 @@ class AnnouncementService(
                 pageable = pageable,
             )
 
+        if (!includeLikeStatus) {
+            return announcements.map { announcement ->
+                AnnouncementResponse.from(announcement)
+            }
+        }
+
+        val user = UserAuthenticationHolder.current()
+        val announcementList = announcements.content
+        val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
+        val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
+
         return announcements.map { announcement ->
-            AnnouncementResponse.from(announcement)
+            AnnouncementResponse.from(
+                announcement = announcement,
+                isLiked = likedAnnouncementIds.contains(announcement.id),
+            )
         }
     }
 }
