@@ -136,8 +136,6 @@ class AnnouncementService(
         }
     }
 
-    
-
     @Transactional
     fun deactivateExpiredAnnouncements() {
         val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE)
