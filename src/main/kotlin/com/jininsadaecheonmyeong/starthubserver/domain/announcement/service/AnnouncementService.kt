@@ -2,6 +2,8 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendationResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendedAnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.AnnouncementNotFoundException
@@ -9,10 +11,13 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.A
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.jsoup.Jsoup
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.reactive.function.client.WebClient
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -21,6 +26,8 @@ import java.time.format.DateTimeFormatter
 class AnnouncementService(
     private val repository: AnnouncementRepository,
     private val announcementLikeRepository: AnnouncementLikeRepository,
+    private val webClient: WebClient,
+    @param:Value("\${recommendation.fastapi-url}") private val fastapiUrl: String,
 ) {
     companion object {
         private const val K_STARTUP_URL = "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do"
@@ -175,10 +182,35 @@ class AnnouncementService(
                 businessExperience = businessExperience,
                 pageable = pageable,
             )
-        return if (includeLikeStatus) {
-            mapAnnouncementsToResponseWithLikeStatus(announcements)
-        } else {
-            announcements.map { AnnouncementResponse.from(it) }
+        return if (includeLikeStatus) mapAnnouncementsToResponseWithLikeStatus(announcements) else announcements.map { AnnouncementResponse.from(it) }
+    }
+
+    fun getRecommendedAnnouncements(accessToken: String): List<RecommendedAnnouncementResponse> {
+        val recommendationResponse = webClient.get()
+            .uri("$fastapiUrl/recommend")
+            .header(HttpHeaders.ACCEPT, "application/json")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+            .retrieve()
+            .bodyToMono(RecommendationResponse::class.java)
+            .block()
+
+        if (recommendationResponse == null || recommendationResponse.recommendations.isEmpty()) {
+            return emptyList()
+        }
+
+        val scoreMap = recommendationResponse.recommendations.associate { it.title to it.score }
+        val recommendedTitles = recommendationResponse.recommendations.map { it.title }
+
+        val announcements = repository.findAllByTitleIn(recommendedTitles)
+
+        val announcementsByTitle = announcements.associateBy { it.title }
+        val sortedAnnouncements = recommendedTitles.mapNotNull { title -> announcementsByTitle[title] }
+
+        return sortedAnnouncements.map { announcement ->
+            RecommendedAnnouncementResponse.from(
+                announcement = announcement,
+                score = scoreMap[announcement.title]
+            )
         }
     }
 

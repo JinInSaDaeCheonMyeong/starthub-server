@@ -88,3 +88,6 @@ oauth:
 discord:
   webhook:
     url: ${DISCORD_WEBHOOK_URL}
+
+recommendation:
+  fastapi-url: ${RECOMMENDATION_API_URL}

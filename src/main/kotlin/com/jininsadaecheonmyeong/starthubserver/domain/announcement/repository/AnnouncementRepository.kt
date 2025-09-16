@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository
 interface AnnouncementRepository : JpaRepository<Announcement, Long> {
     fun existsByUrl(url: String): Boolean
 
+    fun findAllByTitleIn(titles: List<String>): List<Announcement>
+
     fun findAllByStatus(
         status: AnnouncementStatus,
         pageable: Pageable,
