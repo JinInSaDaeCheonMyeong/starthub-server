@@ -2,7 +2,6 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementSimpleResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.AnnouncementNotFoundException
@@ -112,29 +111,38 @@ class AnnouncementService(
         }
     }
 
-    fun findAllAnnouncements(pageable: Pageable): Page<AnnouncementResponse> {
+    fun findAllAnnouncements(
+        pageable: Pageable,
+        includeLikeStatus: Boolean,
+    ): Page<AnnouncementResponse> {
         val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE, pageable)
 
-        return announcements.map { announcement ->
-            AnnouncementResponse.from(announcement)
+        if (!includeLikeStatus) {
+            return announcements.map { announcement ->
+                AnnouncementResponse.from(announcement)
+            }
+        }
+
+        return try {
+            val user = UserAuthenticationHolder.current()
+            val announcementList = announcements.content
+            val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
+            val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
+
+            announcements.map { announcement ->
+                AnnouncementResponse.from(
+                    announcement = announcement,
+                    isLiked = likedAnnouncementIds.contains(announcement.id),
+                )
+            }
+        } catch (_: Exception) {
+            announcements.map { announcement ->
+                AnnouncementResponse.from(announcement)
+            }
         }
     }
 
-    fun getAllAnnouncementsWithLikeStatus(pageable: Pageable): Page<AnnouncementSimpleResponse> {
-        val user = UserAuthenticationHolder.current()
-        val announcements = repository.findAllByStatus(AnnouncementStatus.ACTIVE, pageable)
-        val announcementList = announcements.content
-
-        val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
-        val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
-
-        return announcements.map { announcement ->
-            AnnouncementSimpleResponse.from(
-                announcement = announcement,
-                isLiked = likedAnnouncementIds.contains(announcement.id),
-            )
-        }
-    }
+    
 
     @Transactional
     fun deactivateExpiredAnnouncements() {

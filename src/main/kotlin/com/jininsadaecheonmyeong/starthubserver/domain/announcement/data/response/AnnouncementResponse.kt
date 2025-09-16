@@ -17,24 +17,28 @@ data class AnnouncementResponse(
     val startupHistory: String,
     val departmentInCharge: String,
     val content: String,
+    val isLiked: Boolean? = null,
 ) {
     companion object {
-        fun from(announcement: Announcement) =
-            AnnouncementResponse(
-                id = announcement.id!!,
-                title = announcement.title,
-                url = announcement.url,
-                organization = announcement.organization,
-                receptionPeriod = announcement.receptionPeriod,
-                likeCount = announcement.likeCount,
-                supportField = announcement.supportField,
-                targetAge = announcement.targetAge,
-                contactNumber = announcement.contactNumber,
-                region = announcement.region,
-                organizationType = announcement.organizationType,
-                startupHistory = announcement.startupHistory,
-                departmentInCharge = announcement.departmentInCharge,
-                content = announcement.content,
-            )
+        fun from(
+            announcement: Announcement,
+            isLiked: Boolean? = null,
+        ) = AnnouncementResponse(
+            id = announcement.id!!,
+            title = announcement.title,
+            url = announcement.url,
+            organization = announcement.organization,
+            receptionPeriod = announcement.receptionPeriod,
+            likeCount = announcement.likeCount,
+            supportField = announcement.supportField,
+            targetAge = announcement.targetAge,
+            contactNumber = announcement.contactNumber,
+            region = announcement.region,
+            organizationType = announcement.organizationType,
+            startupHistory = announcement.startupHistory,
+            departmentInCharge = announcement.departmentInCharge,
+            content = announcement.content,
+            isLiked = isLiked,
+        )
     }
 }
