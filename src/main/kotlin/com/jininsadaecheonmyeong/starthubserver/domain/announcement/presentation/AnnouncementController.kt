@@ -30,7 +30,9 @@ class AnnouncementController(
         return BaseResponse.of(response, "공고 조회 성공")
     }
 
-    override fun getAllAnnouncementsWithLikeStatus(pageable: Pageable): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementSimpleResponse>>> {
+    override fun getAllAnnouncementsWithLikeStatus(
+        pageable: Pageable,
+    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementSimpleResponse>>> {
         val announcements = announcementService.getAllAnnouncementsWithLikeStatus(pageable)
         val response = CustomPageResponse.from(announcements)
         return BaseResponse.of(response, "좋아요 여부를 포함한 공고 조회 성공")
