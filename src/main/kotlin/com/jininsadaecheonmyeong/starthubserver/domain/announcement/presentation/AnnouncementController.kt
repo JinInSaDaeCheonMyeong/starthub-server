@@ -2,13 +2,16 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.presentatio
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendedAnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs.AnnouncementDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementLikeService
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
+import jakarta.servlet.http.HttpServletRequest
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -80,5 +83,14 @@ class AnnouncementController(
             )
         val response = CustomPageResponse.from(announcements)
         return BaseResponse.of(response, "공고 검색 성공")
+    }
+
+    override fun getRecommendedAnnouncements(
+        request: HttpServletRequest,
+    ): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>> {
+        val authHeader = request.getHeader(HttpHeaders.AUTHORIZATION)
+        val accessToken = authHeader.substring(7)
+        val response = announcementService.getRecommendedAnnouncements(accessToken)
+        return BaseResponse.of(response, "추천 공고 조회 성공")
     }
 }

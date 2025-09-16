@@ -2,11 +2,13 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs
 
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendedAnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
@@ -79,4 +81,11 @@ interface AnnouncementDocs {
         @Parameter(description = "'좋아요' 여부 포함 여부") @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
         @ParameterObject pageable: Pageable,
     ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
+
+    @Operation(
+        summary = "추천 공고 조회",
+        description = "사용자의 창업 분야를 기반으로 추천된 공고 목록을 조회합니다.",
+    )
+    @GetMapping("/recommendations")
+    fun getRecommendedAnnouncements(request: HttpServletRequest): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>>
 }
