@@ -11,7 +11,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToOne
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 
 @Entity
@@ -47,8 +47,8 @@ class BmcQuestion(
     var question10Answer: String? = null,
     @Column(nullable = false)
     var isCompleted: Boolean = false,
-    @OneToOne(mappedBy = "bmcQuestion", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    var businessModelCanvas: BusinessModelCanvas? = null,
+    @OneToMany(mappedBy = "bmcQuestion", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    var businessModelCanvases: MutableList<BusinessModelCanvas> = mutableListOf(),
 ) : BaseEntity() {
     fun updateAnswer(
         questionNumber: Int,
