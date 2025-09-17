@@ -9,6 +9,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.Announ
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.AnnouncementNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserInterestNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
@@ -18,6 +19,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.core.publisher.Mono
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -208,6 +210,12 @@ class AnnouncementService(
                 .header(HttpHeaders.ACCEPT, "application/json")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
                 .retrieve()
+                .onStatus({ it.is4xxClientError }) { response ->
+                    response.bodyToMono(Map::class.java).flatMap { errorBody ->
+                        val detail = errorBody?.get("detail") as? String ?: "알 수 없는 오류가 발생했습니다."
+                        Mono.error(UserInterestNotFoundException(detail))
+                    }
+                }
                 .bodyToMono(RecommendationResponse::class.java)
                 .block()
 
