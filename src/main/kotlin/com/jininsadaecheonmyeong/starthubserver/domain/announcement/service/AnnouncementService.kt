@@ -156,10 +156,20 @@ class AnnouncementService(
         return likedAnnouncements.map { AnnouncementResponse.from(it.announcement) }
     }
 
-    fun getAnnouncementDetail(announcementId: Long): AnnouncementDetailResponse {
+    fun getAnnouncementDetail(
+        announcementId: Long,
+        includeLikeStatus: Boolean,
+    ): AnnouncementDetailResponse {
         val announcement =
             repository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
-        return AnnouncementDetailResponse(announcement)
+
+        return if (includeLikeStatus) {
+            val user = UserAuthenticationHolder.current()
+            val isLiked = announcementLikeRepository.existsByUserAndAnnouncement(user, announcement)
+            AnnouncementDetailResponse.from(announcement, isLiked)
+        } else {
+            AnnouncementDetailResponse.from(announcement)
+        }
     }
 
     fun searchAnnouncements(

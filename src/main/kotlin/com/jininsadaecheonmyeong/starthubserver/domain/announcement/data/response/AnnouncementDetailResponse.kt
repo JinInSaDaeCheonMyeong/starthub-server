@@ -19,22 +19,29 @@ data class AnnouncementDetailResponse(
     val startupHistory: String,
     val departmentInCharge: String,
     val content: String,
+    val isLiked: Boolean? = null,
 ) {
-    constructor(announcement: Announcement) : this(
-        id = announcement.id!!,
-        title = announcement.title,
-        url = announcement.url,
-        organization = announcement.organization,
-        receptionPeriod = announcement.receptionPeriod,
-        status = announcement.status,
-        likeCount = announcement.likeCount,
-        supportField = announcement.supportField,
-        targetAge = announcement.targetAge,
-        contactNumber = announcement.contactNumber,
-        region = announcement.region,
-        organizationType = announcement.organizationType,
-        startupHistory = announcement.startupHistory,
-        departmentInCharge = announcement.departmentInCharge,
-        content = announcement.content,
-    )
+    companion object {
+        fun from(
+            announcement: Announcement,
+            isLiked: Boolean? = null,
+        ) = AnnouncementDetailResponse(
+            id = announcement.id!!,
+            title = announcement.title,
+            url = announcement.url,
+            organization = announcement.organization,
+            receptionPeriod = announcement.receptionPeriod,
+            status = announcement.status,
+            likeCount = announcement.likeCount,
+            supportField = announcement.supportField,
+            targetAge = announcement.targetAge,
+            contactNumber = announcement.contactNumber,
+            region = announcement.region,
+            organizationType = announcement.organizationType,
+            startupHistory = announcement.startupHistory,
+            departmentInCharge = announcement.departmentInCharge,
+            content = announcement.content,
+            isLiked = isLiked,
+        )
+    }
 }

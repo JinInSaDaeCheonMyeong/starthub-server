@@ -59,11 +59,12 @@ interface AnnouncementDocs {
 
     @Operation(
         summary = "공고 상세 조회",
-        description = "특정 공고의 상세 정보를 조회합니다.",
+        description = "특정 공고의 상세 정보를 조회합니다. `includeLikeStatus` 파라미터를 true로 주면, 인증된 사용자의 경우 해당 공고의 '좋아요' 여부를 함께 반환합니다.",
     )
     @GetMapping("/{announcementId}")
     fun getAnnouncementDetail(
         @PathVariable announcementId: Long,
+        @Parameter(description = "'좋아요' 여부 포함 여부") @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
     ): ResponseEntity<BaseResponse<AnnouncementDetailResponse>>
 
     @Operation(

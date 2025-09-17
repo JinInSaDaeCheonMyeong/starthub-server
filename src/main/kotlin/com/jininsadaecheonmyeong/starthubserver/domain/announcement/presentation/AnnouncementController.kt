@@ -55,8 +55,11 @@ class AnnouncementController(
         return BaseResponse.of(Unit, "좋아요 삭제 성공")
     }
 
-    override fun getAnnouncementDetail(announcementId: Long): ResponseEntity<BaseResponse<AnnouncementDetailResponse>> {
-        val response = announcementService.getAnnouncementDetail(announcementId)
+    override fun getAnnouncementDetail(
+        @PathVariable announcementId: Long,
+        @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
+    ): ResponseEntity<BaseResponse<AnnouncementDetailResponse>> {
+        val response = announcementService.getAnnouncementDetail(announcementId, includeLikeStatus)
         return BaseResponse.of(response, "공고 상세 조회 성공")
     }
 
