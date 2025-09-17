@@ -17,12 +17,14 @@ data class RecommendedAnnouncementResponse(
     val startupHistory: String,
     val departmentInCharge: String,
     val content: String,
+    val isLiked: Boolean,
     val score: Double? = null,
 ) {
     companion object {
         fun from(
             announcement: Announcement,
             score: Double? = null,
+            isLiked: Boolean,
         ) = RecommendedAnnouncementResponse(
             id = announcement.id!!,
             title = announcement.title,
@@ -38,6 +40,7 @@ data class RecommendedAnnouncementResponse(
             startupHistory = announcement.startupHistory,
             departmentInCharge = announcement.departmentInCharge,
             content = announcement.content,
+            isLiked = isLiked,
             score = score,
         )
     }

@@ -213,9 +213,14 @@ class AnnouncementService(
         val announcementsByTitle = announcements.associateBy { it.title }
         val sortedAnnouncements = recommendedTitles.mapNotNull { title -> announcementsByTitle[title] }
 
+        val user = UserAuthenticationHolder.current()
+        val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, sortedAnnouncements)
+        val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
+
         return sortedAnnouncements.map { announcement ->
             RecommendedAnnouncementResponse.from(
                 announcement = announcement,
+                isLiked = likedAnnouncementIds.contains(announcement.id),
                 score = scoreMap[announcement.title],
             )
         }
