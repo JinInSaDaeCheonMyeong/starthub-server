@@ -28,7 +28,7 @@ class Announcement(
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     var status: AnnouncementStatus = AnnouncementStatus.ACTIVE,
-    @Column(name = "like_count", nullable = false)
+    @Column(name = "like_count", nullable = false, columnDefinition = "INTEGER DEFAULT 0 CHECK (like_count >= 0)")
     var likeCount: Int = 0,
     @Column(name = "support_field")
     var supportField: String,
