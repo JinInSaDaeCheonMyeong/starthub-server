@@ -8,10 +8,8 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.Anno
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
-import jakarta.servlet.http.HttpServletRequest
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
-import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -88,12 +86,8 @@ class AnnouncementController(
         return BaseResponse.of(response, "공고 검색 성공")
     }
 
-    override fun getRecommendedAnnouncements(
-        request: HttpServletRequest,
-    ): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>> {
-        val authHeader = request.getHeader(HttpHeaders.AUTHORIZATION)
-        val accessToken = authHeader.substring(7)
-        val response = announcementService.getRecommendedAnnouncements(accessToken)
+    override fun getRecommendedAnnouncements(): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>> {
+        val response = announcementService.getRecommendedAnnouncements()
         return BaseResponse.of(response, "추천 공고 조회 성공")
     }
 }

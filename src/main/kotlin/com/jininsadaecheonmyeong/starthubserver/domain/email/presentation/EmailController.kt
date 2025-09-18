@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.email.data.EmailVerifyReq
 import com.jininsadaecheonmyeong.starthubserver.domain.email.docs.EmailDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.email.service.EmailVerificationService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -18,7 +19,7 @@ class EmailController(
 ) : EmailDocs {
     @PostMapping("/send-code")
     override fun sendVerificationCode(
-        @RequestBody request: EmailSendRequest,
+        @Valid @RequestBody request: EmailSendRequest,
     ): ResponseEntity<BaseResponse<Unit>> {
         emailVerificationService.sendVerificationCode(request.email)
         return BaseResponse.of("전송 성공")
@@ -26,7 +27,7 @@ class EmailController(
 
     @PostMapping("/verify")
     override fun verifyEmail(
-        @RequestBody request: EmailVerifyRequest,
+        @Valid @RequestBody request: EmailVerifyRequest,
     ): ResponseEntity<BaseResponse<Unit>> {
         emailVerificationService.verifyCode(request.email, request.code)
         return BaseResponse.of("코드 확인 성공")

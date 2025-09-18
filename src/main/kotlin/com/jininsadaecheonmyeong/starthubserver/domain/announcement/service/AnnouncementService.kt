@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.UserInterestsRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendationResponse
@@ -10,12 +11,14 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.An
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserInterestNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserStartupFieldRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.reactive.function.client.WebClient
@@ -28,6 +31,7 @@ import java.time.format.DateTimeFormatter
 class AnnouncementService(
     private val repository: AnnouncementRepository,
     private val announcementLikeRepository: AnnouncementLikeRepository,
+    private val userStartupFieldRepository: UserStartupFieldRepository,
     private val webClient: WebClient,
     @param:Value("\${recommendation.fastapi-url}") private val fastapiUrl: String,
 ) {
@@ -203,12 +207,18 @@ class AnnouncementService(
         }
     }
 
-    fun getRecommendedAnnouncements(accessToken: String): List<RecommendedAnnouncementResponse> {
+    fun getRecommendedAnnouncements(): List<RecommendedAnnouncementResponse> {
+        val user = UserAuthenticationHolder.current()
+        val userInterests = userStartupFieldRepository.findByUser(user)
+        val interestNames = userInterests.map { it.businessType.displayName }
+        val request = UserInterestsRequest(interestNames)
+
         val recommendationResponse =
-            webClient.get()
+            webClient.post()
                 .uri("$fastapiUrl/recommend")
                 .header(HttpHeaders.ACCEPT, "application/json")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
                 .retrieve()
                 .onStatus({ it.is4xxClientError }) { response ->
                     response.bodyToMono(Map::class.java).flatMap { errorBody ->
@@ -231,7 +241,6 @@ class AnnouncementService(
         val announcementsByTitle = announcements.associateBy { it.title }
         val sortedAnnouncements = recommendedTitles.mapNotNull { title -> announcementsByTitle[title] }
 
-        val user = UserAuthenticationHolder.current()
         val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, sortedAnnouncements)
         val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()
 
