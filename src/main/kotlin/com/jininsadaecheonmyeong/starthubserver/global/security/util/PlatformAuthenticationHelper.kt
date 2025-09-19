@@ -7,16 +7,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class PlatformAuthenticationHelper {
-    companion object {
-        private const val PLATFORM_HEADER = "X-Platform"
-        private const val WEB_PLATFORM = "web"
-        private const val APP_PLATFORM = "app"
-        private const val ACCESS_TOKEN_COOKIE_NAME = "access_token"
-        private const val REFRESH_TOKEN_COOKIE_NAME = "refresh_token"
-        private const val COOKIE_MAX_AGE = 7 * 24 * 60 * 60 // 7일
-        private const val COOKIE_PATH = "/"
-    }
-
     fun isWebPlatform(request: HttpServletRequest): Boolean {
         return request.getHeader(PLATFORM_HEADER) == WEB_PLATFORM
     }
@@ -70,5 +60,15 @@ class PlatformAuthenticationHelper {
                 .build()
 
         response.addHeader("Set-Cookie", cookie.toString())
+    }
+
+    companion object {
+        private const val PLATFORM_HEADER = "X-Platform"
+        private const val WEB_PLATFORM = "web"
+        private const val APP_PLATFORM = "app"
+        private const val ACCESS_TOKEN_COOKIE_NAME = "access_token"
+        private const val REFRESH_TOKEN_COOKIE_NAME = "refresh_token"
+        private const val COOKIE_MAX_AGE = 7 * 24 * 60 * 60 // 7일
+        private const val COOKIE_PATH = "/"
     }
 }

@@ -21,10 +21,6 @@ class TokenFilter(
     private val tokenParser: TokenParser,
     private val userRepository: UserRepository,
 ) : OncePerRequestFilter() {
-    companion object {
-        private const val TOKEN_SECURE_TYPE = "Bearer "
-    }
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -47,7 +43,7 @@ class TokenFilter(
             } catch (e: Exception) {
                 when {
                     isTokenExpiredException(e) -> throw ExpiredTokenException("토큰이 만료되었습니다.")
-                    else -> throw InvalidTokenException("유효하지 않은 토큰입니다.")
+                    else -> throw InvalidTokenException("유효하지 않은 토큰")
                 }
             }
         }
@@ -69,7 +65,11 @@ class TokenFilter(
 
     private fun isTokenExpiredException(e: Exception): Boolean {
         return e.message?.contains("expired", ignoreCase = true) == true ||
-            e.message?.contains("만료", ignoreCase = true) == true ||
-            e is io.jsonwebtoken.ExpiredJwtException
+                e.message?.contains("만료", ignoreCase = true) == true ||
+                e is io.jsonwebtoken.ExpiredJwtException
+    }
+
+    companion object {
+        private const val TOKEN_SECURE_TYPE = "Bearer "
     }
 }

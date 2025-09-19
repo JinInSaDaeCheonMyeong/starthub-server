@@ -1,5 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.enums
 
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.InvalidTokenTypeException
+
 enum class TokenType(
     val value: String,
 ) {
@@ -9,6 +11,6 @@ enum class TokenType(
 
     companion object {
         fun toTokenType(string: String): TokenType =
-            entries.find { it.value == string } ?: throw IllegalArgumentException("Unknown token type: $string")
+            entries.find { it.value == string } ?: throw InvalidTokenTypeException()
     }
 }

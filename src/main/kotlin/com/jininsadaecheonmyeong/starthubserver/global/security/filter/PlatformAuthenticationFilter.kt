@@ -21,14 +21,6 @@ class PlatformAuthenticationFilter(
     private val tokenParser: TokenParser,
     private val userRepository: UserRepository,
 ) : OncePerRequestFilter() {
-    companion object {
-        private const val TOKEN_SECURE_TYPE = "Bearer "
-        private const val ACCESS_TOKEN_COOKIE_NAME = "access_token"
-        private const val PLATFORM_HEADER = "X-Platform"
-        private const val WEB_PLATFORM = "web"
-        private const val APP_PLATFORM = "app"
-    }
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -41,9 +33,11 @@ class PlatformAuthenticationFilter(
             WEB_PLATFORM -> {
                 token = extractTokenFromCookie(request)
             }
+
             APP_PLATFORM -> {
                 token = extractTokenFromHeader(request)
             }
+
             else -> {
                 token = extractTokenFromHeader(request) ?: extractTokenFromCookie(request)
             }
@@ -93,7 +87,15 @@ class PlatformAuthenticationFilter(
 
     private fun isTokenExpiredException(e: Exception): Boolean {
         return e.message?.contains("expired", ignoreCase = true) == true ||
-            e.message?.contains("만료", ignoreCase = true) == true ||
-            e is io.jsonwebtoken.ExpiredJwtException
+                e.message?.contains("만료", ignoreCase = true) == true ||
+                e is io.jsonwebtoken.ExpiredJwtException
+    }
+
+    companion object {
+        private const val TOKEN_SECURE_TYPE = "Bearer "
+        private const val ACCESS_TOKEN_COOKIE_NAME = "access_token"
+        private const val PLATFORM_HEADER = "X-Platform"
+        private const val WEB_PLATFORM = "web"
+        private const val APP_PLATFORM = "app"
     }
 }
