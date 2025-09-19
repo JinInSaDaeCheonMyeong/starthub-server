@@ -87,8 +87,8 @@ class PlatformAuthenticationFilter(
 
     private fun isTokenExpiredException(e: Exception): Boolean {
         return e.message?.contains("expired", ignoreCase = true) == true ||
-                e.message?.contains("만료", ignoreCase = true) == true ||
-                e is io.jsonwebtoken.ExpiredJwtException
+            e.message?.contains("만료", ignoreCase = true) == true ||
+            e is io.jsonwebtoken.ExpiredJwtException
     }
 
     companion object {

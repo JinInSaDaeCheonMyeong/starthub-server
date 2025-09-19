@@ -10,7 +10,6 @@ enum class TokenType(
     ;
 
     companion object {
-        fun toTokenType(string: String): TokenType =
-            entries.find { it.value == string } ?: throw InvalidTokenTypeException()
+        fun toTokenType(string: String): TokenType = entries.find { it.value == string } ?: throw InvalidTokenTypeException()
     }
 }
