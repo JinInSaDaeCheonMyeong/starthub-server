@@ -3,3 +3,9 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+
+swagger:
+  auth:
+    enabled: true
+    username: ${SWAGGER_USERNAME}
+    password: ${SWAGGER_PASSWORD}

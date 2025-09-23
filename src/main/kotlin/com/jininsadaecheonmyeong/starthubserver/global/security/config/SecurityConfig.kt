@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.security.filter.PlatformA
 import com.jininsadaecheonmyeong.starthubserver.global.security.filter.TokenExceptionFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -22,8 +23,13 @@ class SecurityConfig(
     private val tokenExceptionFilter: TokenExceptionFilter,
 ) {
     @Bean
+    @Order(2)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http
+        return http
+            .securityMatcher { request ->
+                !request.requestURI.startsWith("/swagger-ui") &&
+                    !request.requestURI.startsWith("/v3/api-docs")
+            }
             .csrf { it.disable() }
             .formLogin { it.disable() }
             .httpBasic { it.disable() }
@@ -32,14 +38,12 @@ class SecurityConfig(
                 request
                     .requestMatchers("/user/**").permitAll()
                     .requestMatchers("/oauth/**").permitAll()
-                    .requestMatchers("/swagger-ui/**").permitAll()
-                    .requestMatchers("/v3/api-docs/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/announcements/**").permitAll()
                     .anyRequest().permitAll() // TODO Remove it
             }
             .addFilterAfter(platformAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(tokenExceptionFilter, PlatformAuthenticationFilter::class.java)
-        return http.build()
+            .build()
     }
 
     @Bean

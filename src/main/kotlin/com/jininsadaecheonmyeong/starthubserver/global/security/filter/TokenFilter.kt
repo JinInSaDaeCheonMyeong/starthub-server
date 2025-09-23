@@ -26,6 +26,11 @@ class TokenFilter(
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
+        if (isSwaggerPath(request.requestURI)) {
+            filterChain.doFilter(request, response)
+            return
+        }
+
         if (!request.getHeader("Authorization").isNullOrEmpty()) {
             val token: String =
                 request.getHeader("Authorization")
@@ -67,6 +72,10 @@ class TokenFilter(
         return e.message?.contains("expired", ignoreCase = true) == true ||
             e.message?.contains("만료", ignoreCase = true) == true ||
             e is io.jsonwebtoken.ExpiredJwtException
+    }
+
+    private fun isSwaggerPath(requestURI: String): Boolean {
+        return requestURI.startsWith("/swagger-ui") || requestURI.startsWith("/v3/api-docs")
     }
 
     companion object {
