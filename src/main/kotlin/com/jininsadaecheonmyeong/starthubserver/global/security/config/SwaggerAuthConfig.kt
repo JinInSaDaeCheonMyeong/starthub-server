@@ -17,9 +17,9 @@ import org.springframework.security.web.SecurityFilterChain
 @ConditionalOnProperty(name = ["swagger.auth.enabled"], havingValue = "true")
 class SwaggerAuthConfig(
     private val passwordEncoder: PasswordEncoder,
-    @Value("\${swagger.auth.username:admin}")
+    @Value("\${swagger.auth.username}")
     private val swaggerUsername: String,
-    @Value("\${swagger.auth.password:swagger123}")
+    @Value("\${swagger.auth.password}")
     private val swaggerPassword: String,
 ) {
     @Bean
