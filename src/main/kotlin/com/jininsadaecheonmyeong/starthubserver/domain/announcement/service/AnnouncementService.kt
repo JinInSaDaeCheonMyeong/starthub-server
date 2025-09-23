@@ -159,7 +159,7 @@ class AnnouncementService(
         val user = UserAuthenticationHolder.current()
         val likedAnnouncements = announcementLikeRepository.findByUserOrderByCreatedAtDesc(user, pageable)
 
-        return likedAnnouncements.map { AnnouncementResponse.from(it.announcement) }
+        return likedAnnouncements.map { AnnouncementResponse.from(it.announcement, true) }
     }
 
     fun getAnnouncementDetail(
