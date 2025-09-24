@@ -26,6 +26,11 @@ class PlatformAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
+        if (isSwaggerPath(request.requestURI)) {
+            filterChain.doFilter(request, response)
+            return
+        }
+
         val platform = request.getHeader(PLATFORM_HEADER)
         var token: String? = null
 
@@ -89,6 +94,10 @@ class PlatformAuthenticationFilter(
         return e.message?.contains("expired", ignoreCase = true) == true ||
             e.message?.contains("만료", ignoreCase = true) == true ||
             e is io.jsonwebtoken.ExpiredJwtException
+    }
+
+    private fun isSwaggerPath(requestURI: String): Boolean {
+        return requestURI.startsWith("/swagger-ui") || requestURI.startsWith("/v3/api-docs")
     }
 
     companion object {
