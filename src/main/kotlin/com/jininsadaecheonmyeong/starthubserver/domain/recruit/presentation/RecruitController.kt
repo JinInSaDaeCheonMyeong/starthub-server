@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -24,14 +25,14 @@ class RecruitController(
     private val recruitService: RecruitService,
 ) : RecruitDocs {
     @PostMapping
-    override fun createRecruit(request: CreateRecruitRequest): ResponseEntity<BaseResponse<RecruitResponse>> {
+    override fun createRecruit(@RequestBody request: CreateRecruitRequest): ResponseEntity<BaseResponse<RecruitResponse>> {
         return BaseResponse.of(recruitService.createRecruit(request), "채용 공고 생성 성공")
     }
 
     @PatchMapping("/{id}")
     override fun updateRecruit(
         @PathVariable id: Long,
-        request: UpdateRecruitRequest,
+        @RequestBody request: UpdateRecruitRequest,
     ): ResponseEntity<BaseResponse<RecruitResponse>> {
         return BaseResponse.of(recruitService.updateRecruit(id, request), "채용 공고 수정 성공")
     }

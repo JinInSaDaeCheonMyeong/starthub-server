@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 
 @Tag(name = "채용", description = "채용 공고 관련 API")
@@ -18,7 +19,7 @@ interface RecruitDocs {
         summary = "채용 공고 생성",
         description = "새로운 채용 공고를 생성합니다.",
     )
-    fun createRecruit(request: CreateRecruitRequest): ResponseEntity<BaseResponse<RecruitResponse>>
+    fun createRecruit(@RequestBody request: CreateRecruitRequest): ResponseEntity<BaseResponse<RecruitResponse>>
 
     @Operation(
         summary = "채용 공고 수정",
@@ -26,7 +27,7 @@ interface RecruitDocs {
     )
     fun updateRecruit(
         @PathVariable id: Long,
-        request: UpdateRecruitRequest,
+        @RequestBody request: UpdateRecruitRequest,
     ): ResponseEntity<BaseResponse<RecruitResponse>>
 
     @Operation(
