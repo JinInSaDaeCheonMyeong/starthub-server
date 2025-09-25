@@ -102,7 +102,7 @@ class UserService(
                     UserStartupField(
                         user = user,
                         businessType = startupField.businessType,
-                        customField = startupField.customField
+                        customField = startupField.customField,
                     )
                 }
             userStartupFieldRepository.saveAll(userStartupFields)
@@ -111,12 +111,13 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun getUser(user: User): UserResponse {
-        val startupFields = userStartupFieldRepository.findByUser(user).map {
-            StartupFieldResponse(
-                businessType = it.businessType,
-                customField = it.customField
-            )
-        }
+        val startupFields =
+            userStartupFieldRepository.findByUser(user).map {
+                StartupFieldResponse(
+                    businessType = it.businessType,
+                    customField = it.customField,
+                )
+            }
         return UserResponse(
             id = user.id!!,
             email = user.email,
@@ -143,12 +144,13 @@ class UserService(
     fun getUserProfile(userId: Long): UserProfileResponse {
         val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
         val companies = companyRepository.findByFounderAndDeletedFalse(user)
-        val startupFields = userStartupFieldRepository.findByUser(user).map {
-            StartupFieldResponse(
-                businessType = it.businessType,
-                customField = it.customField
-            )
-        }
+        val startupFields =
+            userStartupFieldRepository.findByUser(user).map {
+                StartupFieldResponse(
+                    businessType = it.businessType,
+                    customField = it.customField,
+                )
+            }
         return UserProfileResponse(
             username = user.username,
             profileImage = user.profileImage,
