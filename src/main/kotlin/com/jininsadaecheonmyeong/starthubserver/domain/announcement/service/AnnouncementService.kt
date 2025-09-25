@@ -218,10 +218,11 @@ class AnnouncementService(
         val likedUrls = likedAnnouncements.map { LikedAnnouncementUrl(it.announcement.url) }.toList()
         val likedContent = LikedAnnouncementsContent(content = likedUrls)
 
-        val request = RecommendationRequest(
-            interests = interestNames,
-            likedAnnouncements = likedContent,
-        )
+        val request =
+            RecommendationRequest(
+                interests = interestNames,
+                likedAnnouncements = likedContent,
+            )
 
         val recommendationResponse =
             webClient.post()
