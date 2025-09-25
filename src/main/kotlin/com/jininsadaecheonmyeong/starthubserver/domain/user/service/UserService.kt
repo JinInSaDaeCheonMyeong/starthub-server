@@ -6,6 +6,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRep
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.StartupFieldResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserProfileResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
@@ -98,7 +99,11 @@ class UserService(
             userStartupFieldRepository.deleteByUser(user)
             val userStartupFields =
                 newInterests.map { startupField ->
-                    UserStartupField(user = user, businessType = startupField)
+                    UserStartupField(
+                        user = user,
+                        businessType = startupField.businessType,
+                        customField = startupField.customField
+                    )
                 }
             userStartupFieldRepository.saveAll(userStartupFields)
         }
@@ -106,7 +111,12 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun getUser(user: User): UserResponse {
-        val startupFields = userStartupFieldRepository.findByUser(user).map { it.businessType }
+        val startupFields = userStartupFieldRepository.findByUser(user).map {
+            StartupFieldResponse(
+                businessType = it.businessType,
+                customField = it.customField
+            )
+        }
         return UserResponse(
             id = user.id!!,
             email = user.email,
@@ -121,6 +131,7 @@ class UserService(
             startupLocation = user.startupLocation,
             annualRevenue = user.annualRevenue,
             startupFields = startupFields,
+            startupHistory = user.startupHistory,
         )
     }
 
@@ -132,7 +143,12 @@ class UserService(
     fun getUserProfile(userId: Long): UserProfileResponse {
         val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
         val companies = companyRepository.findByFounderAndDeletedFalse(user)
-        val startupFields = userStartupFieldRepository.findByUser(user).map { it.businessType }
+        val startupFields = userStartupFieldRepository.findByUser(user).map {
+            StartupFieldResponse(
+                businessType = it.businessType,
+                customField = it.customField
+            )
+        }
         return UserProfileResponse(
             username = user.username,
             profileImage = user.profileImage,
@@ -147,6 +163,7 @@ class UserService(
             startupLocation = user.startupLocation,
             annualRevenue = user.annualRevenue,
             startupFields = startupFields,
+            startupHistory = user.startupHistory,
         )
     }
 }

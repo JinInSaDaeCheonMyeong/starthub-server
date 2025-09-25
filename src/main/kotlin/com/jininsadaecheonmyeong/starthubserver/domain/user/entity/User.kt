@@ -49,4 +49,5 @@ class User(
     var companyWebsite: String? = null,
     var startupLocation: String? = null,
     var annualRevenue: Long? = null,
+    var startupHistory: Int? = null,
 ) : BaseEntity()

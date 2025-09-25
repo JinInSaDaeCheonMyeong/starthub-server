@@ -1,7 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.data.response
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.StartupStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserGender
 import java.time.LocalDate
@@ -20,5 +19,6 @@ data class UserProfileResponse(
     val companyWebsite: String?,
     val startupLocation: String?,
     val annualRevenue: Long?,
-    val startupFields: List<BusinessType>,
+    val startupFields: List<StartupFieldResponse>,
+    val startupHistory: Int?,
 )
