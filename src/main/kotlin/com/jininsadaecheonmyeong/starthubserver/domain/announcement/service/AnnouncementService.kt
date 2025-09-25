@@ -1,6 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.UserInterestsRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.LikedAnnouncementUrl
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.LikedAnnouncementsContent
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.RecommendationRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendationResponse
@@ -211,7 +213,16 @@ class AnnouncementService(
         val user = UserAuthenticationHolder.current()
         val userInterests = userStartupFieldRepository.findByUser(user)
         val interestNames = userInterests.map { it.businessType.displayName }
-        val request = UserInterestsRequest(interestNames)
+
+        val likedAnnouncements = announcementLikeRepository.findByUserOrderByCreatedAtDesc(user, Pageable.unpaged())
+        val likedUrls = likedAnnouncements.map { LikedAnnouncementUrl(it.announcement.url) }.toList()
+        val likedContent = LikedAnnouncementsContent(content = likedUrls)
+
+        val request =
+            RecommendationRequest(
+                interests = interestNames,
+                likedAnnouncements = likedContent,
+            )
 
         val recommendationResponse =
             webClient.post()
