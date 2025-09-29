@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.presentation
 
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.DeleteUserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -48,7 +50,11 @@ class UserController(
                     tokenResponse.refresh,
                 )
                 BaseResponse.of(
-                    mapOf("isFirstLogin" to tokenResponse.isFirstLogin),
+                    mapOf(
+                        "isFirstLogin" to tokenResponse.isFirstLogin,
+                        "isAccountRestored" to tokenResponse.isAccountRestored,
+                        "deletedAt" to tokenResponse.deletedAt,
+                    ),
                     "로그인 성공",
                 )
             }
@@ -74,7 +80,11 @@ class UserController(
                     tokenResponse.refresh,
                 )
                 BaseResponse.of(
-                    mapOf("isFirstLogin" to tokenResponse.isFirstLogin),
+                    mapOf(
+                        "isFirstLogin" to tokenResponse.isFirstLogin,
+                        "isAccountRestored" to tokenResponse.isAccountRestored,
+                        "deletedAt" to tokenResponse.deletedAt,
+                    ),
                     "토큰 재발급 성공",
                 )
             }
@@ -119,4 +129,20 @@ class UserController(
     override fun getUserProfile(
         @PathVariable userId: Long,
     ) = BaseResponse.of(userService.getUserProfile(userId), "유저 프로필 조회 성공")
+
+    @DeleteMapping("/delete")
+    override fun deleteAccount(
+        @RequestBody request: DeleteUserRequest,
+        httpRequest: HttpServletRequest,
+        httpResponse: HttpServletResponse,
+    ): ResponseEntity<BaseResponse<Unit>> {
+        val currentUser = UserAuthenticationHolder.current()
+        userService.deleteAccount(currentUser, request)
+
+        if (platformAuthenticationHelper.isWebPlatform(httpRequest)) {
+            platformAuthenticationHelper.clearTokenCookies(httpResponse)
+        }
+
+        return BaseResponse.of("회원 탈퇴가 완료되었습니다.")
+    }
 }
