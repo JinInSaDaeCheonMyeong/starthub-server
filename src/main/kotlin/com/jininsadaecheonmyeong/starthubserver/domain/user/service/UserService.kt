@@ -3,6 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.user.service
 import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.DeleteUserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
@@ -12,6 +13,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserPr
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.response.UserResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.UserStartupField
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidPasswordException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
@@ -26,6 +28,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.Toke
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 
 @Service
 @Transactional
@@ -50,6 +53,25 @@ class UserService(
     fun signIn(request: UserRequest): TokenResponse {
         val user: User = userRepository.findByEmail(request.email) ?: throw UserNotFoundException("찾을 수 없는 유저")
         if (!passwordEncoder.matches(request.password, user.password)) throw InvalidPasswordException("잘못된 비밀번호")
+
+        // 회원 탈퇴 철회 로직: 탈퇴 후 2주 이내에 로그인하면 탈퇴를 철회
+        var isAccountRestored = false
+        var originalDeletedAt: LocalDateTime? = null
+        if (user.deleted && user.deletedAt != null) {
+            val twoWeeksAfterDeletion = user.deletedAt!!.plusWeeks(2)
+            if (LocalDateTime.now().isBefore(twoWeeksAfterDeletion)) {
+                originalDeletedAt = user.deletedAt
+                user.deleted = false
+                user.deletedAt = null
+                isAccountRestored = true
+                userRepository.save(user)
+            } else {
+                throw UserNotFoundException("탈퇴 처리된 계정입니다.")
+            }
+        } else if (user.deleted) {
+            throw UserNotFoundException("탈퇴 처리된 계정입니다.")
+        }
+
         val isFirstLogin = user.isFirstLogin
         if (isFirstLogin) {
             user.isFirstLogin = false
@@ -59,6 +81,8 @@ class UserService(
             access = tokenProvider.generateAccess(user),
             refresh = tokenProvider.generateRefresh(user),
             isFirstLogin = isFirstLogin,
+            isAccountRestored = isAccountRestored,
+            deletedAt = originalDeletedAt,
         )
     }
 
@@ -75,6 +99,8 @@ class UserService(
             access = tokenProvider.generateAccess(user),
             refresh = tokenProvider.generateRefresh(user),
             isFirstLogin = false,
+            isAccountRestored = false,
+            deletedAt = null,
         )
     }
 
@@ -137,6 +163,26 @@ class UserService(
     }
 
     fun signOut(user: User) {
+        tokenRedisService.deleteRefreshToken(user.email)
+    }
+
+    fun deleteAccount(
+        user: User,
+        request: DeleteUserRequest,
+    ) {
+        if (user.provider == AuthType.LOCAL) {
+            if (request.password.isNullOrBlank()) {
+                throw InvalidPasswordException("비밀번호를 입력해주세요.")
+            }
+            if (user.password == null || !passwordEncoder.matches(request.password, user.password)) {
+                throw InvalidPasswordException("잘못된 비밀번호")
+            }
+        }
+
+        user.deleted = true
+        user.deletedAt = LocalDateTime.now()
+        userRepository.save(user)
+
         tokenRedisService.deleteRefreshToken(user.email)
     }
 

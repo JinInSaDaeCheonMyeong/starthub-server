@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.docs
 
+import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.DeleteUserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UserRequest
@@ -60,4 +61,14 @@ interface UserDocs {
     fun getUserProfile(
         @Parameter(description = "유저 ID") @PathVariable userId: Long,
     ): ResponseEntity<BaseResponse<UserProfileResponse>>
+
+    @Operation(
+        summary = "회원 탈퇴",
+        description = "LOCAL 사용자는 비밀번호를 확인한 후, OAuth 사용자는 비밀번호 없이 회원 탈퇴를 진행합니다. 탈퇴 후 2주 이내에 다시 로그인하면 탈퇴가 철회됩니다.",
+    )
+    fun deleteAccount(
+        @RequestBody request: DeleteUserRequest,
+        @Parameter(hidden = true) httpRequest: HttpServletRequest,
+        @Parameter(hidden = true) httpResponse: HttpServletResponse,
+    ): ResponseEntity<BaseResponse<Unit>>
 }
