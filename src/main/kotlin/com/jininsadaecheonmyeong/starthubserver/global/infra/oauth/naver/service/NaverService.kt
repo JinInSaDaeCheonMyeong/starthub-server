@@ -17,7 +17,7 @@ class NaverService(
 ) {
     private val webClient = webClientBuilder.build()
 
-    fun exchangeCodeForUserInfo(code: String): NaverUserInfo {
+    fun exchangeCodeForUserInfoApp(code: String): NaverUserInfo {
         val tokenResponse =
             webClient.post()
                 .uri(naverProperties.tokenUri)
@@ -26,7 +26,6 @@ class NaverService(
                     BodyInserters.fromFormData("client_id", naverProperties.clientId)
                         .with("client_secret", naverProperties.clientSecret)
                         .with("code", code)
-                        .with("redirect_uri", naverProperties.redirectUri)
                         .with("grant_type", naverProperties.grantType),
                 )
                 .retrieve()

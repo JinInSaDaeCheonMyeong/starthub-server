@@ -18,17 +18,15 @@ class OAuthService(
     private val appleService: AppleService,
     private val userRepository: UserRepository,
 ) {
-    fun googleAuthWeb(code: String) = processOAuthLogin(googleService.exchangeCodeForUserInfoWeb(code), AuthType.GOOGLE)
-
     fun googleAuthApp(
         code: String,
         platform: String,
         codeVerifier: String,
     ) = processOAuthLogin(googleService.exchangeCodeForUserInfoApp(code, platform, codeVerifier), AuthType.GOOGLE)
 
-    fun naverAuth(code: String) = processOAuthLogin(naverService.exchangeCodeForUserInfo(code), AuthType.NAVER)
+    fun naverAuthApp(code: String) = processOAuthLogin(naverService.exchangeCodeForUserInfoApp(code), AuthType.NAVER)
 
-    fun appleAuth(code: String) = processOAuthLogin(appleService.exchangeCodeForUserInfo(code), AuthType.APPLE)
+    fun appleAuthApp(idToken: String) = processOAuthLogin(appleService.exchangeCodeForUserInfoApp(idToken), AuthType.APPLE)
 
     private fun processOAuthLogin(
         info: OAuthUserInfo,
