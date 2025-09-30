@@ -20,5 +20,6 @@ data class UserResponse(
     val startupLocation: String?,
     val annualRevenue: Long?,
     val startupFields: List<BusinessType>,
+    val startupHistory: Int?,
     val provider: AuthType,
 )

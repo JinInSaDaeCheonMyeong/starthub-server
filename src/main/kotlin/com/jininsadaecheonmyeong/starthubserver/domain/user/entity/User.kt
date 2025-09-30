@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "users")
@@ -38,6 +39,7 @@ class User(
     var profileImage: String? = null,
     @Column(nullable = false)
     var deleted: Boolean = false,
+    var deletedAt: LocalDateTime? = null,
     @Column(nullable = false)
     var isFirstLogin: Boolean = true,
     @Enumerated(EnumType.STRING)
@@ -49,4 +51,5 @@ class User(
     var companyWebsite: String? = null,
     var startupLocation: String? = null,
     var annualRevenue: Long? = null,
+    var startupHistory: Int? = null,
 ) : BaseEntity()

@@ -29,4 +29,6 @@ class UserStartupField(
     @Enumerated(EnumType.STRING)
     @Column(name = "startup_field", nullable = false)
     val businessType: BusinessType,
+    @Column(name = "custom_field")
+    val customField: String? = null,
 )
