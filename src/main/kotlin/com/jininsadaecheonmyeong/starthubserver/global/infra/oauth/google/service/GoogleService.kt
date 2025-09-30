@@ -17,14 +17,6 @@ class GoogleService(
 ) {
     private val webClient = webClientBuilder.build()
 
-    fun exchangeCodeForUserInfoWeb(code: String): GoogleUserInfo {
-        val clientId = googleProperties.clientId
-        val redirectUri = googleProperties.redirectUri
-        val bodyBuilder =
-            createTokenRequestBody(clientId, code, redirectUri, clientSecret = googleProperties.clientSecret, codeVerifier = null)
-        return getUserInfoFromToken(bodyBuilder)
-    }
-
     fun exchangeCodeForUserInfoApp(
         code: String,
         platform: String,
@@ -36,7 +28,7 @@ class GoogleService(
                 "ios" -> googleProperties.iosClientId to googleProperties.iosRedirectUri
                 else -> throw IllegalArgumentException("지원하지 않는 플랫폼입니다.")
             }
-        val bodyBuilder = createTokenRequestBody(clientId, code, redirectUri, clientSecret = null, codeVerifier = codeVerifier)
+        val bodyBuilder = createTokenRequestBody(clientId, code, redirectUri, codeVerifier = codeVerifier)
         return getUserInfoFromToken(bodyBuilder)
     }
 
@@ -44,14 +36,12 @@ class GoogleService(
         clientId: String,
         code: String,
         redirectUri: String,
-        clientSecret: String?,
         codeVerifier: String?,
     ) = BodyInserters.fromFormData("client_id", clientId)
         .with("code", code)
         .with("redirect_uri", redirectUri)
         .with("grant_type", googleProperties.grantType)
         .also {
-            if (!clientSecret.isNullOrBlank()) it.with("client_secret", clientSecret)
             if (!codeVerifier.isNullOrBlank()) it.with("code_verifier", codeVerifier)
         }
 

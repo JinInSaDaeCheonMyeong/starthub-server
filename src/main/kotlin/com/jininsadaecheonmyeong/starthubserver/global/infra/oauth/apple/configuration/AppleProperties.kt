@@ -8,7 +8,4 @@ data class AppleProperties(
     val clientId: String,
     val keyId: String,
     val privateKey: String,
-    val redirectUri: String,
-    val tokenUri: String,
-    val grantType: String,
 )
