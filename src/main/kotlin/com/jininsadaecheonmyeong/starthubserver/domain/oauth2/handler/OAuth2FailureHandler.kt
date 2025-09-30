@@ -15,7 +15,7 @@ class OAuth2FailureHandler : SimpleUrlAuthenticationFailureHandler() {
         exception: AuthenticationException,
     ) {
         val targetUrl =
-            UriComponentsBuilder.fromUriString("http://localhost:3000/oauth/fail")
+            UriComponentsBuilder.fromUriString("https://start-hub.kr/oauth/fail")
                 .queryParam("error", exception.localizedMessage)
                 .build().toUriString()
 

@@ -33,9 +33,6 @@ class CustomOAuth2AccessTokenResponseClient(
         body.add("code", request.authorizationExchange.authorizationResponse.code)
         body.add("grant_type", request.grantType.value)
         body.add("redirect_uri", request.authorizationExchange.authorizationRequest.redirectUri)
-        println("=== Apple Token Request Body ===")
-        body.forEach { (key, value) -> println("$key = $value") }
-        println("===============================")
 
         val responseMap =
             webClient.post()

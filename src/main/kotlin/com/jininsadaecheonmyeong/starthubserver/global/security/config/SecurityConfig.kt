@@ -51,9 +51,9 @@ class SecurityConfig(
             .authorizeHttpRequests { it.anyRequest().authenticated() }
             .oauth2Login {
                 it.authorizationEndpoint {
-                        e ->
-                    e.authorizationRequestResolver(customOAuth2AuthorizationRequestResolver())
-                    e.authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository)
+                        auth ->
+                    auth.authorizationRequestResolver(customOAuth2AuthorizationRequestResolver())
+                    auth.authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository)
                 }
                 it.userInfoEndpoint { u -> u.userService(customOAuth2UserService) }
                 it.tokenEndpoint { t -> t.accessTokenResponseClient(customOAuth2AccessTokenResponseClient) }

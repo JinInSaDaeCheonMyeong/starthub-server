@@ -121,6 +121,7 @@ class UserService(
             startupLocation = user.startupLocation,
             annualRevenue = user.annualRevenue,
             startupFields = startupFields,
+            provider = user.provider,
         )
     }
 

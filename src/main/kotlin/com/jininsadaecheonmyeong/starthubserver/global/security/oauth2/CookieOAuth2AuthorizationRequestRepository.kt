@@ -1,6 +1,5 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.oauth2
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository
@@ -10,8 +9,7 @@ import org.springframework.util.SerializationUtils
 import java.util.Base64
 
 @Component
-class CookieOAuth2AuthorizationRequestRepository(
-) : AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
+class CookieOAuth2AuthorizationRequestRepository() : AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
     private val cookieName = "oauth2_auth_request"
     private val cookieExpireSeconds = 180
 

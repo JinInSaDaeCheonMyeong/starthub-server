@@ -24,8 +24,8 @@ class OAuth2SuccessHandler(
         val accessToken = tokenProvider.generateAccess(user)
         val refreshToken = tokenProvider.generateRefresh(user)
 
-        val targetUrl = 
-            UriComponentsBuilder.fromUriString("http://localhost:3000/oauth/callback")
+        val targetUrl =
+            UriComponentsBuilder.fromUriString("https://start-hub.kr/oauth/callback")
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .queryParam("isFirstLogin", customOAuth2User.isFirstLogin)
