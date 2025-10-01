@@ -9,6 +9,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.UserBmcSummary
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.UserScaleAnalysis
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.WeaknessesAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
@@ -29,6 +30,20 @@ class CompetitorAnalysisService(
 ) {
     private val logger = LoggerFactory.getLogger(CompetitorAnalysisService::class.java)
 
+    companion object {
+        private const val MAX_COMPETITORS = 3
+        private const val MIN_KEYWORD_LENGTH = 4
+        private const val MAX_KEYWORDS = 5
+        private const val MIN_SENTENCE_LENGTH = 3
+        private const val SCALE_TEXT_MAX_LENGTH = 200
+
+        private const val FALLBACK_SCALE = "중간 규모"
+        private const val FALLBACK_MARKET_SHARE = "5-10%"
+
+        private val SENTENCE_TERMINATORS = listOf("습니다", "합니다", "됩니다", "입니다", "있습니다", "없습니다", "갑니다", "옵니다")
+        private val SPECIAL_CHARS_TO_CLEAN = listOf("**", "*", "##")
+    }
+
     fun analyzeCompetitors(request: CompetitorAnalysisRequest): CompetitorAnalysisResponse {
         logger.info("=== START analyzeCompetitors === BMC ID: {}", request.bmcId)
 
@@ -47,43 +62,28 @@ class CompetitorAnalysisService(
 
         val competitors =
             try {
-                val searchRequest =
-                    SearchRequest(
-                        query = searchKeywords.joinToString(" ") + " 회사 서비스",
-                        maxResults = 3,
-                        bmcContext =
-                            com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.BmcContext(
-                                title = userBmc.title,
-                                valueProposition = userBmc.valueProposition,
-                                customerSegments = userBmc.customerSegments,
-                                channels = userBmc.channels,
-                                revenueStreams = userBmc.revenueStreams,
-                            ),
-                    )
+                val searchRequest = createSearchRequest(userBmc, searchKeywords)
 
                 val searchResults = perplexitySearchService.searchCompetitors(searchRequest)
                 logger.info("Perplexity search returned {} competitors", searchResults.size)
 
-                val competitorInfos =
-                    searchResults.map { result ->
-                        CompetitorInfo(
-                            name = result.title,
-                            description = result.snippet,
-                            logoUrl = result.thumbnailUrl,
-                            websiteUrl = result.url,
+                searchResults.map { result ->
+                    CompetitorInfo(
+                        name = result.title,
+                        description = result.snippet,
+                        logoUrl = result.thumbnailUrl,
+                        websiteUrl = result.url,
+                    )
+                }.also { competitorInfos ->
+                    competitorInfos.forEach { competitor ->
+                        logger.info(
+                            "Competitor: name={}, logoUrl={}, websiteUrl={}",
+                            competitor.name,
+                            competitor.logoUrl,
+                            competitor.websiteUrl,
                         )
                     }
-
-                competitorInfos.forEach { competitor ->
-                    logger.info(
-                        "Competitor: name={}, logoUrl={}, websiteUrl={}",
-                        competitor.name,
-                        competitor.logoUrl,
-                        competitor.websiteUrl,
-                    )
                 }
-
-                competitorInfos
             } catch (e: Exception) {
                 logger.error("Perplexity Search failed: {}", e.message)
                 emptyList()
@@ -109,8 +109,26 @@ class CompetitorAnalysisService(
         }
     }
 
+    private fun createSearchRequest(
+        userBmc: BusinessModelCanvas,
+        searchKeywords: List<String>,
+    ): SearchRequest {
+        return SearchRequest(
+            query = searchKeywords.joinToString(" ") + " 회사 서비스",
+            maxResults = MAX_COMPETITORS,
+            bmcContext =
+                com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.BmcContext(
+                    title = userBmc.title,
+                    valueProposition = userBmc.valueProposition,
+                    customerSegments = userBmc.customerSegments,
+                    channels = userBmc.channels,
+                    revenueStreams = userBmc.revenueStreams,
+                ),
+        )
+    }
+
     private fun validateUserAccess(
-        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        userBmc: BusinessModelCanvas,
         user: User,
     ) {
         if (!userBmc.isOwner(user)) {
@@ -118,14 +136,11 @@ class CompetitorAnalysisService(
         }
     }
 
-    private fun generateSearchKeywords(
-        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
-    ): List<String> {
+    private fun generateSearchKeywords(userBmc: BusinessModelCanvas): List<String> {
         val allText = listOfNotNull(userBmc.title, userBmc.valueProposition, userBmc.customerSegments).joinToString(" ")
 
         logger.info("BMC text for keyword extraction: {}", allText.take(200))
 
-        // 줄바꿈, 쉼표, 마침표, 세미콜론, 하이픈으로 분리하고 의미있는 키워드만 추출
         val keywords =
             allText
                 .replace("\n", " ")
@@ -134,12 +149,12 @@ class CompetitorAnalysisService(
                 .map { it.trim() }
                 .filter { keyword ->
                     keyword.isNotBlank() &&
-                        keyword.length >= 4 &&
+                        keyword.length >= MIN_KEYWORD_LENGTH &&
                         !keyword.startsWith("(") &&
                         !keyword.startsWith("[")
                 }
                 .distinct()
-                .take(5)
+                .take(MAX_KEYWORDS)
 
         logger.info("Generated search keywords from BMC: {}", keywords)
 
@@ -152,7 +167,7 @@ class CompetitorAnalysisService(
     }
 
     private fun buildAnalysisPrompt(
-        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        userBmc: BusinessModelCanvas,
         competitors: List<CompetitorInfo>,
     ): String {
         val competitorSection =
@@ -213,8 +228,22 @@ class CompetitorAnalysisService(
                 [경쟁사:${comp.name}]
                 [예상_규모] 이 회사의 규모를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조
                 [시장_점유율] 예상 수치와 근거를 1문장으로 설명. 중요한 수치는 <<수치>> 형식으로 강조
-                [유사점] 우리 서비스와 비슷한 점 2-3개를 **높임말을 사용한 완전한 문장**으로 쉼표로 구분하여 작성. 각 문장은 반드시 완결되어야 하며, 중간에 끊기지 않아야 합니다. 중요한 키워드는 <<키워드>> 형식으로 강조. (예: "<<빠른 배달 서비스>>를 제공합니다, <<저렴한 가격대>>를 유지하고 있습니다, <<지역 밀착형 서비스>>를 운영합니다")
-                [차이점] 우리 서비스와 다른 점 2-3개를 **높임말을 사용한 완전한 문장**으로 쉼표로 구분하여 작성. 각 문장은 반드시 완결되어야 하며, 중간에 끊기지 않아야 합니다. 중요한 키워드는 <<키워드>> 형식으로 강조. (예: "한식 전문이 아닌 <<다양한 음식점>>을 포함합니다, 도시락 중심이 아닌 <<전반적인 배달 지원>>을 제공합니다, <<대기업 기반의 대규모 인프라>>를 보유하고 있습니다")
+                [유사점]
+                첫 번째 유사점 문장입니다, 두 번째 유사점 문장입니다, 세 번째 유사점 문장입니다
+                **형식 규칙**:
+                - 반드시 쉼표(,)로만 구분
+                - 각 문장은 "~합니다" 또는 "~하고 있습니다"로 끝남
+                - "계시다" 같은 과도한 존칭 금지
+                - 중요 키워드는 <<키워드>> 형식으로 강조
+                - 예시: "<<빠른 배달 서비스>>를 제공합니다, <<저렴한 가격대>>를 유지하고 있습니다, <<지역 밀착형 서비스>>를 운영합니다"
+                [차이점]
+                첫 번째 차이점 문장입니다, 두 번째 차이점 문장입니다, 세 번째 차이점 문장입니다
+                **형식 규칙**:
+                - 반드시 쉼표(,)로만 구분
+                - 각 문장은 "~합니다" 또는 "~하고 있습니다"로 끝남
+                - "계시다" 같은 과도한 존칭 금지
+                - 중요 키워드는 <<키워드>> 형식으로 강조
+                - 예시: "한식 전문이 아닌 <<다양한 음식점>>을 포함합니다, 도시락 중심이 아닌 <<전반적인 배달 지원>>을 제공합니다, <<대기업 기반의 대규모 인프라>>를 보유하고 있습니다"
                 [경쟁사_끝:${comp.name}]
                 """.trimIndent()
             }
@@ -308,7 +337,7 @@ class CompetitorAnalysisService(
 
     private fun parseGptResponse(
         gptResponse: String,
-        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        userBmc: BusinessModelCanvas,
         competitors: List<CompetitorInfo>,
     ): CompetitorAnalysisResponse {
         return CompetitorAnalysisResponse(
@@ -321,7 +350,7 @@ class CompetitorAnalysisService(
     }
 
     private fun createUserBmcSummary(
-        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        userBmc: BusinessModelCanvas,
         gptResponse: String,
     ): UserBmcSummary {
         val bmcSection = extractSection(gptResponse, "0. BMC 핵심 강점", "1. 사용자 규모 분석")
@@ -340,9 +369,7 @@ class CompetitorAnalysisService(
         )
     }
 
-    private fun extractKeyStrengthsFallback(
-        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
-    ): List<String> {
+    private fun extractKeyStrengthsFallback(userBmc: BusinessModelCanvas): List<String> {
         return buildList {
             if (!userBmc.valueProposition.isNullOrBlank()) add("명확한 가치 제안")
             if (!userBmc.keyResources.isNullOrBlank()) add("핵심 자원 보유")
@@ -372,7 +399,7 @@ class CompetitorAnalysisService(
 
         val competitorAnalysisSection = extractCompetitorAnalysisSection(scaleSection)
 
-        return competitors.take(3).map { competitor ->
+        return competitors.take(MAX_COMPETITORS).map { competitor ->
             val (scale, share, similarities, differences) = extractCompetitorDetailedInfo(competitorAnalysisSection, competitor.name)
             CompetitorScale(
                 name = competitor.name,
@@ -409,12 +436,7 @@ class CompetitorAnalysisService(
         section: String,
         competitorName: String,
     ): CompetitorDetailedInfo {
-        // 회사명에서 특수문자 제거 (regex에서 문제가 되는 문자들)
-        val cleanCompetitorName = competitorName
-            .replace("**", "")
-            .replace("*", "")
-            .replace("##", "")
-            .trim()
+        val cleanCompetitorName = cleanSpecialCharacters(competitorName)
 
         // 새로운 브래킷 마커 형식: [경쟁사:name]...[경쟁사_끝:name]
         val startMarker = "[경쟁사:$cleanCompetitorName]"
@@ -430,42 +452,10 @@ class CompetitorAnalysisService(
             }
 
             if (competitorBlock.isNotBlank()) {
-                // 브래킷 마커를 사용하여 각 필드 추출
-                val scalePattern = Regex("\\[예상_규모\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
-                val scale = scalePattern.find(competitorBlock)?.groupValues?.get(1)
-                    ?.replace("\n", " ")
-                    ?.replace(Regex("\\s+"), " ")
-                    ?.trim()
-                    ?.take(200)
-                    ?: "중간 규모"
-
-                val sharePattern = Regex("\\[시장_점유율\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
-                val share = sharePattern.find(competitorBlock)?.groupValues?.get(1)
-                    ?.replace("\n", " ")
-                    ?.replace(Regex("\\s+"), " ")
-                    ?.trim()
-                    ?.take(200)
-                    ?: "5-10%"
-
-                val similaritiesPattern = Regex("\\[유사점\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
-                val similaritiesText = similaritiesPattern.find(competitorBlock)?.groupValues?.get(1)
-                    ?.replace("\n", " ")
-                    ?.trim() ?: ""
-                val similarities = if (similaritiesText.isNotBlank()) {
-                    splitIntoCompleteSentences(similaritiesText).take(3)
-                } else {
-                    emptyList()
-                }
-
-                val differencesPattern = Regex("\\[차이점\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
-                val differencesText = differencesPattern.find(competitorBlock)?.groupValues?.get(1)
-                    ?.replace("\n", " ")
-                    ?.trim() ?: ""
-                val differences = if (differencesText.isNotBlank()) {
-                    splitIntoCompleteSentences(differencesText).take(3)
-                } else {
-                    emptyList()
-                }
+                val scale = extractBracketField(competitorBlock, "예상_규모", FALLBACK_SCALE)
+                val share = extractBracketField(competitorBlock, "시장_점유율", FALLBACK_MARKET_SHARE)
+                val similarities = extractSentenceList(competitorBlock, "유사점", MAX_COMPETITORS)
+                val differences = extractSentenceList(competitorBlock, "차이점", MAX_COMPETITORS)
 
                 return CompetitorDetailedInfo(scale, share, similarities, differences)
             }
@@ -482,50 +472,83 @@ class CompetitorAnalysisService(
         val competitorBlock = competitorBlockPattern.find(section)?.groupValues?.get(1)?.trim()
 
         if (competitorBlock.isNullOrBlank()) {
-            return CompetitorDetailedInfo("중간 규모", "5-10%", emptyList(), emptyList())
+            return CompetitorDetailedInfo(FALLBACK_SCALE, FALLBACK_MARKET_SHARE, emptyList(), emptyList())
         }
 
-        val scalePattern = Regex("예상\\s*규모[:\\s]*(.+?)(?=시장\\s*점유율|유사점|차이점|$)", RegexOption.IGNORE_CASE)
-        val scale =
-            scalePattern.find(competitorBlock)?.groupValues?.get(1)
-                ?.replace("\n", " ")
-                ?.trim()
-                ?.take(200)
-                ?: "중간 규모"
-
-        val sharePattern = Regex("시장\\s*점유율[:\\s]*(.+?)(?=유사점|차이점|$)", RegexOption.IGNORE_CASE)
-        val share =
-            sharePattern.find(competitorBlock)?.groupValues?.get(1)
-                ?.replace("\n", " ")
-                ?.trim()
-                ?.take(200)
-                ?: "5-10%"
-
-        val similaritiesPattern = Regex("유사점[:\\s]*(.+?)(?=차이점|$)", RegexOption.IGNORE_CASE)
-        val similaritiesText =
-            similaritiesPattern.find(competitorBlock)?.groupValues?.get(1)
-                ?.replace("\n", " ")
-                ?.trim() ?: ""
-        val similarities =
-            if (similaritiesText.isNotBlank()) {
-                splitIntoCompleteSentences(similaritiesText).take(3)
-            } else {
-                emptyList()
-            }
-
-        val differencesPattern = Regex("차이점[:\\s]*(.+?)$", RegexOption.IGNORE_CASE)
-        val differencesText =
-            differencesPattern.find(competitorBlock)?.groupValues?.get(1)
-                ?.replace("\n", " ")
-                ?.trim() ?: ""
-        val differences =
-            if (differencesText.isNotBlank()) {
-                splitIntoCompleteSentences(differencesText).take(3)
-            } else {
-                emptyList()
-            }
+        val scale = extractFallbackField(competitorBlock, "예상\\s*규모", FALLBACK_SCALE)
+        val share = extractFallbackField(competitorBlock, "시장\\s*점유율", FALLBACK_MARKET_SHARE)
+        val similarities = extractFallbackSentenceList(competitorBlock, "유사점", MAX_COMPETITORS)
+        val differences = extractFallbackSentenceList(competitorBlock, "차이점", MAX_COMPETITORS)
 
         return CompetitorDetailedInfo(scale, share, similarities, differences)
+    }
+
+    private fun cleanSpecialCharacters(text: String): String {
+        var result = text
+        SPECIAL_CHARS_TO_CLEAN.forEach { char ->
+            result = result.replace(char, "")
+        }
+        return result.trim()
+    }
+
+    private fun extractBracketField(
+        block: String,
+        fieldName: String,
+        fallback: String,
+    ): String {
+        val pattern = Regex("\\[$fieldName\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
+        return pattern.find(block)?.groupValues?.get(1)
+            ?.replace("\n", " ")
+            ?.replace(Regex("\\s+"), " ")
+            ?.trim()
+            ?.take(SCALE_TEXT_MAX_LENGTH)
+            ?: fallback
+    }
+
+    private fun extractSentenceList(
+        block: String,
+        fieldName: String,
+        maxItems: Int,
+    ): List<String> {
+        val pattern = Regex("\\[$fieldName\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
+        val text = pattern.find(block)?.groupValues?.get(1)
+            ?.replace("\n", " ")
+            ?.trim() ?: ""
+        return if (text.isNotBlank()) {
+            splitIntoCompleteSentences(text).take(maxItems)
+        } else {
+            emptyList()
+        }
+    }
+
+    private fun extractFallbackField(
+        block: String,
+        fieldPattern: String,
+        fallback: String,
+    ): String {
+        val pattern = Regex("$fieldPattern[:\\s]*(.+?)(?=시장\\s*점유율|유사점|차이점|$)", RegexOption.IGNORE_CASE)
+        return pattern.find(block)?.groupValues?.get(1)
+            ?.replace("\n", " ")
+            ?.trim()
+            ?.take(SCALE_TEXT_MAX_LENGTH)
+            ?: fallback
+    }
+
+    private fun extractFallbackSentenceList(
+        block: String,
+        fieldName: String,
+        maxItems: Int,
+    ): List<String> {
+        val endPattern = if (fieldName == "유사점") "차이점" else "$"
+        val pattern = Regex("$fieldName[:\\s]*(.+?)(?=$endPattern)", RegexOption.IGNORE_CASE)
+        val text = pattern.find(block)?.groupValues?.get(1)
+            ?.replace("\n", " ")
+            ?.trim() ?: ""
+        return if (text.isNotBlank()) {
+            splitIntoCompleteSentences(text).take(maxItems)
+        } else {
+            emptyList()
+        }
     }
 
     private data class CompetitorDetailedInfo(
@@ -535,14 +558,8 @@ class CompetitorAnalysisService(
         val differences: List<String>,
     )
 
-    /**
-     * 쉼표로 구분된 텍스트를 완전한 문장 단위로 분리
-     * "~습니다, ~합니다, ~됩니다" 등의 패턴을 인식하여 완전한 문장을 추출
-     */
     private fun splitIntoCompleteSentences(text: String): List<String> {
-        // 높임말 종결 패턴: ~습니다, ~합니다, ~됩니다, ~입니다 등 뒤에 오는 쉼표를 기준으로 분리
         val sentences = mutableListOf<String>()
-        val terminators = listOf("습니다", "합니다", "됩니다", "입니다", "있습니다", "없습니다", "갑니다", "옵니다")
 
         var currentSentence = StringBuilder()
         val chars = text.toCharArray()
@@ -551,18 +568,16 @@ class CompetitorAnalysisService(
         while (i < chars.size) {
             currentSentence.append(chars[i])
 
-            // 종결 패턴 체크
             val accumulated = currentSentence.toString()
-            val endsWithTerminator = terminators.any { accumulated.trimEnd().endsWith(it) }
+            val endsWithTerminator = SENTENCE_TERMINATORS.any { accumulated.trimEnd().endsWith(it) }
 
-            // 다음 문자가 쉼표이고, 현재까지가 종결 패턴으로 끝나면 문장 완성
             if (endsWithTerminator && i + 1 < chars.size && chars[i + 1] == ',') {
                 val sentence = currentSentence.toString().trim()
-                if (sentence.isNotBlank() && sentence.length > 3) {
+                if (sentence.isNotBlank() && sentence.length > MIN_SENTENCE_LENGTH) {
                     sentences.add(sentence)
                 }
                 currentSentence = StringBuilder()
-                i += 2 // 쉼표와 공백 건너뛰기
+                i += 2
                 if (i < chars.size && chars[i] == ' ') i++
                 continue
             }
@@ -570,9 +585,8 @@ class CompetitorAnalysisService(
             i++
         }
 
-        // 마지막 문장 처리
         val lastSentence = currentSentence.toString().trim().removeSuffix(",").removeSuffix(".").trim()
-        if (lastSentence.isNotBlank() && lastSentence.length > 3) {
+        if (lastSentence.isNotBlank() && lastSentence.length > MIN_SENTENCE_LENGTH) {
             sentences.add(lastSentence)
         }
 
@@ -797,7 +811,7 @@ class CompetitorAnalysisService(
     }
 
     private fun createFallbackResponse(
-        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        userBmc: BusinessModelCanvas,
         competitors: List<CompetitorInfo>,
     ): CompetitorAnalysisResponse {
         return CompetitorAnalysisResponse(
@@ -809,9 +823,7 @@ class CompetitorAnalysisService(
         )
     }
 
-    private fun createFallbackUserBmcSummary(
-        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
-    ): UserBmcSummary {
+    private fun createFallbackUserBmcSummary(userBmc: BusinessModelCanvas): UserBmcSummary {
         return UserBmcSummary(
             title = userBmc.title,
             valueProposition = userBmc.valueProposition,
@@ -830,13 +842,13 @@ class CompetitorAnalysisService(
     }
 
     private fun createFallbackCompetitorScales(competitors: List<CompetitorInfo>): List<CompetitorScale> {
-        return competitors.take(3).map { competitor ->
+        return competitors.take(MAX_COMPETITORS).map { competitor ->
             CompetitorScale(
                 name = competitor.name,
                 logoUrl = competitor.logoUrl,
                 websiteUrl = competitor.websiteUrl,
-                estimatedScale = "중간 규모",
-                marketShare = "5-10%",
+                estimatedScale = FALLBACK_SCALE,
+                marketShare = FALLBACK_MARKET_SHARE,
             )
         }
     }
