@@ -7,13 +7,11 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthR
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthUserInfo
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.service.GoogleService
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.service.NaverService
-
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.service.TokenService
 import org.springframework.stereotype.Service
 
 @Service
 class OAuthService(
-    
     private val googleService: GoogleService,
     private val naverService: NaverService,
     private val appleService: AppleService,

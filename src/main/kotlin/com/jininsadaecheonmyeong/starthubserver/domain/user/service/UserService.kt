@@ -22,9 +22,9 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepos
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserStartupFieldRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenRedisService
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.service.TokenService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.service.TokenService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

@@ -1,7 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth2.handler
 
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth2.data.CustomOAuth2User
-
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.service.TokenService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -12,7 +11,6 @@ import org.springframework.web.util.UriComponentsBuilder
 
 @Component
 class OAuth2SuccessHandler(
-    
     private val tokenService: TokenService,
 ) : SimpleUrlAuthenticationSuccessHandler() {
     override fun onAuthenticationSuccess(
