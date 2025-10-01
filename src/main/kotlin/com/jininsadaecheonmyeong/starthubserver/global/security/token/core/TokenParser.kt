@@ -18,6 +18,10 @@ class TokenParser(
         return createClaims(token)["email"].toString()
     }
 
+    fun findId(token: String): String {
+        return createClaims(token).subject
+    }
+
     private fun createClaims(token: String): Claims {
         return Jwts.parser().verifyWith(properties.secretKey).build().parseSignedClaims(token).payload
     }

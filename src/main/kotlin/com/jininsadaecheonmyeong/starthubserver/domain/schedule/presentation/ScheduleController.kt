@@ -20,12 +20,13 @@ import java.time.LocalDate
 @RequestMapping("/schedules")
 class ScheduleController(
     private val scheduleService: ScheduleService,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) : ScheduleDocs {
     @PostMapping
     override fun createSchedule(
         @RequestBody request: ScheduleRequest,
     ): BaseResponse<Unit> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         scheduleService.createSchedule(user.id!!, request)
         return BaseResponse(Unit, HttpStatus.CREATED, "일정 생성 성공")
     }
@@ -34,7 +35,7 @@ class ScheduleController(
     override fun getSchedulesByMonth(
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) date: LocalDate,
     ): BaseResponse<List<ScheduleResponse>> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val schedules = scheduleService.getSchedulesByMonth(user.id!!, date)
         return BaseResponse(schedules, HttpStatus.OK, "월별 일정 조회 성공")
     }
@@ -43,7 +44,7 @@ class ScheduleController(
     override fun getSchedulesByDate(
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) date: LocalDate,
     ): BaseResponse<List<AnnouncementSummaryResponse>> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val schedules = scheduleService.getSchedulesByDate(user.id!!, date)
         return BaseResponse(schedules, HttpStatus.OK, "일별 일정 조회 성공")
     }

@@ -25,6 +25,7 @@ class ChatService(
     private val userRepository: UserRepository,
     private val companyRepository: CompanyRepository,
     private val messagingTemplate: SimpMessagingTemplate,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
     @Transactional
     fun getOrCreateChatRoom(
@@ -74,7 +75,7 @@ class ChatService(
 
     @Transactional(readOnly = true)
     fun getMyChatRooms(): List<ChatRoomResponse> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val rooms = chatRoomRepository.findChatRoomsByUser(user)
         return rooms.map { ChatRoomResponse(it.id, it.user1.id!!, it.user2.id!!) }
     }

@@ -20,11 +20,12 @@ class BmcModificationService(
     private val chatModel: ChatModel,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val bmcModificationRequestRepository: BmcModificationRequestRepository,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
     private val log = logger()
 
     fun requestBmcModification(request: ModifyBmcRequest): BmcModificationResponse {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(request.bmcId)
                 .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
@@ -78,7 +79,7 @@ class BmcModificationService(
 
     @Transactional(readOnly = true)
     fun getBmcModificationHistory(bmcId: Long): List<BmcModificationResponse> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
                 .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }

@@ -27,10 +27,11 @@ class RecruitService(
     private val companyRepository: CompanyRepository,
     private val techStackRepository: TechStackRepository,
     private val recruitTechStackRepository: RecruitTechStackRepository,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
     @Transactional
     fun createRecruit(request: CreateRecruitRequest): RecruitResponse {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val company =
             companyRepository.findByIdAndDeletedFalse(request.companyId)
                 .orElseThrow { CompanyNotFoundException("회사를 찾을 수 없습니다.") }
@@ -65,7 +66,7 @@ class RecruitService(
             recruitRepository.findByIdAndDeletedFalse(recruitId)
                 .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
 
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         if (recruit.writer.id != user.id) {
             throw NotRecruitWriterException("채용 공고 작성자만 수정할 수 있습니다.")
         }
@@ -91,7 +92,7 @@ class RecruitService(
             recruitRepository.findByIdAndDeletedFalse(recruitId)
                 .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
 
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         if (recruit.writer.id != user.id) {
             throw NotRecruitWriterException("채용 공고 작성자만 삭제할 수 있습니다.")
         }
@@ -106,7 +107,7 @@ class RecruitService(
             recruitRepository.findByIdAndDeletedFalse(recruitId)
                 .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
 
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         if (recruit.writer.id != user.id) {
             throw NotRecruitWriterException("채용 공고 작성자만 마감할 수 있습니다.")
         }

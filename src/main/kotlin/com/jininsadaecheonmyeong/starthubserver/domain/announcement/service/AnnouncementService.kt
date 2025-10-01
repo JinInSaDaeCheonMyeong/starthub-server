@@ -35,6 +35,7 @@ class AnnouncementService(
     private val announcementLikeRepository: AnnouncementLikeRepository,
     private val userStartupFieldRepository: UserStartupFieldRepository,
     private val webClient: WebClient,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
     @param:Value("\${recommendation.fastapi-url}") private val fastapiUrl: String,
 ) {
     companion object {
@@ -158,7 +159,7 @@ class AnnouncementService(
     }
 
     fun findLikedAnnouncementsByUser(pageable: Pageable): Page<AnnouncementResponse> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val likedAnnouncements = announcementLikeRepository.findByUserOrderByCreatedAtDesc(user, pageable)
 
         return likedAnnouncements.map { AnnouncementResponse.from(it.announcement, true) }
@@ -172,7 +173,7 @@ class AnnouncementService(
             repository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
 
         return if (includeLikeStatus) {
-            val user = UserAuthenticationHolder.current()
+            val user = userAuthenticationHolder.current()
             val isLiked = announcementLikeRepository.existsByUserAndAnnouncement(user, announcement)
             AnnouncementDetailResponse.from(announcement, isLiked)
         } else {
@@ -210,7 +211,7 @@ class AnnouncementService(
     }
 
     fun getRecommendedAnnouncements(): List<RecommendedAnnouncementResponse> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val userInterests = userStartupFieldRepository.findByUser(user)
         val interestNames = userInterests.map { it.businessType.displayName }
 
@@ -265,7 +266,7 @@ class AnnouncementService(
     }
 
     private fun mapAnnouncementsToResponseWithLikeStatus(announcements: Page<Announcement>): Page<AnnouncementResponse> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val announcementList = announcements.content
         val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
         val likedAnnouncementIds = userLikes.map { it.announcement.id }.toSet()

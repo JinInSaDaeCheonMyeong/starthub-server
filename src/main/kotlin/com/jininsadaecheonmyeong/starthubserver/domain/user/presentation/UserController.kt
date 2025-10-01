@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController
 class UserController(
     private val userService: UserService,
     private val platformAuthenticationHelper: PlatformAuthenticationHelper,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) : UserDocs {
     @PostMapping("/sign-up")
     override fun signUp(
@@ -98,14 +99,14 @@ class UserController(
     override fun updateUserProfile(
         @RequestBody request: UpdateUserProfileRequest,
     ): ResponseEntity<BaseResponse<Unit>> {
-        val currentUser = UserAuthenticationHolder.current()
+        val currentUser = userAuthenticationHolder.current()
         userService.updateUserProfile(currentUser, request)
         return BaseResponse.of("유저 프로필 설정 성공")
     }
 
     @GetMapping("/me")
     override fun getUser(): ResponseEntity<BaseResponse<UserResponse>> {
-        val currentUser = UserAuthenticationHolder.current()
+        val currentUser = userAuthenticationHolder.current()
         val user = userService.getUser(currentUser)
         return BaseResponse.of(user, "유저 정보 조회 성공")
     }
@@ -115,7 +116,7 @@ class UserController(
         httpRequest: HttpServletRequest,
         httpResponse: HttpServletResponse,
     ): ResponseEntity<BaseResponse<Unit>> {
-        val currentUser = UserAuthenticationHolder.current()
+        val currentUser = userAuthenticationHolder.current()
         userService.signOut(currentUser)
 
         if (platformAuthenticationHelper.isWebPlatform(httpRequest)) {
@@ -136,7 +137,7 @@ class UserController(
         httpRequest: HttpServletRequest,
         httpResponse: HttpServletResponse,
     ): ResponseEntity<BaseResponse<Unit>> {
-        val currentUser = UserAuthenticationHolder.current()
+        val currentUser = userAuthenticationHolder.current()
         userService.deleteAccount(currentUser, request)
 
         if (platformAuthenticationHelper.isWebPlatform(httpRequest)) {

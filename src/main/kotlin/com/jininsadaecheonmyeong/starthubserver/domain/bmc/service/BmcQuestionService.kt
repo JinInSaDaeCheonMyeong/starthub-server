@@ -15,9 +15,10 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class BmcQuestionService(
     private val bmcQuestionRepository: BmcQuestionRepository,
+    private val userAuthenticationHolder: UserAuthenticationHolder
 ) {
     fun createBmcSession(request: CreateBmcSessionRequest): BmcSessionResponse {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
 
         val bmcQuestion =
             BmcQuestion(
@@ -30,7 +31,7 @@ class BmcQuestionService(
     }
 
     fun answerQuestion(request: AnswerQuestionRequest): BmcSessionResponse {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmcQuestion =
             bmcQuestionRepository.findByIdAndUser(request.sessionId, user)
                 .orElseThrow { BmcSessionNotFoundException("BMC 세션을 찾을 수 없습니다.") }
@@ -43,7 +44,7 @@ class BmcQuestionService(
 
     @Transactional(readOnly = true)
     fun getBmcSession(sessionId: Long): BmcSessionResponse {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmcQuestion =
             bmcQuestionRepository.findByIdAndUser(sessionId, user)
                 .orElseThrow { BmcSessionNotFoundException("BMC 세션을 찾을 수 없습니다.") }
@@ -53,7 +54,7 @@ class BmcQuestionService(
 
     @Transactional(readOnly = true)
     fun getAllBmcSessions(): List<BmcSessionResponse> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmcQuestions = bmcQuestionRepository.findAllByUserOrderByCreatedAtDesc(user)
 
         return bmcQuestions.map { BmcSessionResponse.from(it) }
@@ -98,7 +99,7 @@ class BmcQuestionService(
     }
 
     fun getBmcQuestionEntity(sessionId: Long): BmcQuestion {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         return bmcQuestionRepository.findByIdAndUser(sessionId, user)
             .orElseThrow { BmcSessionNotFoundException("BMC 세션을 찾을 수 없습니다.") }
     }

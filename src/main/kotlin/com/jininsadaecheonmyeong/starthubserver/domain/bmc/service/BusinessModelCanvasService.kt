@@ -12,10 +12,11 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class BusinessModelCanvasService(
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
     @Transactional(readOnly = true)
     fun getBusinessModelCanvas(id: Long): BusinessModelCanvasResponse {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
@@ -27,14 +28,14 @@ class BusinessModelCanvasService(
 
     @Transactional(readOnly = true)
     fun getAllBusinessModelCanvases(): List<BusinessModelCanvasResponse> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmcs = businessModelCanvasRepository.findAllByUserAndDeletedFalse(user)
 
         return bmcs.map { BusinessModelCanvasResponse.from(it) }
     }
 
     fun deleteBusinessModelCanvas(id: Long) {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
@@ -46,7 +47,7 @@ class BusinessModelCanvasService(
     }
 
     fun updateBusinessModelCanvas(request: UpdateBmcRequest): BusinessModelCanvasResponse {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(request.bmcId)
                 .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
