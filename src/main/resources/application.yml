@@ -122,7 +122,19 @@ discord:
 recommendation:
   fastapi-url: ${RECOMMENDATION_API_URL}
 
+perplexity:
+  api-key: ${PERPLEXITY_API_KEY}
+  base-url: https://api.perplexity.ai
+  model: sonar-pro
+  timeout: 30000
+  max-tokens: 4000
+
 swagger:
   auth:
     username: ${SWAGGER_USERNAME}
     password: ${SWAGGER_PASSWORD}
+
+logging:
+  level:
+    com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor: INFO
+    com.jininsadaecheonmyeong.starthubserver.global.infra.search: INFO

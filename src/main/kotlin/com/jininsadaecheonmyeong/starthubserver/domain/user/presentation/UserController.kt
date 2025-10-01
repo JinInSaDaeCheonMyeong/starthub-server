@@ -87,7 +87,7 @@ class UserController(
         @PathVariable userId: Long,
     ) = BaseResponse.of(userService.getUserProfile(userId), "유저 프로필 조회 성공")
 
-    @DeleteMapping("/delete")
+    @DeleteMapping
     override fun deleteAccount(
         @RequestBody request: DeleteUserRequest,
         httpRequest: HttpServletRequest,
