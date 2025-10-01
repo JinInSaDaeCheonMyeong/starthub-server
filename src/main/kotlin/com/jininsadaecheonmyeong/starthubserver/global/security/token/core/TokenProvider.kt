@@ -11,7 +11,6 @@ import java.util.Date
 @Component
 class TokenProvider(
     private val properties: TokenProperties,
-    private val tokenRedisService: TokenRedisService,
 ) {
     private fun generate(
         tokenType: TokenType,
@@ -31,7 +30,6 @@ class TokenProvider(
 
     fun generateRefresh(user: User): String {
         val refreshToken = generate(TokenType.REFRESH_TOKEN, user, properties.refresh)
-        tokenRedisService.storeRefreshToken(user.id.toString(), refreshToken)
         return refreshToken
     }
 }
