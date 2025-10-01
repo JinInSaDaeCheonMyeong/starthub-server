@@ -33,7 +33,7 @@ class CompetitorAnalysisService(
     private val logger = LoggerFactory.getLogger(CompetitorAnalysisService::class.java)
 
     companion object {
-        private const val MAX_COMPETITORS = 3
+        private const val MAX_COMPETITORS = 4
         private const val MIN_KEYWORD_LENGTH = 4
         private const val MAX_KEYWORDS = 5
         private const val MIN_SENTENCE_LENGTH = 3
