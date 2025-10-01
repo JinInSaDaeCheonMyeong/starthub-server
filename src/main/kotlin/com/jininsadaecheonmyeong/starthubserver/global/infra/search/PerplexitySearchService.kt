@@ -34,29 +34,10 @@ class PerplexitySearchService(
 
         return try {
             val searchQuery = buildCompetitorSearchQuery(request)
-            logger.info("=== Perplexity Search Query ===")
-            logger.info(searchQuery)
-            logger.info("=== End Query ===")
-
             val response = performSearch(searchQuery)
-
-            logger.info("=== Perplexity Raw Response ===")
-            logger.info("Response ID: {}", response.id)
-            logger.info("Model: {}", response.model)
-            logger.info("Citations: {}", response.citations)
-            val content = response.choices.firstOrNull()?.message?.content ?: ""
-            logger.info("Content length: {} characters", content.length)
-            logger.info("Content: {}", content)
-            logger.info("=== End Response ===")
-
-            val results = parseCompetitorResults(response, request.maxResults)
-
-            logger.info("Perplexity search completed: query='{}', results={}", request.query, results.size)
-
-            results
+            parseCompetitorResults(response, request.maxResults)
         } catch (e: Exception) {
-            logger.error("Perplexity search failed for query: '{}', error: {}", request.query, e.message)
-            logger.error("Exception details: ", e)
+            logger.error("경쟁사 검색 실패: {}", e.message)
             when {
                 e.message?.contains("API key") == true ->
                     throw SearchException("Perplexity API key is invalid. Please check your API key configuration.", e)
@@ -176,8 +157,6 @@ class PerplexitySearchService(
                 returnCitations = true,
             )
 
-        logger.info("Perplexity request: model={}, maxTokens={}, temperature={}", properties.model, properties.maxTokens, 0.2)
-
         return webClient.post()
             .uri("/chat/completions")
             .contentType(MediaType.APPLICATION_JSON)
@@ -190,11 +169,11 @@ class PerplexitySearchService(
                     .filter { it is TimeoutException },
             )
             .onErrorMap(WebClientResponseException::class.java) { ex ->
-                logger.error("Perplexity API error response body: {}", ex.responseBodyAsString)
+                logger.error("Perplexity API 오류: 상태코드 {}", ex.statusCode.value())
                 when (ex.statusCode.value()) {
                     401 -> SearchException("Perplexity API key is invalid", ex)
                     429 -> SearchException("Perplexity API rate limit exceeded", ex)
-                    400 -> SearchException("Invalid search parameters: ${ex.responseBodyAsString}", ex)
+                    400 -> SearchException("Invalid search parameters", ex)
                     else -> SearchException("Perplexity API error: ${ex.statusText}", ex)
                 }
             }
@@ -217,7 +196,6 @@ class PerplexitySearchService(
                 val description = extractField(block, "설명").replace("**", "").trim()
                 val logo = extractField(block, "로고").replace("**", "").trim()
 
-                // 잘못된 URL 필터링 (정보 없음, ## 등)
                 val cleanWebsite =
                     website
                         .replace("##", "")
@@ -239,24 +217,22 @@ class PerplexitySearchService(
                     )
                 }
             } catch (e: Exception) {
-                logger.warn("Failed to parse company block: {}", e.message)
+                logger.warn("경쟁사 정보 파싱 실패")
             }
         }
 
-        // CompanyInfoService를 사용하여 실제 웹사이트에서 로고 추출
         val enhancedCompetitors =
             competitors.map { competitor ->
                 if (competitor.thumbnailUrl == null || !isValidImageUrl(competitor.thumbnailUrl)) {
                     try {
                         val extractedLogo = companyInfoService.extractCompanyLogo(competitor.url)
                         if (extractedLogo != null) {
-                            logger.info("Logo extracted for {}: {}", competitor.title, extractedLogo)
                             competitor.copy(thumbnailUrl = extractedLogo)
                         } else {
                             competitor
                         }
                     } catch (e: Exception) {
-                        logger.warn("Failed to extract logo for {}: {}", competitor.title, e.message)
+                        logger.warn("로고 추출 실패: {}", competitor.title)
                         competitor
                     }
                 } else {
@@ -339,7 +315,6 @@ class PerplexitySearchService(
             (url.startsWith("http://") || url.startsWith("https://"))
     }
 
-    // Perplexity API Data Classes
     data class PerplexityRequest(
         val model: String,
         val messages: List<PerplexityMessage>,
