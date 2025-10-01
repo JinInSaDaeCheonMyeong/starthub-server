@@ -158,6 +158,7 @@ class UserService(
             annualRevenue = user.annualRevenue,
             startupFields = startupFields,
             startupHistory = user.startupHistory,
+            provider = user.provider,
         )
     }
 

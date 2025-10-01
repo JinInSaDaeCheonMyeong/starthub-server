@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.data.response
 
+import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.AuthType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.StartupStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.UserGender
 import java.time.LocalDate
@@ -19,4 +20,5 @@ data class UserResponse(
     val annualRevenue: Long?,
     val startupFields: List<StartupFieldResponse>,
     val startupHistory: Int?,
+    val provider: AuthType,
 )

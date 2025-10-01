@@ -18,11 +18,12 @@ class BmcGenerationService(
     private val bmcQuestionService: BmcQuestionService,
     private val bmcPromptService: BmcPromptService,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
     private val log = logger()
 
     fun generateBusinessModelCanvas(request: GenerateBmcRequest): BusinessModelCanvasResponse {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val bmcQuestion = bmcQuestionService.getBmcQuestionEntity(request.sessionId)
 
         if (!bmcQuestion.isCompleted) {
