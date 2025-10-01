@@ -29,7 +29,7 @@ class PerplexitySearchService(
     fun searchCompetitors(request: SearchRequest): List<CompetitorSearchResult> {
         if (properties.apiKey.isBlank() || properties.apiKey.startsWith("\${")) {
             logger.error("Perplexity API 키가 설정되지 않음")
-            throw SearchException("Perplexity API is not configured. Please set PERPLEXITY_API_KEY in your environment.")
+            throw SearchException("Perplexity API Key를 찾을 수 없음")
         }
 
         return try {
