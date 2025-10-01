@@ -5,5 +5,5 @@ import java.time.LocalDate
 data class ScheduleResponse(
     val announcementId: Long,
     val startDate: LocalDate,
-    val endDate: LocalDate
+    val endDate: LocalDate,
 )

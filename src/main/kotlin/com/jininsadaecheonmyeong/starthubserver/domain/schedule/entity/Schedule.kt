@@ -19,16 +19,12 @@ class Schedule(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     val user: User,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "announcement_id", nullable = false)
     val announcement: Announcement,
-
     val startDate: LocalDate,
-
     val endDate: LocalDate,
 ) : BaseEntity()

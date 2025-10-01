@@ -5,5 +5,5 @@ data class AnnouncementSummaryResponse(
     val title: String,
     val organization: String,
     val receptionPeriod: String,
-    val likeCount: Int
+    val likeCount: Int,
 )
