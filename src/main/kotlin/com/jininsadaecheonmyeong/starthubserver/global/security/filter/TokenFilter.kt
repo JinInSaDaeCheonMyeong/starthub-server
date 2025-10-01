@@ -1,16 +1,17 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.filter
 
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
+import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.ExpiredTokenException
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.CustomUserDetails
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
@@ -56,16 +57,16 @@ class TokenFilter(
     }
 
     private fun setAuthentication(token: String) {
-        val user = getUserDetails(token)
-        SecurityContextHolder.getContext().authentication =
-            UsernamePasswordAuthenticationToken(user, null, user.authorities)
-    }
+        val userId = tokenParser.findId(token)
+        val authorities =
+            listOf(
+                userRepository.findById(userId.toLong())
+                    .orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+                    .let { SimpleGrantedAuthority("ROLE_${it.role}") },
+            )
 
-    private fun getUserDetails(token: String): CustomUserDetails {
-        return CustomUserDetails(
-            userRepository.findByEmail(tokenParser.findEmail(token))
-                ?: throw RuntimeException("찾을 수 없는 유저"),
-        )
+        SecurityContextHolder.getContext().authentication =
+            UsernamePasswordAuthenticationToken(userId, null, authorities)
     }
 
     private fun isTokenExpiredException(e: Exception): Boolean {

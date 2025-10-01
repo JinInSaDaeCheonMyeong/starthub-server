@@ -15,10 +15,11 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class CompanyService(
     private val repository: CompanyRepository,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
     @Transactional
     fun save(req: CreateCompanyRequest) {
-        val founder = UserAuthenticationHolder.current()
+        val founder = userAuthenticationHolder.current()
         if (repository.existsByCompanyNameAndDeletedFalse(req.name)) {
             throw CompanyDuplicationException("이미 등록된 기업")
         }
@@ -43,7 +44,7 @@ class CompanyService(
     }
 
     private fun findCompanyAndVerifyFounder(companyId: Long): Company {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val company = repository.findById(companyId).orElseThrow { CompanyNotFoundException("찾을 수 없는 기업") }
         if (!company.isFounder(user)) {
             throw NotCompanyFounderException("기업 등록자만 접근할 수 있습니다.")
@@ -73,7 +74,7 @@ class CompanyService(
 
     @Transactional(readOnly = true)
     fun findMy(): List<Company> {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         return repository.findByFounderAndDeletedFalse(user)
     }
 }

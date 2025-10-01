@@ -20,8 +20,7 @@ class TokenProvider(
     ): String {
         return Jwts.builder()
             .claim("category", tokenType.value)
-            .claim("email", user.email)
-            .claim("role", user.role)
+            .subject(user.id.toString())
             .issuedAt(Date(currentTimeMillis()))
             .expiration(Date(currentTimeMillis() + expire))
             .signWith(properties.secretKey)
@@ -32,7 +31,7 @@ class TokenProvider(
 
     fun generateRefresh(user: User): String {
         val refreshToken = generate(TokenType.REFRESH_TOKEN, user, properties.refresh)
-        tokenRedisService.storeRefreshToken(user.email, refreshToken)
+        tokenRedisService.storeRefreshToken(user.id.toString(), refreshToken)
         return refreshToken
     }
 }

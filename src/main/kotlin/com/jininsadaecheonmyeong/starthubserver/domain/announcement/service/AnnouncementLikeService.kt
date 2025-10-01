@@ -15,9 +15,10 @@ import org.springframework.transaction.annotation.Transactional
 class AnnouncementLikeService(
     private val announcementLikeRepository: AnnouncementLikeRepository,
     private val announcementRepository: AnnouncementRepository,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
     fun addLike(announcementId: Long) {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val announcement =
             announcementRepository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
 
@@ -38,7 +39,7 @@ class AnnouncementLikeService(
     }
 
     fun removeLike(announcementId: Long) {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val announcement =
             announcementRepository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
 
