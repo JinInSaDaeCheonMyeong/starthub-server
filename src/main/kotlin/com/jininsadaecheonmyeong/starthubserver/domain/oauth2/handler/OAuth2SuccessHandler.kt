@@ -1,7 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.oauth2.handler
 
 import com.jininsadaecheonmyeong.starthubserver.domain.oauth2.data.CustomOAuth2User
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
+
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.service.TokenService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.core.Authentication
@@ -11,7 +12,8 @@ import org.springframework.web.util.UriComponentsBuilder
 
 @Component
 class OAuth2SuccessHandler(
-    private val tokenProvider: TokenProvider,
+    
+    private val tokenService: TokenService,
 ) : SimpleUrlAuthenticationSuccessHandler() {
     override fun onAuthenticationSuccess(
         request: HttpServletRequest,
@@ -21,8 +23,8 @@ class OAuth2SuccessHandler(
         val customOAuth2User = authentication.principal as CustomOAuth2User
         val user = customOAuth2User.user
 
-        val accessToken = tokenProvider.generateAccess(user)
-        val refreshToken = tokenProvider.generateRefresh(user)
+        val accessToken = tokenService.generateAccess(user)
+        val refreshToken = tokenService.generateAndStoreRefreshToken(user)
 
         val targetUrl =
             UriComponentsBuilder.fromUriString("https://start-hub.kr/oauth/callback")

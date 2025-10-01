@@ -7,16 +7,18 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthR
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common.OAuthUserInfo
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.service.GoogleService
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.service.NaverService
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
+
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.service.TokenService
 import org.springframework.stereotype.Service
 
 @Service
 class OAuthService(
-    private val tokenProvider: TokenProvider,
+    
     private val googleService: GoogleService,
     private val naverService: NaverService,
     private val appleService: AppleService,
     private val userRepository: UserRepository,
+    private val tokenService: TokenService,
 ) {
     fun googleAuthApp(
         code: String,
@@ -40,8 +42,8 @@ class OAuthService(
             userRepository.save(user)
         }
         return OAuthResponse(
-            access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user),
+            access = tokenService.generateAccess(user),
+            refresh = tokenService.generateAndStoreRefreshToken(user),
             isFirstLogin = isFirstLogin,
         )
     }
