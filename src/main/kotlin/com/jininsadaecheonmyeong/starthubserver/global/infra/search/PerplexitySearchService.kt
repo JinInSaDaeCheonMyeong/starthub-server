@@ -153,7 +153,8 @@ class PerplexitySearchService(
                     listOf(
                         PerplexityMessage(
                             role = "system",
-                            content = """
+                            content =
+                                """
                                 당신은 스타트업과 중소기업 시장 분석 전문가입니다.
 
                                 규칙:
@@ -162,7 +163,7 @@ class PerplexitySearchService(
                                 3. 중소기업, 스타트업, 중견기업을 우선적으로 찾으세요
                                 4. 정확한 웹사이트 URL을 제공하세요
                                 5. 비슷한 규모와 타겟 고객을 가진 직접 경쟁사를 찾으세요
-                            """.trimIndent(),
+                                """.trimIndent(),
                         ),
                         PerplexityMessage(
                             role = "user",
@@ -217,13 +218,15 @@ class PerplexitySearchService(
                 val logo = extractField(block, "로고").replace("**", "").trim()
 
                 // 잘못된 URL 필터링 (정보 없음, ## 등)
-                val cleanWebsite = website
-                    .replace("##", "")
-                    .split("\n").firstOrNull()?.trim() ?: ""
+                val cleanWebsite =
+                    website
+                        .replace("##", "")
+                        .split("\n").firstOrNull()?.trim() ?: ""
 
                 if (name.isNotBlank() && cleanWebsite.isNotBlank() &&
                     !cleanWebsite.contains("정보 없음") &&
-                    (cleanWebsite.startsWith("http://") || cleanWebsite.startsWith("https://"))) {
+                    (cleanWebsite.startsWith("http://") || cleanWebsite.startsWith("https://"))
+                ) {
                     competitors.add(
                         CompetitorSearchResult(
                             title = name,

@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional(readOnly = true)
 class CompetitorAnalysisService(
+    private val userAuthenticationHolder: UserAuthenticationHolder,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val perplexitySearchService: PerplexitySearchService,
     private val chatModel: ChatModel,
@@ -46,7 +47,7 @@ class CompetitorAnalysisService(
     }
 
     fun analyzeCompetitors(request: CompetitorAnalysisRequest): CompetitorAnalysisResponse {
-        val user = UserAuthenticationHolder.current()
+        val user = userAuthenticationHolder.current()
         val userBmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(request.bmcId)
                 .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
@@ -239,11 +240,12 @@ class CompetitorAnalysisService(
         val startIndex = section.indexOf(startMarker, ignoreCase = true)
         if (startIndex != -1) {
             val endIndex = section.indexOf(endMarker, startIndex, ignoreCase = true)
-            val competitorBlock = if (endIndex != -1) {
-                section.substring(startIndex + startMarker.length, endIndex)
-            } else {
-                section.substring(startIndex + startMarker.length)
-            }
+            val competitorBlock =
+                if (endIndex != -1) {
+                    section.substring(startIndex + startMarker.length, endIndex)
+                } else {
+                    section.substring(startIndex + startMarker.length)
+                }
 
             if (competitorBlock.isNotBlank()) {
                 val scale = extractBracketField(competitorBlock, "예상_규모", FALLBACK_SCALE)
@@ -303,9 +305,10 @@ class CompetitorAnalysisService(
         maxItems: Int,
     ): List<String> {
         val pattern = Regex("\\[$fieldName\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
-        val text = pattern.find(block)?.groupValues?.get(1)
-            ?.replace("\n", " ")
-            ?.trim() ?: ""
+        val text =
+            pattern.find(block)?.groupValues?.get(1)
+                ?.replace("\n", " ")
+                ?.trim() ?: ""
         return if (text.isNotBlank()) {
             splitIntoCompleteSentences(text).take(maxItems)
         } else {
@@ -333,9 +336,10 @@ class CompetitorAnalysisService(
     ): List<String> {
         val endPattern = if (fieldName == "유사점") "차이점" else "$"
         val pattern = Regex("$fieldName[:\\s]*(.+?)(?=$endPattern)", RegexOption.IGNORE_CASE)
-        val text = pattern.find(block)?.groupValues?.get(1)
-            ?.replace("\n", " ")
-            ?.trim() ?: ""
+        val text =
+            pattern.find(block)?.groupValues?.get(1)
+                ?.replace("\n", " ")
+                ?.trim() ?: ""
         return if (text.isNotBlank()) {
             splitIntoCompleteSentences(text).take(maxItems)
         } else {
@@ -477,9 +481,10 @@ class CompetitorAnalysisService(
         val match = pattern.find(section)
 
         if (match != null) {
-            val content = match.groupValues[1].trim()
-                .replace("\n", " ")
-                .replace(Regex("\\s+"), " ")
+            val content =
+                match.groupValues[1].trim()
+                    .replace("\n", " ")
+                    .replace(Regex("\\s+"), " ")
             return if (content.isNotEmpty() && content.length > 10) content else fallback
         }
 
