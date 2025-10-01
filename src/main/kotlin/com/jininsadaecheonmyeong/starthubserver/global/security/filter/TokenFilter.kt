@@ -1,8 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.filter
 
+import com.jininsadaecheonmyeong.starthubserver.domain.user.cache.UserCache
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
-import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
@@ -20,7 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 class TokenFilter(
     private val tokenValidator: TokenValidator,
     private val tokenParser: TokenParser,
-    private val userRepository: UserRepository,
+    private val userCache: UserCache,
 ) : OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -58,12 +58,8 @@ class TokenFilter(
 
     private fun setAuthentication(token: String) {
         val userId = tokenParser.findId(token)
-        val authorities =
-            listOf(
-                userRepository.findById(userId.toLong())
-                    .orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
-                    .let { SimpleGrantedAuthority("ROLE_${it.role}") },
-            )
+        val user = userCache.getById(userId.toLong()) ?: throw UserNotFoundException("찾을 수 없는 유저")
+        val authorities = listOf(SimpleGrantedAuthority("ROLE_${user.role}"))
 
         SecurityContextHolder.getContext().authentication =
             UsernamePasswordAuthenticationToken(userId, null, authorities)

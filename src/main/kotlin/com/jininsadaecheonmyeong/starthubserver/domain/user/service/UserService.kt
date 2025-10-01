@@ -3,6 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.user.service
 import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.cache.UserCache
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.DeleteUserRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.user.data.request.UpdateUserProfileRequest
@@ -42,6 +43,7 @@ class UserService(
     private val userStartupFieldRepository: UserStartupFieldRepository,
     private val companyRepository: CompanyRepository,
     private val tokenService: TokenService,
+    private val userCache: UserCache,
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
@@ -56,6 +58,8 @@ class UserService(
 
         var isAccountRestored = false
         var originalDeletedAt: LocalDateTime? = null
+        var needsCacheUpdate = false
+
         if (user.deleted && user.deletedAt != null) {
             val twoWeeksAfterDeletion = user.deletedAt!!.plusWeeks(2)
             if (LocalDateTime.now().isBefore(twoWeeksAfterDeletion)) {
@@ -63,7 +67,7 @@ class UserService(
                 user.deleted = false
                 user.deletedAt = null
                 isAccountRestored = true
-                userRepository.save(user)
+                needsCacheUpdate = true
             } else {
                 throw UserNotFoundException("탈퇴 처리된 계정입니다.")
             }
@@ -74,8 +78,14 @@ class UserService(
         val isFirstLogin = user.isFirstLogin
         if (isFirstLogin) {
             user.isFirstLogin = false
-            userRepository.save(user)
+            needsCacheUpdate = true
         }
+
+        if (needsCacheUpdate) {
+            userRepository.save(user)
+            userCache.put(user)
+        }
+
         return TokenResponse(
             access = tokenService.generateAccess(user),
             refresh = tokenService.generateAndStoreRefreshToken(user),
@@ -119,6 +129,7 @@ class UserService(
         user.annualRevenue = request.annualRevenue
 
         userRepository.save(user)
+        userCache.put(user)
 
         request.startupFields?.let { newInterests ->
             userStartupFieldRepository.deleteByUser(user)
@@ -184,6 +195,7 @@ class UserService(
         userRepository.save(user)
 
         tokenRedisService.deleteRefreshToken(user.email)
+        user.id?.let { userCache.evict(it) }
     }
 
     @Transactional(readOnly = true)
