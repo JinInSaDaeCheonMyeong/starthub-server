@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response
+package com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response
 
 import io.swagger.v3.oas.annotations.media.Schema
 

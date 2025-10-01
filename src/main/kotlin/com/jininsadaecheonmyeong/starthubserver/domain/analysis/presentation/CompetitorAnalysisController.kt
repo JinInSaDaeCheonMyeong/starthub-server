@@ -1,8 +1,8 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.presentation
+package com.jininsadaecheonmyeong.starthubserver.domain.analysis.presentation
 
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.request.CompetitorAnalysisRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.CompetitorAnalysisResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.service.CompetitorAnalysisService
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.request.CompetitorAnalysisRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.CompetitorAnalysisResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.service.CompetitorAnalysisService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import jakarta.annotation.PostConstruct
 import jakarta.validation.Valid

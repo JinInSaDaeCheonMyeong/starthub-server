@@ -1,4 +1,4 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.request
+package com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.request
 
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotNull

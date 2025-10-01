@@ -1,14 +1,14 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.service
+package com.jininsadaecheonmyeong.starthubserver.domain.analysis.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.request.CompetitorAnalysisRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.CompetitorAnalysisResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.CompetitorInfo
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.CompetitorScale
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.GlobalExpansionStrategy
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.StrengthsAnalysis
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.UserBmcSummary
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.UserScaleAnalysis
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.WeaknessesAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.request.CompetitorAnalysisRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.CompetitorAnalysisResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.CompetitorInfo
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.CompetitorScale
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.GlobalExpansionStrategy
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.StrengthsAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.UserBmcSummary
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.UserScaleAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.WeaknessesAnalysis
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
@@ -27,6 +27,7 @@ class CompetitorAnalysisService(
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val perplexitySearchService: PerplexitySearchService,
     private val chatModel: ChatModel,
+    private val promptBuilder: CompetitorAnalysisPromptBuilder,
 ) {
     private val logger = LoggerFactory.getLogger(CompetitorAnalysisService::class.java)
 
@@ -45,27 +46,19 @@ class CompetitorAnalysisService(
     }
 
     fun analyzeCompetitors(request: CompetitorAnalysisRequest): CompetitorAnalysisResponse {
-        logger.info("=== START analyzeCompetitors === BMC ID: {}", request.bmcId)
-
         val user = UserAuthenticationHolder.current()
         val userBmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(request.bmcId)
                 .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
 
-        logger.info("BMC found: title={}", userBmc.title)
         validateUserAccess(userBmc, user)
 
-        logger.info("Generating search keywords...")
         val searchKeywords = request.searchKeywords ?: generateSearchKeywords(userBmc)
-        logger.info("Final search keywords (size={}): {}", searchKeywords.size, searchKeywords)
-        logger.info("Search query will be: '{}'", searchKeywords.joinToString(" ") + " 회사 서비스")
 
         val competitors =
             try {
                 val searchRequest = createSearchRequest(userBmc, searchKeywords)
-
                 val searchResults = perplexitySearchService.searchCompetitors(searchRequest)
-                logger.info("Perplexity search returned {} competitors", searchResults.size)
 
                 searchResults.map { result ->
                     CompetitorInfo(
@@ -74,37 +67,18 @@ class CompetitorAnalysisService(
                         logoUrl = result.thumbnailUrl,
                         websiteUrl = result.url,
                     )
-                }.also { competitorInfos ->
-                    competitorInfos.forEach { competitor ->
-                        logger.info(
-                            "Competitor: name={}, logoUrl={}, websiteUrl={}",
-                            competitor.name,
-                            competitor.logoUrl,
-                            competitor.websiteUrl,
-                        )
-                    }
                 }
             } catch (e: Exception) {
-                logger.error("Perplexity Search failed: {}", e.message)
+                logger.error("경쟁사 검색 실패: {}", e.message)
                 emptyList()
             }
 
         return try {
-            val analysisPrompt = buildAnalysisPrompt(userBmc, competitors)
-            logger.info("=== ChatGPT Analysis Prompt ===")
-            logger.info(analysisPrompt.take(500))
-            logger.info("=== End Prompt (truncated) ===")
-
+            val analysisPrompt = promptBuilder.buildAnalysisPrompt(userBmc, competitors)
             val gptResponse = chatModel.call(analysisPrompt)
-            logger.info("=== ChatGPT Raw Response ===")
-            logger.info("Response length: {} characters", gptResponse.length)
-            logger.info(gptResponse)
-            logger.info("=== End ChatGPT Response ===")
-
             parseGptResponse(gptResponse, userBmc, competitors)
         } catch (e: Exception) {
-            logger.error("ChatGPT analysis failed: {}", e.message)
-            logger.error("Exception details: ", e)
+            logger.error("경쟁사 분석 실패: {}", e.message)
             createFallbackResponse(userBmc, competitors)
         }
     }
@@ -139,8 +113,6 @@ class CompetitorAnalysisService(
     private fun generateSearchKeywords(userBmc: BusinessModelCanvas): List<String> {
         val allText = listOfNotNull(userBmc.title, userBmc.valueProposition, userBmc.customerSegments).joinToString(" ")
 
-        logger.info("BMC text for keyword extraction: {}", allText.take(200))
-
         val keywords =
             allText
                 .replace("\n", " ")
@@ -156,183 +128,7 @@ class CompetitorAnalysisService(
                 .distinct()
                 .take(MAX_KEYWORDS)
 
-        logger.info("Generated search keywords from BMC: {}", keywords)
-
-        return if (keywords.isEmpty()) {
-            logger.warn("No keywords generated from BMC, using title: {}", userBmc.title)
-            listOf(userBmc.title)
-        } else {
-            keywords
-        }
-    }
-
-    private fun buildAnalysisPrompt(
-        userBmc: BusinessModelCanvas,
-        competitors: List<CompetitorInfo>,
-    ): String {
-        val competitorSection =
-            if (competitors.isEmpty()) {
-                """
-                ## 경쟁사 정보:
-                검색된 경쟁사가 없습니다. 사용자의 BMC와 해당 산업/시장의 일반적인 경쟁 환경을 고려하여 분석해주세요.
-                """.trimIndent()
-            } else {
-                """
-                ## 발견된 실제 경쟁사:
-                ${competitors.joinToString("\n") { "- ${it.name}: ${it.description}\n  웹사이트: ${it.websiteUrl}" }}
-                """.trimIndent()
-            }
-
-        return """
-            당신은 비즈니스 전략 컨설턴트입니다. 아래 사용자의 BMC를 바탕으로 상세한 경쟁 분석을 수행해주세요.
-
-            ## 사용자 BMC 정보:
-            제목: ${userBmc.title}
-            가치 제안: ${userBmc.valueProposition ?: "미정의"}
-            고객 세그먼트: ${userBmc.customerSegments ?: "미정의"}
-            채널: ${userBmc.channels ?: "미정의"}
-            고객 관계: ${userBmc.customerRelationships ?: "미정의"}
-            수익원: ${userBmc.revenueStreams ?: "미정의"}
-            핵심 자원: ${userBmc.keyResources ?: "미정의"}
-            핵심 활동: ${userBmc.keyActivities ?: "미정의"}
-            핵심 파트너: ${userBmc.keyPartners ?: "미정의"}
-            비용 구조: ${userBmc.costStructure ?: "미정의"}
-
-            $competitorSection
-
-            ## 분석 요청사항:
-            다음 5개 섹션으로 **구체적이고 상세하게** 분석을 제공해주세요. 각 항목은 단순 단어가 아닌 완전한 문장으로 작성해야 합니다.
-
-            **중요**: 각 문장에서 핵심적이고 중요한 키워드나 구절은 <<내용>> 형식으로 감싸서 강조 표시해주세요.
-            예시: "고정밀 센서를 활용하여 <<오탐률을 최소화>>하는 기술은 경쟁력의 핵심입니다"
-
-            ### 0. BMC 핵심 강점
-
-            핵심 강점:
-            - [첫 번째 BMC 핵심 강점을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 BMC 핵심 강점을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 BMC 핵심 강점을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            ### 1. 사용자 규모 분석
-
-            [예상_사용자_기반_규모] 현재 BMC 기반으로 초기 단계인지, 성장 단계인지 등을 2-3문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조
-
-            [시장_내_위치] 경쟁사 대비 사용자의 시장 포지셔닝을 2-3문장으로 설명. 신규 진입자인지, 차별화 전략이 있는지 등. 중요한 키워드는 <<키워드>> 형식으로 강조
-
-            [성장_잠재력] BMC의 가치 제안과 시장 기회를 고려하여 성장 가능성을 2-3문장으로 평가. 중요한 키워드는 <<키워드>> 형식으로 강조
-
-            [경쟁사별_분석]
-            ${
-            competitors.joinToString("\n") { comp ->
-                """
-                [경쟁사:${comp.name}]
-                [예상_규모] 이 회사의 규모를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조
-                [시장_점유율] 예상 수치와 근거를 1문장으로 설명. 중요한 수치는 <<수치>> 형식으로 강조
-                [유사점]
-                첫 번째 유사점 문장입니다, 두 번째 유사점 문장입니다, 세 번째 유사점 문장입니다
-                **형식 규칙**:
-                - 반드시 쉼표(,)로만 구분
-                - 각 문장은 "~합니다" 또는 "~하고 있습니다"로 끝남
-                - "계시다" 같은 과도한 존칭 금지
-                - 중요 키워드는 <<키워드>> 형식으로 강조
-                - 예시: "<<빠른 배달 서비스>>를 제공합니다, <<저렴한 가격대>>를 유지하고 있습니다, <<지역 밀착형 서비스>>를 운영합니다"
-                [차이점]
-                첫 번째 차이점 문장입니다, 두 번째 차이점 문장입니다, 세 번째 차이점 문장입니다
-                **형식 규칙**:
-                - 반드시 쉼표(,)로만 구분
-                - 각 문장은 "~합니다" 또는 "~하고 있습니다"로 끝남
-                - "계시다" 같은 과도한 존칭 금지
-                - 중요 키워드는 <<키워드>> 형식으로 강조
-                - 예시: "한식 전문이 아닌 <<다양한 음식점>>을 포함합니다, 도시락 중심이 아닌 <<전반적인 배달 지원>>을 제공합니다, <<대기업 기반의 대규모 인프라>>를 보유하고 있습니다"
-                [경쟁사_끝:${comp.name}]
-                """.trimIndent()
-            }
-        }
-            [경쟁사별_분석_끝]
-
-            ### 2. 강점 분석
-
-            ${if (competitors.isNotEmpty()) "주요 경쟁사: ${competitors.joinToString(", ") { it.name }}" else ""}
-
-            경쟁 우위 요소:
-            - [첫 번째 경쟁 우위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 경쟁 우위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 경쟁 우위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [네 번째 경쟁 우위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            고유한 가치 제안:
-            - [첫 번째 고유 가치를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 고유 가치를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 고유 가치를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            시장 기회 요소:
-            - [첫 번째 시장 기회를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 시장 기회를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 시장 기회를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [네 번째 시장 기회를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            전략적 권고사항:
-            - [첫 번째 권고사항을 구체적인 실행 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 권고사항을 구체적인 실행 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 권고사항을 구체적인 실행 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [네 번째 권고사항을 구체적인 실행 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            ### 3. 약점 분석
-
-            경쟁 열위 요소:
-            - [첫 번째 경쟁 열위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 경쟁 열위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 경쟁 열위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [네 번째 경쟁 열위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            시장 도전 과제:
-            - [첫 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [네 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            자원 제약 사항:
-            - [첫 번째 자원 제약을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 자원 제약을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 자원 제약을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            개선 필요 영역:
-            - [첫 번째 개선 영역을 구체적인 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 개선 영역을 구체적인 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 개선 영역을 구체적인 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [네 번째 개선 영역을 구체적인 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            ### 4. 글로벌 진출 전략
-
-            우선 진출 시장 (3개):
-            - [첫 번째 우선 시장을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조. 예: "<<동남아시아>> (베트남, 태국, 인도네시아): <<모바일 우선 문화>>와 빠른 디지털 전환으로 진입 기회 높음"]
-            - [두 번째 우선 시장을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 우선 시장을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            시장별 진입 전략 (3개):
-            - [첫 번째 시장의 진입 전략을 2-3문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조. 예: "동남아: <<현지 모바일 결제 시스템 통합>> 우선, <<저가 요금제>>로 시장 진입"]
-            - [두 번째 시장의 진입 전략을 2-3문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 시장의 진입 전략을 2-3문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            현지화 요구사항 (3-4개):
-            - [첫 번째 현지화 요구사항을 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 현지화 요구사항을 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 현지화 요구사항을 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [네 번째 현지화 요구사항을 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            글로벌 파트너십 기회 (3-4개):
-            - [첫 번째 파트너십 기회를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 파트너십 기회를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 파트너십 기회를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [네 번째 파트너십 기회를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            예상 도전 과제 (3개):
-            - [첫 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [두 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-            - [세 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
-
-            **중요**: 각 항목은 반드시 완전한 문장으로 작성하고, 단순 키워드가 아닌 구체적인 설명과 근거를 포함해주세요. 중요한 부분은 반드시 <<내용>> 형식으로 강조 표시해주세요.
-            """.trimIndent()
+        return keywords.ifEmpty { listOf(userBmc.title) }
     }
 
     private fun parseGptResponse(
@@ -419,7 +215,6 @@ class CompetitorAnalysisService(
 
         val startIndex = scaleSection.indexOf(startMarker, ignoreCase = true)
         if (startIndex == -1) {
-            // Fallback: 기존 형식
             val fallbackIndex = scaleSection.indexOf("경쟁사별 분석", ignoreCase = true)
             return if (fallbackIndex != -1) scaleSection.substring(fallbackIndex) else scaleSection
         }
@@ -438,7 +233,6 @@ class CompetitorAnalysisService(
     ): CompetitorDetailedInfo {
         val cleanCompetitorName = cleanSpecialCharacters(competitorName)
 
-        // 새로운 브래킷 마커 형식: [경쟁사:name]...[경쟁사_끝:name]
         val startMarker = "[경쟁사:$cleanCompetitorName]"
         val endMarker = "[경쟁사_끝:$cleanCompetitorName]"
 
@@ -461,8 +255,6 @@ class CompetitorAnalysisService(
             }
         }
 
-        // Fallback: 기존 형식 시도
-        // Regex에서 특수문자를 escape 처리
         val escapedName = Regex.escape(cleanCompetitorName)
         val competitorBlockPattern =
             Regex(
@@ -681,7 +473,6 @@ class CompetitorAnalysisService(
         key: String,
         fallback: String,
     ): String {
-        // 새로운 브래킷 마커 형식: [key] content
         val pattern = Regex("\\[$key\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
         val match = pattern.find(section)
 
@@ -692,7 +483,6 @@ class CompetitorAnalysisService(
             return if (content.isNotEmpty() && content.length > 10) content else fallback
         }
 
-        // Fallback: 기존 형식도 시도 (하위 호환성)
         val lines = section.lines()
         val startIndex =
             lines.indexOfFirst { line ->
@@ -763,7 +553,6 @@ class CompetitorAnalysisService(
             }
 
             if (line.startsWith("-") || line.startsWith("•")) {
-                // "---" 같은 구분선은 무시
                 val trimmedLine = line.removePrefix("-").removePrefix("•").trim()
                 if (trimmedLine.isEmpty() || trimmedLine.all { it == '-' }) {
                     continue

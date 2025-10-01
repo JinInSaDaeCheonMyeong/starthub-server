@@ -1,7 +1,7 @@
-package com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.docs
+package com.jininsadaecheonmyeong.starthubserver.domain.analysis.docs
 
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.request.CompetitorAnalysisRequest
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.CompetitorAnalysisResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.request.CompetitorAnalysisRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.CompetitorAnalysisResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -22,9 +22,6 @@ interface CompetitorAnalysisDocs {
         summary = "경쟁사 분석 수행",
         description =
             "BMC를 기반으로 Perplexity AI를 활용한 실시간 웹 검색을 통해 경쟁사를 분석합니다. " +
-                "주요 기능: Perplexity AI 검색 엔진을 통해 실제 존재하는 경쟁사 정보를 정확하게 수집, " +
-                "BMC의 가치 제안과 고객 세그먼트를 기반으로 자동 키워드 생성, " +
-                "경쟁사의 규모/강점/약점/시장 기회 등을 종합적으로 분석. " +
                 "검색 키워드를 직접 입력하지 않으면 BMC 내용을 기반으로 자동 생성됩니다.",
     )
     @ApiResponses(
@@ -118,7 +115,7 @@ interface CompetitorAnalysisDocs {
                                 name = "Perplexity API 오류",
                                 value = """{
   "statusCode": 500,
-  "message": "Perplexity API rate limit exceeded. Please try again later.",
+  "message": "Perplexity API 토큰이 초과되었습니다. 잠시 후 다시 시도해주세요.",
   "data": null
 }""",
                             ),

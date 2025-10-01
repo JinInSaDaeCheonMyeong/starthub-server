@@ -54,7 +54,6 @@ class UserService(
         val user: User = userRepository.findByEmail(request.email) ?: throw UserNotFoundException("찾을 수 없는 유저")
         if (!passwordEncoder.matches(request.password, user.password)) throw InvalidPasswordException("잘못된 비밀번호")
 
-        // 회원 탈퇴 철회 로직: 탈퇴 후 2주 이내에 로그인하면 탈퇴를 철회
         var isAccountRestored = false
         var originalDeletedAt: LocalDateTime? = null
         if (user.deleted && user.deletedAt != null) {
