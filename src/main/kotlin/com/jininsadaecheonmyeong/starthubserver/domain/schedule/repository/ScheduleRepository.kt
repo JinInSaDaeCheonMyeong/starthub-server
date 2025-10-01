@@ -9,7 +9,9 @@ import java.time.LocalDate
 interface ScheduleRepository : JpaRepository<Schedule, Long> {
     @Query(
         "SELECT s FROM Schedule s WHERE s.user.id = :userId AND " +
-            "((s.startDate BETWEEN :startDate AND :endDate) OR (s.endDate BETWEEN :startDate AND :endDate))",
+            "((s.startDate BETWEEN :startDate AND :endDate) OR " +
+            "(s.endDate BETWEEN :startDate AND :endDate) OR " +
+            "(s.startDate <= :startDate AND s.endDate >= :endDate))",
     )
     fun findSchedulesByMonth(
         @Param("userId") userId: Long,
