@@ -21,10 +21,10 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFou
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserStartupFieldRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
-import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenRedisService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.service.TokenService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -35,13 +35,13 @@ import java.time.LocalDateTime
 class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val tokenProvider: TokenProvider,
     private val tokenValidator: TokenValidator,
     private val tokenParser: TokenParser,
     private val tokenRedisService: TokenRedisService,
     private val emailRepository: EmailRepository,
     private val userStartupFieldRepository: UserStartupFieldRepository,
     private val companyRepository: CompanyRepository,
+    private val tokenService: TokenService,
 ) {
     fun signUp(request: UserRequest) {
         if (userRepository.existsByEmail(request.email)) throw EmailAlreadyExistsException("이미 등록된 이메일")
@@ -77,8 +77,8 @@ class UserService(
             userRepository.save(user)
         }
         return TokenResponse(
-            access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user),
+            access = tokenService.generateAccess(user),
+            refresh = tokenService.generateAndStoreRefreshToken(user),
             isFirstLogin = isFirstLogin,
             isAccountRestored = isAccountRestored,
             deletedAt = originalDeletedAt,
@@ -95,8 +95,8 @@ class UserService(
         if (tokenRedisService.findByEmail(email)?.equals(request.refresh) != true) throw InvalidTokenException("유효하지 않은 리프레시 토큰")
 
         return TokenResponse(
-            access = tokenProvider.generateAccess(user),
-            refresh = tokenProvider.generateRefresh(user),
+            access = tokenService.generateAccess(user),
+            refresh = tokenService.generateAndStoreRefreshToken(user),
             isFirstLogin = false,
             isAccountRestored = false,
             deletedAt = null,
