@@ -1,0 +1,871 @@
+package com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.service
+
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.request.CompetitorAnalysisRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.CompetitorAnalysisResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.CompetitorInfo
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.CompetitorScale
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.GlobalExpansionStrategy
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.StrengthsAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.UserBmcSummary
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.UserScaleAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor.data.response.WeaknessesAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
+import com.jininsadaecheonmyeong.starthubserver.global.infra.search.PerplexitySearchService
+import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchRequest
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import org.slf4j.LoggerFactory
+import org.springframework.ai.chat.model.ChatModel
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+
+@Service
+@Transactional(readOnly = true)
+class CompetitorAnalysisService(
+    private val businessModelCanvasRepository: BusinessModelCanvasRepository,
+    private val perplexitySearchService: PerplexitySearchService,
+    private val chatModel: ChatModel,
+) {
+    private val logger = LoggerFactory.getLogger(CompetitorAnalysisService::class.java)
+
+    fun analyzeCompetitors(request: CompetitorAnalysisRequest): CompetitorAnalysisResponse {
+        logger.info("=== START analyzeCompetitors === BMC ID: {}", request.bmcId)
+
+        val user = UserAuthenticationHolder.current()
+        val userBmc =
+            businessModelCanvasRepository.findByIdAndDeletedFalse(request.bmcId)
+                .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
+
+        logger.info("BMC found: title={}", userBmc.title)
+        validateUserAccess(userBmc, user)
+
+        logger.info("Generating search keywords...")
+        val searchKeywords = request.searchKeywords ?: generateSearchKeywords(userBmc)
+        logger.info("Final search keywords (size={}): {}", searchKeywords.size, searchKeywords)
+        logger.info("Search query will be: '{}'", searchKeywords.joinToString(" ") + " 회사 서비스")
+
+        val competitors =
+            try {
+                val searchRequest =
+                    SearchRequest(
+                        query = searchKeywords.joinToString(" ") + " 회사 서비스",
+                        maxResults = 3,
+                        bmcContext =
+                            com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.BmcContext(
+                                title = userBmc.title,
+                                valueProposition = userBmc.valueProposition,
+                                customerSegments = userBmc.customerSegments,
+                                channels = userBmc.channels,
+                                revenueStreams = userBmc.revenueStreams,
+                            ),
+                    )
+
+                val searchResults = perplexitySearchService.searchCompetitors(searchRequest)
+                logger.info("Perplexity search returned {} competitors", searchResults.size)
+
+                val competitorInfos =
+                    searchResults.map { result ->
+                        CompetitorInfo(
+                            name = result.title,
+                            description = result.snippet,
+                            logoUrl = result.thumbnailUrl,
+                            websiteUrl = result.url,
+                        )
+                    }
+
+                competitorInfos.forEach { competitor ->
+                    logger.info(
+                        "Competitor: name={}, logoUrl={}, websiteUrl={}",
+                        competitor.name,
+                        competitor.logoUrl,
+                        competitor.websiteUrl,
+                    )
+                }
+
+                competitorInfos
+            } catch (e: Exception) {
+                logger.error("Perplexity Search failed: {}", e.message)
+                emptyList()
+            }
+
+        return try {
+            val analysisPrompt = buildAnalysisPrompt(userBmc, competitors)
+            logger.info("=== ChatGPT Analysis Prompt ===")
+            logger.info(analysisPrompt.take(500))
+            logger.info("=== End Prompt (truncated) ===")
+
+            val gptResponse = chatModel.call(analysisPrompt)
+            logger.info("=== ChatGPT Raw Response ===")
+            logger.info("Response length: {} characters", gptResponse.length)
+            logger.info(gptResponse)
+            logger.info("=== End ChatGPT Response ===")
+
+            parseGptResponse(gptResponse, userBmc, competitors)
+        } catch (e: Exception) {
+            logger.error("ChatGPT analysis failed: {}", e.message)
+            logger.error("Exception details: ", e)
+            createFallbackResponse(userBmc, competitors)
+        }
+    }
+
+    private fun validateUserAccess(
+        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        user: User,
+    ) {
+        if (!userBmc.isOwner(user)) {
+            throw BmcNotFoundException("접근 권한이 없습니다.")
+        }
+    }
+
+    private fun generateSearchKeywords(
+        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+    ): List<String> {
+        val allText = listOfNotNull(userBmc.title, userBmc.valueProposition, userBmc.customerSegments).joinToString(" ")
+
+        logger.info("BMC text for keyword extraction: {}", allText.take(200))
+
+        // 줄바꿈, 쉼표, 마침표, 세미콜론, 하이픈으로 분리하고 의미있는 키워드만 추출
+        val keywords =
+            allText
+                .replace("\n", " ")
+                .replace("-", " ")
+                .split(Regex("[,\\.;]"))
+                .map { it.trim() }
+                .filter { keyword ->
+                    keyword.isNotBlank() &&
+                        keyword.length >= 4 &&
+                        !keyword.startsWith("(") &&
+                        !keyword.startsWith("[")
+                }
+                .distinct()
+                .take(5)
+
+        logger.info("Generated search keywords from BMC: {}", keywords)
+
+        return if (keywords.isEmpty()) {
+            logger.warn("No keywords generated from BMC, using title: {}", userBmc.title)
+            listOf(userBmc.title)
+        } else {
+            keywords
+        }
+    }
+
+    private fun buildAnalysisPrompt(
+        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        competitors: List<CompetitorInfo>,
+    ): String {
+        val competitorSection =
+            if (competitors.isEmpty()) {
+                """
+                ## 경쟁사 정보:
+                검색된 경쟁사가 없습니다. 사용자의 BMC와 해당 산업/시장의 일반적인 경쟁 환경을 고려하여 분석해주세요.
+                """.trimIndent()
+            } else {
+                """
+                ## 발견된 실제 경쟁사:
+                ${competitors.joinToString("\n") { "- ${it.name}: ${it.description}\n  웹사이트: ${it.websiteUrl}" }}
+                """.trimIndent()
+            }
+
+        return """
+            당신은 비즈니스 전략 컨설턴트입니다. 아래 사용자의 BMC를 바탕으로 상세한 경쟁 분석을 수행해주세요.
+
+            ## 사용자 BMC 정보:
+            제목: ${userBmc.title}
+            가치 제안: ${userBmc.valueProposition ?: "미정의"}
+            고객 세그먼트: ${userBmc.customerSegments ?: "미정의"}
+            채널: ${userBmc.channels ?: "미정의"}
+            고객 관계: ${userBmc.customerRelationships ?: "미정의"}
+            수익원: ${userBmc.revenueStreams ?: "미정의"}
+            핵심 자원: ${userBmc.keyResources ?: "미정의"}
+            핵심 활동: ${userBmc.keyActivities ?: "미정의"}
+            핵심 파트너: ${userBmc.keyPartners ?: "미정의"}
+            비용 구조: ${userBmc.costStructure ?: "미정의"}
+
+            $competitorSection
+
+            ## 분석 요청사항:
+            다음 5개 섹션으로 **구체적이고 상세하게** 분석을 제공해주세요. 각 항목은 단순 단어가 아닌 완전한 문장으로 작성해야 합니다.
+
+            **중요**: 각 문장에서 핵심적이고 중요한 키워드나 구절은 <<내용>> 형식으로 감싸서 강조 표시해주세요.
+            예시: "고정밀 센서를 활용하여 <<오탐률을 최소화>>하는 기술은 경쟁력의 핵심입니다"
+
+            ### 0. BMC 핵심 강점
+
+            핵심 강점:
+            - [첫 번째 BMC 핵심 강점을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 BMC 핵심 강점을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 BMC 핵심 강점을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            ### 1. 사용자 규모 분석
+
+            [예상_사용자_기반_규모] 현재 BMC 기반으로 초기 단계인지, 성장 단계인지 등을 2-3문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조
+
+            [시장_내_위치] 경쟁사 대비 사용자의 시장 포지셔닝을 2-3문장으로 설명. 신규 진입자인지, 차별화 전략이 있는지 등. 중요한 키워드는 <<키워드>> 형식으로 강조
+
+            [성장_잠재력] BMC의 가치 제안과 시장 기회를 고려하여 성장 가능성을 2-3문장으로 평가. 중요한 키워드는 <<키워드>> 형식으로 강조
+
+            [경쟁사별_분석]
+            ${
+            competitors.joinToString("\n") { comp ->
+                """
+                [경쟁사:${comp.name}]
+                [예상_규모] 이 회사의 규모를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조
+                [시장_점유율] 예상 수치와 근거를 1문장으로 설명. 중요한 수치는 <<수치>> 형식으로 강조
+                [유사점] 우리 서비스와 비슷한 점 2-3개를 **높임말을 사용한 완전한 문장**으로 쉼표로 구분하여 작성. 각 문장은 반드시 완결되어야 하며, 중간에 끊기지 않아야 합니다. 중요한 키워드는 <<키워드>> 형식으로 강조. (예: "<<빠른 배달 서비스>>를 제공합니다, <<저렴한 가격대>>를 유지하고 있습니다, <<지역 밀착형 서비스>>를 운영합니다")
+                [차이점] 우리 서비스와 다른 점 2-3개를 **높임말을 사용한 완전한 문장**으로 쉼표로 구분하여 작성. 각 문장은 반드시 완결되어야 하며, 중간에 끊기지 않아야 합니다. 중요한 키워드는 <<키워드>> 형식으로 강조. (예: "한식 전문이 아닌 <<다양한 음식점>>을 포함합니다, 도시락 중심이 아닌 <<전반적인 배달 지원>>을 제공합니다, <<대기업 기반의 대규모 인프라>>를 보유하고 있습니다")
+                [경쟁사_끝:${comp.name}]
+                """.trimIndent()
+            }
+        }
+            [경쟁사별_분석_끝]
+
+            ### 2. 강점 분석
+
+            ${if (competitors.isNotEmpty()) "주요 경쟁사: ${competitors.joinToString(", ") { it.name }}" else ""}
+
+            경쟁 우위 요소:
+            - [첫 번째 경쟁 우위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 경쟁 우위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 경쟁 우위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [네 번째 경쟁 우위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            고유한 가치 제안:
+            - [첫 번째 고유 가치를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 고유 가치를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 고유 가치를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            시장 기회 요소:
+            - [첫 번째 시장 기회를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 시장 기회를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 시장 기회를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [네 번째 시장 기회를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            전략적 권고사항:
+            - [첫 번째 권고사항을 구체적인 실행 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 권고사항을 구체적인 실행 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 권고사항을 구체적인 실행 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [네 번째 권고사항을 구체적인 실행 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            ### 3. 약점 분석
+
+            경쟁 열위 요소:
+            - [첫 번째 경쟁 열위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 경쟁 열위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 경쟁 열위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [네 번째 경쟁 열위를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            시장 도전 과제:
+            - [첫 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [네 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            자원 제약 사항:
+            - [첫 번째 자원 제약을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 자원 제약을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 자원 제약을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            개선 필요 영역:
+            - [첫 번째 개선 영역을 구체적인 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 개선 영역을 구체적인 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 개선 영역을 구체적인 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [네 번째 개선 영역을 구체적인 방안과 함께 2-3문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            ### 4. 글로벌 진출 전략
+
+            우선 진출 시장 (3개):
+            - [첫 번째 우선 시장을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조. 예: "<<동남아시아>> (베트남, 태국, 인도네시아): <<모바일 우선 문화>>와 빠른 디지털 전환으로 진입 기회 높음"]
+            - [두 번째 우선 시장을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 우선 시장을 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            시장별 진입 전략 (3개):
+            - [첫 번째 시장의 진입 전략을 2-3문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조. 예: "동남아: <<현지 모바일 결제 시스템 통합>> 우선, <<저가 요금제>>로 시장 진입"]
+            - [두 번째 시장의 진입 전략을 2-3문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 시장의 진입 전략을 2-3문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            현지화 요구사항 (3-4개):
+            - [첫 번째 현지화 요구사항을 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 현지화 요구사항을 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 현지화 요구사항을 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [네 번째 현지화 요구사항을 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            글로벌 파트너십 기회 (3-4개):
+            - [첫 번째 파트너십 기회를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 파트너십 기회를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 파트너십 기회를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [네 번째 파트너십 기회를 1-2문장으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            예상 도전 과제 (3개):
+            - [첫 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [두 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+            - [세 번째 도전 과제를 1-2문장으로 구체적으로 설명. 중요한 키워드는 <<키워드>> 형식으로 강조]
+
+            **중요**: 각 항목은 반드시 완전한 문장으로 작성하고, 단순 키워드가 아닌 구체적인 설명과 근거를 포함해주세요. 중요한 부분은 반드시 <<내용>> 형식으로 강조 표시해주세요.
+            """.trimIndent()
+    }
+
+    private fun parseGptResponse(
+        gptResponse: String,
+        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        competitors: List<CompetitorInfo>,
+    ): CompetitorAnalysisResponse {
+        return CompetitorAnalysisResponse(
+            userBmc = createUserBmcSummary(userBmc, gptResponse),
+            userScale = parseUserScaleAnalysis(gptResponse, competitors),
+            strengths = parseStrengthsAnalysis(gptResponse),
+            weaknesses = parseWeaknessesAnalysis(gptResponse),
+            globalExpansionStrategy = parseGlobalExpansionStrategy(gptResponse),
+        )
+    }
+
+    private fun createUserBmcSummary(
+        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        gptResponse: String,
+    ): UserBmcSummary {
+        val bmcSection = extractSection(gptResponse, "0. BMC 핵심 강점", "1. 사용자 규모 분석")
+        val keyStrengths = extractListValues(bmcSection, "핵심 강점", 3)
+
+        return UserBmcSummary(
+            title = userBmc.title,
+            valueProposition = userBmc.valueProposition,
+            targetCustomer = userBmc.customerSegments,
+            keyStrengths =
+                if (keyStrengths.isNotEmpty()) {
+                    keyStrengths
+                } else {
+                    extractKeyStrengthsFallback(userBmc)
+                },
+        )
+    }
+
+    private fun extractKeyStrengthsFallback(
+        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+    ): List<String> {
+        return buildList {
+            if (!userBmc.valueProposition.isNullOrBlank()) add("명확한 가치 제안")
+            if (!userBmc.keyResources.isNullOrBlank()) add("핵심 자원 보유")
+            if (!userBmc.revenueStreams.isNullOrBlank()) add("수익 모델 확립")
+        }.ifEmpty { listOf("비즈니스 모델 수립 완료") }
+    }
+
+    private fun parseUserScaleAnalysis(
+        gptResponse: String,
+        competitors: List<CompetitorInfo>,
+    ): UserScaleAnalysis {
+        val scaleSection = extractSection(gptResponse, "1. 사용자 규모 분석", "2. 강점 분석")
+
+        return UserScaleAnalysis(
+            estimatedUserBase = extractValue(scaleSection, "예상_사용자_기반_규모", "소규모 스타트업 단계"),
+            marketPosition = extractValue(scaleSection, "시장_내_위치", "신규 진입자"),
+            growthPotential = extractValue(scaleSection, "성장_잠재력", "높은 성장 가능성"),
+            competitorComparison = createCompetitorScales(scaleSection, competitors),
+        )
+    }
+
+    private fun createCompetitorScales(
+        scaleSection: String,
+        competitors: List<CompetitorInfo>,
+    ): List<CompetitorScale> {
+        if (competitors.isEmpty()) return emptyList()
+
+        val competitorAnalysisSection = extractCompetitorAnalysisSection(scaleSection)
+
+        return competitors.take(3).map { competitor ->
+            val (scale, share, similarities, differences) = extractCompetitorDetailedInfo(competitorAnalysisSection, competitor.name)
+            CompetitorScale(
+                name = competitor.name,
+                logoUrl = competitor.logoUrl,
+                websiteUrl = competitor.websiteUrl,
+                estimatedScale = scale,
+                marketShare = share,
+                similarities = similarities,
+                differences = differences,
+            )
+        }
+    }
+
+    private fun extractCompetitorAnalysisSection(scaleSection: String): String {
+        val startMarker = "[경쟁사별_분석]"
+        val endMarker = "[경쟁사별_분석_끝]"
+
+        val startIndex = scaleSection.indexOf(startMarker, ignoreCase = true)
+        if (startIndex == -1) {
+            // Fallback: 기존 형식
+            val fallbackIndex = scaleSection.indexOf("경쟁사별 분석", ignoreCase = true)
+            return if (fallbackIndex != -1) scaleSection.substring(fallbackIndex) else scaleSection
+        }
+
+        val endIndex = scaleSection.indexOf(endMarker, startIndex, ignoreCase = true)
+        return if (endIndex != -1) {
+            scaleSection.substring(startIndex, endIndex + endMarker.length)
+        } else {
+            scaleSection.substring(startIndex)
+        }
+    }
+
+    private fun extractCompetitorDetailedInfo(
+        section: String,
+        competitorName: String,
+    ): CompetitorDetailedInfo {
+        // 회사명에서 특수문자 제거 (regex에서 문제가 되는 문자들)
+        val cleanCompetitorName = competitorName
+            .replace("**", "")
+            .replace("*", "")
+            .replace("##", "")
+            .trim()
+
+        // 새로운 브래킷 마커 형식: [경쟁사:name]...[경쟁사_끝:name]
+        val startMarker = "[경쟁사:$cleanCompetitorName]"
+        val endMarker = "[경쟁사_끝:$cleanCompetitorName]"
+
+        val startIndex = section.indexOf(startMarker, ignoreCase = true)
+        if (startIndex != -1) {
+            val endIndex = section.indexOf(endMarker, startIndex, ignoreCase = true)
+            val competitorBlock = if (endIndex != -1) {
+                section.substring(startIndex + startMarker.length, endIndex)
+            } else {
+                section.substring(startIndex + startMarker.length)
+            }
+
+            if (competitorBlock.isNotBlank()) {
+                // 브래킷 마커를 사용하여 각 필드 추출
+                val scalePattern = Regex("\\[예상_규모\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
+                val scale = scalePattern.find(competitorBlock)?.groupValues?.get(1)
+                    ?.replace("\n", " ")
+                    ?.replace(Regex("\\s+"), " ")
+                    ?.trim()
+                    ?.take(200)
+                    ?: "중간 규모"
+
+                val sharePattern = Regex("\\[시장_점유율\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
+                val share = sharePattern.find(competitorBlock)?.groupValues?.get(1)
+                    ?.replace("\n", " ")
+                    ?.replace(Regex("\\s+"), " ")
+                    ?.trim()
+                    ?.take(200)
+                    ?: "5-10%"
+
+                val similaritiesPattern = Regex("\\[유사점\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
+                val similaritiesText = similaritiesPattern.find(competitorBlock)?.groupValues?.get(1)
+                    ?.replace("\n", " ")
+                    ?.trim() ?: ""
+                val similarities = if (similaritiesText.isNotBlank()) {
+                    splitIntoCompleteSentences(similaritiesText).take(3)
+                } else {
+                    emptyList()
+                }
+
+                val differencesPattern = Regex("\\[차이점\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
+                val differencesText = differencesPattern.find(competitorBlock)?.groupValues?.get(1)
+                    ?.replace("\n", " ")
+                    ?.trim() ?: ""
+                val differences = if (differencesText.isNotBlank()) {
+                    splitIntoCompleteSentences(differencesText).take(3)
+                } else {
+                    emptyList()
+                }
+
+                return CompetitorDetailedInfo(scale, share, similarities, differences)
+            }
+        }
+
+        // Fallback: 기존 형식 시도
+        // Regex에서 특수문자를 escape 처리
+        val escapedName = Regex.escape(cleanCompetitorName)
+        val competitorBlockPattern =
+            Regex(
+                "-\\s*$escapedName[:\\s]*(.+?)(?=-\\s*[\\w가-힣]+:|$)",
+                setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
+            )
+        val competitorBlock = competitorBlockPattern.find(section)?.groupValues?.get(1)?.trim()
+
+        if (competitorBlock.isNullOrBlank()) {
+            return CompetitorDetailedInfo("중간 규모", "5-10%", emptyList(), emptyList())
+        }
+
+        val scalePattern = Regex("예상\\s*규모[:\\s]*(.+?)(?=시장\\s*점유율|유사점|차이점|$)", RegexOption.IGNORE_CASE)
+        val scale =
+            scalePattern.find(competitorBlock)?.groupValues?.get(1)
+                ?.replace("\n", " ")
+                ?.trim()
+                ?.take(200)
+                ?: "중간 규모"
+
+        val sharePattern = Regex("시장\\s*점유율[:\\s]*(.+?)(?=유사점|차이점|$)", RegexOption.IGNORE_CASE)
+        val share =
+            sharePattern.find(competitorBlock)?.groupValues?.get(1)
+                ?.replace("\n", " ")
+                ?.trim()
+                ?.take(200)
+                ?: "5-10%"
+
+        val similaritiesPattern = Regex("유사점[:\\s]*(.+?)(?=차이점|$)", RegexOption.IGNORE_CASE)
+        val similaritiesText =
+            similaritiesPattern.find(competitorBlock)?.groupValues?.get(1)
+                ?.replace("\n", " ")
+                ?.trim() ?: ""
+        val similarities =
+            if (similaritiesText.isNotBlank()) {
+                splitIntoCompleteSentences(similaritiesText).take(3)
+            } else {
+                emptyList()
+            }
+
+        val differencesPattern = Regex("차이점[:\\s]*(.+?)$", RegexOption.IGNORE_CASE)
+        val differencesText =
+            differencesPattern.find(competitorBlock)?.groupValues?.get(1)
+                ?.replace("\n", " ")
+                ?.trim() ?: ""
+        val differences =
+            if (differencesText.isNotBlank()) {
+                splitIntoCompleteSentences(differencesText).take(3)
+            } else {
+                emptyList()
+            }
+
+        return CompetitorDetailedInfo(scale, share, similarities, differences)
+    }
+
+    private data class CompetitorDetailedInfo(
+        val scale: String,
+        val share: String,
+        val similarities: List<String>,
+        val differences: List<String>,
+    )
+
+    /**
+     * 쉼표로 구분된 텍스트를 완전한 문장 단위로 분리
+     * "~습니다, ~합니다, ~됩니다" 등의 패턴을 인식하여 완전한 문장을 추출
+     */
+    private fun splitIntoCompleteSentences(text: String): List<String> {
+        // 높임말 종결 패턴: ~습니다, ~합니다, ~됩니다, ~입니다 등 뒤에 오는 쉼표를 기준으로 분리
+        val sentences = mutableListOf<String>()
+        val terminators = listOf("습니다", "합니다", "됩니다", "입니다", "있습니다", "없습니다", "갑니다", "옵니다")
+
+        var currentSentence = StringBuilder()
+        val chars = text.toCharArray()
+        var i = 0
+
+        while (i < chars.size) {
+            currentSentence.append(chars[i])
+
+            // 종결 패턴 체크
+            val accumulated = currentSentence.toString()
+            val endsWithTerminator = terminators.any { accumulated.trimEnd().endsWith(it) }
+
+            // 다음 문자가 쉼표이고, 현재까지가 종결 패턴으로 끝나면 문장 완성
+            if (endsWithTerminator && i + 1 < chars.size && chars[i + 1] == ',') {
+                val sentence = currentSentence.toString().trim()
+                if (sentence.isNotBlank() && sentence.length > 3) {
+                    sentences.add(sentence)
+                }
+                currentSentence = StringBuilder()
+                i += 2 // 쉼표와 공백 건너뛰기
+                if (i < chars.size && chars[i] == ' ') i++
+                continue
+            }
+
+            i++
+        }
+
+        // 마지막 문장 처리
+        val lastSentence = currentSentence.toString().trim().removeSuffix(",").removeSuffix(".").trim()
+        if (lastSentence.isNotBlank() && lastSentence.length > 3) {
+            sentences.add(lastSentence)
+        }
+
+        return sentences
+    }
+
+    private fun parseStrengthsAnalysis(gptResponse: String): StrengthsAnalysis {
+        val strengthSection = extractSection(gptResponse, "2. 강점 분석", "3. 약점 분석")
+
+        return StrengthsAnalysis(
+            competitiveAdvantages = extractListValues(strengthSection, "경쟁 우위 요소", 4),
+            uniqueValuePropositions = extractListValues(strengthSection, "고유한 가치 제안", 3),
+            marketOpportunities = extractListValues(strengthSection, "시장 기회 요소", 4),
+            strategicRecommendations = extractListValues(strengthSection, "전략적 권고사항", 4),
+        )
+    }
+
+    private fun parseWeaknessesAnalysis(gptResponse: String): WeaknessesAnalysis {
+        val weaknessSection = extractSection(gptResponse, "3. 약점 분석", "4. 글로벌 진출 전략")
+
+        return WeaknessesAnalysis(
+            competitiveDisadvantages = extractListValues(weaknessSection, "경쟁 열위 요소", 4),
+            marketChallenges = extractListValues(weaknessSection, "시장 도전 과제", 4),
+            resourceLimitations = extractListValues(weaknessSection, "자원 제약 사항", 3),
+            improvementAreas = extractListValues(weaknessSection, "개선 필요 영역", 4),
+        )
+    }
+
+    private fun parseGlobalExpansionStrategy(gptResponse: String): GlobalExpansionStrategy {
+        val globalSection = extractSection(gptResponse, "4. 글로벌 진출 전략", "")
+
+        return GlobalExpansionStrategy(
+            priorityMarkets = extractListValues(globalSection, "우선 진출 시장", 3),
+            entryStrategies = extractListValues(globalSection, "시장별 진입 전략", 3),
+            localizationRequirements = extractListValues(globalSection, "현지화 요구사항", 4),
+            partnershipOpportunities = extractListValues(globalSection, "글로벌 파트너십 기회", 4),
+            expectedChallenges = extractListValues(globalSection, "예상 도전 과제", 3),
+        )
+    }
+
+    private fun extractSection(
+        content: String,
+        startMarker: String,
+        endMarker: String,
+    ): String {
+        val possibleStartMarkers =
+            listOf(
+                startMarker,
+                "### $startMarker",
+                "##$startMarker",
+                "# $startMarker",
+            )
+
+        var startIndex = -1
+        for (marker in possibleStartMarkers) {
+            startIndex = content.indexOf(marker, ignoreCase = true)
+            if (startIndex != -1) break
+        }
+
+        if (startIndex == -1) {
+            logger.warn("Section start marker '{}' not found", startMarker)
+            return ""
+        }
+
+        if (endMarker.isEmpty()) {
+            return content.substring(startIndex)
+        }
+
+        val possibleEndMarkers =
+            listOf(
+                endMarker,
+                "### $endMarker",
+                "##$endMarker",
+                "# $endMarker",
+            )
+
+        var endIndex = -1
+        for (marker in possibleEndMarkers) {
+            endIndex = content.indexOf(marker, startIndex + startMarker.length, ignoreCase = true)
+            if (endIndex != -1) break
+        }
+
+        return if (endIndex == -1) {
+            content.substring(startIndex)
+        } else {
+            content.substring(startIndex, endIndex)
+        }
+    }
+
+    private fun extractValue(
+        section: String,
+        key: String,
+        fallback: String,
+    ): String {
+        // 새로운 브래킷 마커 형식: [key] content
+        val pattern = Regex("\\[$key\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
+        val match = pattern.find(section)
+
+        if (match != null) {
+            val content = match.groupValues[1].trim()
+                .replace("\n", " ")
+                .replace(Regex("\\s+"), " ")
+            return if (content.isNotEmpty() && content.length > 10) content else fallback
+        }
+
+        // Fallback: 기존 형식도 시도 (하위 호환성)
+        val lines = section.lines()
+        val startIndex =
+            lines.indexOfFirst { line ->
+                val cleanLine = line.replace("**", "").trim()
+                cleanLine.contains(key, ignoreCase = true)
+            }
+        if (startIndex == -1) return fallback
+
+        val startLine = lines[startIndex]
+        val afterColon = startLine.substringAfter(":", "").replace("**", "").trim()
+
+        val textBuilder = StringBuilder()
+        if (afterColon.isNotEmpty() && afterColon != "[" && !afterColon.startsWith("[")) {
+            textBuilder.append(afterColon)
+        }
+
+        for (i in (startIndex + 1) until lines.size) {
+            val line = lines[i].trim()
+            if (line.isEmpty()) break
+            if (line.contains(":") && !line.startsWith("-")) break
+            if (line.startsWith("#")) break
+
+            val cleanLine = line.replace("**", "").trim()
+            if (cleanLine.isEmpty()) break
+
+            textBuilder.append(" ").append(cleanLine)
+        }
+
+        val result = textBuilder.toString().trim()
+        return if (result.isNotEmpty() && result.length > 10) result else fallback
+    }
+
+    private fun extractListValues(
+        section: String,
+        key: String,
+        maxItems: Int,
+    ): List<String> {
+        val lines = section.lines()
+        val startIndex =
+            lines.indexOfFirst { line ->
+                val cleanLine = line.replace("**", "").trim()
+                cleanLine.contains(key, ignoreCase = true)
+            }
+
+        if (startIndex == -1) {
+            logger.warn("Key '{}' not found in section", key)
+            return generateFallbackList(key, maxItems)
+        }
+
+        val items = mutableListOf<String>()
+        var currentItem = StringBuilder()
+        var inListItem = false
+
+        for (i in (startIndex + 1) until lines.size) {
+            val line = lines[i].trim()
+
+            if (line.isEmpty()) {
+                if (currentItem.isNotEmpty()) {
+                    items.add(currentItem.toString().trim())
+                    currentItem = StringBuilder()
+                    inListItem = false
+                }
+                continue
+            }
+
+            if (line.startsWith("#") || (line.contains(":") && !inListItem && !line.startsWith("-"))) {
+                break
+            }
+
+            if (line.startsWith("-") || line.startsWith("•")) {
+                // "---" 같은 구분선은 무시
+                val trimmedLine = line.removePrefix("-").removePrefix("•").trim()
+                if (trimmedLine.isEmpty() || trimmedLine.all { it == '-' }) {
+                    continue
+                }
+
+                if (currentItem.isNotEmpty()) {
+                    items.add(currentItem.toString().trim())
+                    if (items.size >= maxItems) break
+                }
+                currentItem = StringBuilder(trimmedLine)
+                inListItem = true
+            } else if (inListItem) {
+                currentItem.append(" ").append(line)
+            }
+        }
+
+        if (currentItem.isNotEmpty() && items.size < maxItems) {
+            items.add(currentItem.toString().trim())
+        }
+
+        return items.ifEmpty { generateFallbackList(key, maxItems) }
+    }
+
+    private fun generateFallbackList(
+        key: String,
+        maxItems: Int,
+    ): List<String> {
+        val fallbackMap =
+            mapOf(
+                "트렌드" to listOf("디지털 전환", "지속가능성", "개인화 서비스"),
+                "장벽" to listOf("자본 요구사항", "규제 환경", "기술적 복잡성"),
+                "우위" to listOf("혁신적 접근", "고객 중심", "효율적 운영"),
+                "열위" to listOf("시장 인지도 부족", "자원 제약", "경험 부족"),
+                "니즈" to listOf("편의성 향상", "비용 절감", "개인화"),
+                "공백" to listOf("틈새 시장", "서비스 공백", "지역적 공백"),
+                "파트너십" to listOf("기술 파트너", "유통 파트너", "전략적 제휴"),
+                "실행" to listOf("시장 조사", "프로토타입 개발", "파일럿 테스트", "마케팅 전략", "자금 조달"),
+            )
+
+        return fallbackMap.entries
+            .find { key.contains(it.key) }
+            ?.value
+            ?.take(maxItems)
+            ?: (1..maxItems).map { "분석 항목 $it" }
+    }
+
+    private fun createFallbackResponse(
+        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+        competitors: List<CompetitorInfo>,
+    ): CompetitorAnalysisResponse {
+        return CompetitorAnalysisResponse(
+            userBmc = createFallbackUserBmcSummary(userBmc),
+            userScale = createFallbackUserScale(competitors),
+            strengths = createFallbackStrengths(),
+            weaknesses = createFallbackWeaknesses(),
+            globalExpansionStrategy = createFallbackGlobalStrategy(),
+        )
+    }
+
+    private fun createFallbackUserBmcSummary(
+        userBmc: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas,
+    ): UserBmcSummary {
+        return UserBmcSummary(
+            title = userBmc.title,
+            valueProposition = userBmc.valueProposition,
+            targetCustomer = userBmc.customerSegments,
+            keyStrengths = listOf("비즈니스 모델 수립", "명확한 비전"),
+        )
+    }
+
+    private fun createFallbackUserScale(competitors: List<CompetitorInfo>): UserScaleAnalysis {
+        return UserScaleAnalysis(
+            estimatedUserBase = "초기 단계 스타트업",
+            marketPosition = "신규 진입자",
+            growthPotential = "높은 성장 가능성",
+            competitorComparison = createFallbackCompetitorScales(competitors),
+        )
+    }
+
+    private fun createFallbackCompetitorScales(competitors: List<CompetitorInfo>): List<CompetitorScale> {
+        return competitors.take(3).map { competitor ->
+            CompetitorScale(
+                name = competitor.name,
+                logoUrl = competitor.logoUrl,
+                websiteUrl = competitor.websiteUrl,
+                estimatedScale = "중간 규모",
+                marketShare = "5-10%",
+            )
+        }
+    }
+
+    private fun createFallbackStrengths(): StrengthsAnalysis {
+        return StrengthsAnalysis(
+            competitiveAdvantages = listOf("혁신적 접근", "유연성", "빠른 적응력", "고객 중심 사고"),
+            uniqueValuePropositions = listOf("차별화된 서비스", "사용자 경험 중시", "맞춤형 솔루션"),
+            marketOpportunities = listOf("디지털 전환", "신규 시장 창출", "미충족 니즈 해결", "기술 혁신"),
+            strategicRecommendations = listOf("시장 검증", "제품 개발", "마케팅 전략", "파트너십 구축"),
+        )
+    }
+
+    private fun createFallbackWeaknesses(): WeaknessesAnalysis {
+        return WeaknessesAnalysis(
+            competitiveDisadvantages = listOf("브랜드 인지도 부족", "자원 제약", "시장 경험 부족", "초기 단계 리스크"),
+            marketChallenges = listOf("경쟁 심화", "고객 획득 비용", "시장 진입 장벽", "규제 환경"),
+            resourceLimitations = listOf("자금 제약", "인력 부족", "기술 인프라"),
+            improvementAreas = listOf("마케팅 역량", "운영 효율성", "고객 서비스", "기술 개발"),
+        )
+    }
+
+    private fun createFallbackGlobalStrategy(): GlobalExpansionStrategy {
+        return GlobalExpansionStrategy(
+            priorityMarkets = listOf("동남아시아 (베트남, 태국)", "북미 (미국, 캐나다)", "유럽 (영국, 독일)"),
+            entryStrategies = listOf("모바일 우선 전략과 현지 언어 지원", "프리미엄 포지셔닝과 파트너십", "규제 준수와 현지 파트너 확보"),
+            localizationRequirements = listOf("다국어 지원 (영어, 중국어 우선)", "현지 결제 시스템 통합", "문화적 맞춤화", "법규 준수"),
+            partnershipOpportunities = listOf("현지 유통 채널 파트너십", "기술 플랫폼 제휴", "전략적 투자자 확보", "정부 및 공공기관 협력"),
+            expectedChallenges = listOf("문화적 차이와 언어 장벽", "현지 경쟁사의 시장 선점", "규제 및 법적 제약"),
+        )
+    }
+}
