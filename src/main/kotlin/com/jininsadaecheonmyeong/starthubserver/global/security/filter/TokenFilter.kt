@@ -58,11 +58,12 @@ class TokenFilter(
 
     private fun setAuthentication(token: String) {
         val userId = tokenParser.findId(token)
-        val authorities = listOf(
-            userRepository.findById(userId.toLong())
-                .orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
-                .let { SimpleGrantedAuthority("ROLE_${"$"}{it.role}") }
-        )
+        val authorities =
+            listOf(
+                userRepository.findById(userId.toLong())
+                    .orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+                    .let { SimpleGrantedAuthority("ROLE_${"$"}{it.role}") },
+            )
 
         SecurityContextHolder.getContext().authentication =
             UsernamePasswordAuthenticationToken(userId, null, authorities)

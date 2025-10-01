@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class BmcQuestionService(
     private val bmcQuestionRepository: BmcQuestionRepository,
-    private val userAuthenticationHolder: UserAuthenticationHolder
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
     fun createBmcSession(request: CreateBmcSessionRequest): BmcSessionResponse {
         val user = userAuthenticationHolder.current()
