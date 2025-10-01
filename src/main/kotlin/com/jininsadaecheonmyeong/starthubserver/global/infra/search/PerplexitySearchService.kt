@@ -28,7 +28,7 @@ class PerplexitySearchService(
 
     fun searchCompetitors(request: SearchRequest): List<CompetitorSearchResult> {
         if (properties.apiKey.isBlank() || properties.apiKey.startsWith("\${")) {
-            logger.error("Perplexity API key is not configured. Please set PERPLEXITY_API_KEY environment variable.")
+            logger.error("Perplexity API 키가 설정되지 않음")
             throw SearchException("Perplexity API is not configured. Please set PERPLEXITY_API_KEY in your environment.")
         }
 
@@ -40,11 +40,11 @@ class PerplexitySearchService(
             logger.error("경쟁사 검색 실패: {}", e.message)
             when {
                 e.message?.contains("API key") == true ->
-                    throw SearchException("Perplexity API key is invalid. Please check your API key configuration.", e)
+                    throw SearchException("Perplexity API 키가 유효하지 않음.", e)
                 e.message?.contains("rate limit") == true ->
-                    throw SearchException("Perplexity API rate limit exceeded. Please try again later.", e)
+                    throw SearchException("Perplexity API 사용량 제한 초과. 잠시 후 다시 시도해주세요.", e)
                 else ->
-                    throw SearchException("Failed to search competitors via Perplexity: ${e.message}", e)
+                    throw SearchException("경쟁사 검색 실패: ${e.message}", e)
             }
         }
     }
@@ -171,13 +171,13 @@ class PerplexitySearchService(
             .onErrorMap(WebClientResponseException::class.java) { ex ->
                 logger.error("Perplexity API 오류: 상태코드 {}", ex.statusCode.value())
                 when (ex.statusCode.value()) {
-                    401 -> SearchException("Perplexity API key is invalid", ex)
-                    429 -> SearchException("Perplexity API rate limit exceeded", ex)
-                    400 -> SearchException("Invalid search parameters", ex)
-                    else -> SearchException("Perplexity API error: ${ex.statusText}", ex)
+                    401 -> SearchException("Perplexity API 키가 유효하지 않음.", ex)
+                    429 -> SearchException("Perplexity API 사용량 제한 초과", ex)
+                    400 -> SearchException("잘못된 검색 파라미터", ex)
+                    else -> SearchException("Perplexity API 오류: ${ex.statusText}", ex)
                 }
             }
-            .block() ?: throw SearchException("No response from Perplexity API")
+            .block() ?: throw SearchException("Perplexity API 응답 없음")
     }
 
     private fun parseCompetitorResults(
@@ -217,7 +217,7 @@ class PerplexitySearchService(
                     )
                 }
             } catch (e: Exception) {
-                logger.warn("경쟁사 정보 파싱 실패")
+                logger.warn("경쟁사 정보 파싱 실패", e)
             }
         }
 
