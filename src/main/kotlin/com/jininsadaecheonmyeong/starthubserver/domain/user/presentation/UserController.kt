@@ -9,7 +9,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.docs.UserDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.user.service.UserService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
-import com.jininsadaecheonmyeong.starthubserver.global.security.util.PlatformAuthenticationHelper
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/user")
 class UserController(
     private val userService: UserService,
-    private val platformAuthenticationHelper: PlatformAuthenticationHelper,
     private val userAuthenticationHolder: UserAuthenticationHolder,
 ) : UserDocs {
     @PostMapping("/sign-up")
@@ -43,26 +41,7 @@ class UserController(
     ): ResponseEntity<BaseResponse<Any>> {
         val tokenResponse = userService.signIn(request)
 
-        return when {
-            platformAuthenticationHelper.isWebPlatform(httpRequest) -> {
-                platformAuthenticationHelper.setTokenCookies(
-                    httpResponse,
-                    tokenResponse.access,
-                    tokenResponse.refresh,
-                )
-                BaseResponse.of(
-                    mapOf(
-                        "isFirstLogin" to tokenResponse.isFirstLogin,
-                        "isAccountRestored" to tokenResponse.isAccountRestored,
-                        "deletedAt" to tokenResponse.deletedAt,
-                    ),
-                    "로그인 성공",
-                )
-            }
-            else -> {
-                BaseResponse.of(tokenResponse, "로그인 성공")
-            }
-        }
+        return BaseResponse.of(tokenResponse, "로그인 성공")
     }
 
     @PostMapping("/reissue")
@@ -73,26 +52,7 @@ class UserController(
     ): ResponseEntity<BaseResponse<Any>> {
         val tokenResponse = userService.reissue(request)
 
-        return when {
-            platformAuthenticationHelper.isWebPlatform(httpRequest) -> {
-                platformAuthenticationHelper.setTokenCookies(
-                    httpResponse,
-                    tokenResponse.access,
-                    tokenResponse.refresh,
-                )
-                BaseResponse.of(
-                    mapOf(
-                        "isFirstLogin" to tokenResponse.isFirstLogin,
-                        "isAccountRestored" to tokenResponse.isAccountRestored,
-                        "deletedAt" to tokenResponse.deletedAt,
-                    ),
-                    "토큰 재발급 성공",
-                )
-            }
-            else -> {
-                BaseResponse.of(tokenResponse, "토큰 재발급 성공")
-            }
-        }
+        return BaseResponse.of(tokenResponse, "토큰 재발급 성공")
     }
 
     @PatchMapping("/profile")
@@ -119,10 +79,6 @@ class UserController(
         val currentUser = userAuthenticationHolder.current()
         userService.signOut(currentUser)
 
-        if (platformAuthenticationHelper.isWebPlatform(httpRequest)) {
-            platformAuthenticationHelper.clearTokenCookies(httpResponse)
-        }
-
         return BaseResponse.of("로그아웃 성공")
     }
 
@@ -139,10 +95,6 @@ class UserController(
     ): ResponseEntity<BaseResponse<Unit>> {
         val currentUser = userAuthenticationHolder.current()
         userService.deleteAccount(currentUser, request)
-
-        if (platformAuthenticationHelper.isWebPlatform(httpRequest)) {
-            platformAuthenticationHelper.clearTokenCookies(httpResponse)
-        }
 
         return BaseResponse.of("회원 탈퇴가 완료되었습니다.")
     }
