@@ -10,6 +10,6 @@ data class PerplexityProperties
         val apiKey: String,
         val baseUrl: String = "https://api.perplexity.ai",
         val model: String = "llama-3.1-sonar-large-128k-online",
-        val timeout: Long = 30000,
-        val maxTokens: Int = 4000,
+        val timeout: Long = 60000,
+        val maxTokens: Int = 10000,
     )
