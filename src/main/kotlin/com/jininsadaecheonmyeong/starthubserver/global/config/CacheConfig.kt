@@ -1,6 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.global.config
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.springframework.cache.annotation.EnableCaching
@@ -19,10 +21,13 @@ import java.time.Duration
 class CacheConfig {
     @Bean
     fun cacheManager(redisConnectionFactory: RedisConnectionFactory): RedisCacheManager {
+        val ptv = BasicPolymorphicTypeValidator.builder().allowIfBaseType(Any::class.java).build()
+
         val objectMapper =
             ObjectMapper().apply {
                 registerKotlinModule()
                 registerModule(JavaTimeModule())
+                activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY)
             }
 
         val config =
