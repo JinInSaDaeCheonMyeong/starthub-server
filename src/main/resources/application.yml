@@ -129,12 +129,12 @@ perplexity:
   timeout: 30000
   max-tokens: 4000
 
+gcs:
+  bucket-name: ${GCS_BUCKET_NAME}
+  project-id: ${GCS_PROJECT_ID}
+  credentials-path: ${GCS_CREDENTIALS_PATH:}
+
 swagger:
   auth:
     username: ${SWAGGER_USERNAME}
     password: ${SWAGGER_PASSWORD}
-
-logging:
-  level:
-    com.jininsadaecheonmyeong.starthubserver.domain.analysis.competitor: INFO
-    com.jininsadaecheonmyeong.starthubserver.global.infra.search: INFO

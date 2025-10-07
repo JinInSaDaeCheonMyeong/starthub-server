@@ -24,7 +24,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/bmc")
@@ -122,5 +124,14 @@ class BmcController(
     ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>> {
         val result = businessModelCanvasService.updateBusinessModelCanvas(request)
         return BaseResponse.of(result, "BMC 수정 성공")
+    }
+
+    @PostMapping("/canvases/{bmcId}/image")
+    override fun uploadBmcImage(
+        @PathVariable bmcId: Long,
+        @RequestParam image: MultipartFile,
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>> {
+        val result = businessModelCanvasService.uploadBmcImage(bmcId, image)
+        return BaseResponse.of(result, "BMC 이미지 업로드 성공")
     }
 }

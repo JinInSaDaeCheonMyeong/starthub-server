@@ -16,6 +16,7 @@ data class BusinessModelCanvasResponse(
     val keyPartners: String?,
     val costStructure: String?,
     val isCompleted: Boolean,
+    val imageUrl: String?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {
@@ -34,6 +35,7 @@ data class BusinessModelCanvasResponse(
                 keyPartners = bmc.keyPartners,
                 costStructure = bmc.costStructure,
                 isCompleted = bmc.isCompleted,
+                imageUrl = bmc.imageUrl,
                 createdAt = bmc.createdAt,
                 updatedAt = bmc.updatedAt,
             )

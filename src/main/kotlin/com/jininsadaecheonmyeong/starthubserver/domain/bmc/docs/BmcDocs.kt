@@ -18,6 +18,8 @@ import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.multipart.MultipartFile
 
 @Tag(name = "BMC", description = "비즈니스 모델 캔버스 관련 API")
 interface BmcDocs {
@@ -130,5 +132,30 @@ interface BmcDocs {
     )
     fun updateBmc(
         @Valid @RequestBody request: UpdateBmcRequest,
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>>
+
+    @Operation(
+        summary = "BMC 이미지 업로드",
+        description = "완성된 BMC를 이미지로 업로드하여 GCS에 저장합니다. BMC ID와 이미지 파일을 전송합니다.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "이미지 업로드 성공",
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "BMC를 찾을 수 없음",
+            ),
+            ApiResponse(
+                responseCode = "403",
+                description = "접근 권한이 없음",
+            ),
+        ],
+    )
+    fun uploadBmcImage(
+        @PathVariable bmcId: Long,
+        @RequestParam image: MultipartFile,
     ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>>
 }

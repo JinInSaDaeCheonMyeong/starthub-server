@@ -4,15 +4,18 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBm
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BusinessModelCanvasResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
+import com.jininsadaecheonmyeong.starthubserver.global.infra.storage.GcsStorageService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
 
 @Service
 @Transactional
 class BusinessModelCanvasService(
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val userAuthenticationHolder: UserAuthenticationHolder,
+    private val gcsStorageService: GcsStorageService,
 ) {
     @Transactional(readOnly = true)
     fun getBusinessModelCanvas(id: Long): BusinessModelCanvasResponse {
@@ -67,6 +70,23 @@ class BusinessModelCanvasService(
             costStructure = request.costStructure,
         )
 
+        val updatedBmc = businessModelCanvasRepository.save(bmc)
+        return BusinessModelCanvasResponse.from(updatedBmc)
+    }
+
+    fun uploadBmcImage(
+        bmcId: Long,
+        imageFile: MultipartFile,
+    ): BusinessModelCanvasResponse {
+        val user = userAuthenticationHolder.current()
+        val bmc = businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
+            .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
+
+        if (!bmc.isOwner(user)) throw BmcNotFoundException("접근 권한이 없습니다.")
+
+        bmc.imageUrl?.let { gcsStorageService.deleteFile(it) }
+        val imageUrl = gcsStorageService.uploadFile(imageFile, "bmc-images")
+        bmc.updateImageUrl(imageUrl)
         val updatedBmc = businessModelCanvasRepository.save(bmc)
         return BusinessModelCanvasResponse.from(updatedBmc)
     }

@@ -48,6 +48,8 @@ class BusinessModelCanvas(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_bmc_question_id")
     var bmcQuestion: BmcQuestion? = null,
+    @Column(columnDefinition = "TEXT")
+    var imageUrl: String? = null,
 ) : BaseEntity() {
     fun isOwner(user: User): Boolean = this.user.id == user.id
 
@@ -84,4 +86,8 @@ class BusinessModelCanvas(
     }
 
     fun isDeleted(): Boolean = deleted
+
+    fun updateImageUrl(imageUrl: String) {
+        this.imageUrl = imageUrl
+    }
 }
