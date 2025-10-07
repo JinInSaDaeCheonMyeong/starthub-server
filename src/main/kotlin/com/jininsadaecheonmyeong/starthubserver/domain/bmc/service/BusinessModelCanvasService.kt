@@ -79,8 +79,9 @@ class BusinessModelCanvasService(
         imageFile: MultipartFile,
     ): BusinessModelCanvasResponse {
         val user = userAuthenticationHolder.current()
-        val bmc = businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
-            .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
+        val bmc =
+            businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
+                .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
 
         if (!bmc.isOwner(user)) throw BmcNotFoundException("접근 권한이 없습니다.")
 

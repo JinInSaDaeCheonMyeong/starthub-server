@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.analysis.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.request.CompetitorAnalysisRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.CompetitorAnalysisResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.CompetitorInfo
@@ -9,6 +10,8 @@ import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.St
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.UserBmcSummary
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.UserScaleAnalysis
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.WeaknessesAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.entity.CompetitorAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.repository.CompetitorAnalysisRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
@@ -26,9 +29,11 @@ import org.springframework.transaction.annotation.Transactional
 class CompetitorAnalysisService(
     private val userAuthenticationHolder: UserAuthenticationHolder,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
+    private val competitorAnalysisRepository: CompetitorAnalysisRepository,
     private val perplexitySearchService: PerplexitySearchService,
     private val chatModel: ChatModel,
     private val promptBuilder: CompetitorAnalysisPromptBuilder,
+    private val objectMapper: ObjectMapper,
 ) {
     private val logger = LoggerFactory.getLogger(CompetitorAnalysisService::class.java)
 
@@ -46,6 +51,7 @@ class CompetitorAnalysisService(
         private val SPECIAL_CHARS_TO_CLEAN = listOf("**", "*", "##")
     }
 
+    @Transactional
     fun analyzeCompetitors(request: CompetitorAnalysisRequest): CompetitorAnalysisResponse {
         val user = userAuthenticationHolder.current()
         val userBmc =
@@ -74,13 +80,81 @@ class CompetitorAnalysisService(
                 emptyList()
             }
 
-        return try {
-            val analysisPrompt = promptBuilder.buildAnalysisPrompt(userBmc, competitors)
-            val gptResponse = chatModel.call(analysisPrompt)
-            parseGptResponse(gptResponse, userBmc, competitors)
-        } catch (e: Exception) {
-            logger.error("경쟁사 분석 실패: {}", e.message)
-            createFallbackResponse(userBmc, competitors)
+        val analysisResponse =
+            try {
+                val analysisPrompt = promptBuilder.buildAnalysisPrompt(userBmc, competitors)
+                val gptResponse = chatModel.call(analysisPrompt)
+                parseGptResponse(gptResponse, userBmc, competitors)
+            } catch (e: Exception) {
+                logger.error("경쟁사 분석 실패: {}", e.message)
+                createFallbackResponse(userBmc, competitors)
+            }
+        saveAnalysis(user, userBmc, analysisResponse)
+        return analysisResponse
+    }
+
+    private fun saveAnalysis(
+        user: User,
+        bmc: BusinessModelCanvas,
+        response: CompetitorAnalysisResponse,
+    ) {
+        val existingAnalysis = competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(bmc)
+
+        if (existingAnalysis.isPresent) {
+            val analysis = existingAnalysis.get()
+            analysis.userBmcSummary = objectMapper.writeValueAsString(response.userBmc)
+            analysis.userScaleAnalysis = objectMapper.writeValueAsString(response.userScale)
+            analysis.strengthsAnalysis = objectMapper.writeValueAsString(response.strengths)
+            analysis.weaknessesAnalysis = objectMapper.writeValueAsString(response.weaknesses)
+            analysis.globalExpansionStrategy = objectMapper.writeValueAsString(response.globalExpansionStrategy)
+            competitorAnalysisRepository.save(analysis)
+        } else {
+            val newAnalysis =
+                CompetitorAnalysis(
+                    user = user,
+                    businessModelCanvas = bmc,
+                    userBmcSummary = objectMapper.writeValueAsString(response.userBmc),
+                    userScaleAnalysis = objectMapper.writeValueAsString(response.userScale),
+                    strengthsAnalysis = objectMapper.writeValueAsString(response.strengths),
+                    weaknessesAnalysis = objectMapper.writeValueAsString(response.weaknesses),
+                    globalExpansionStrategy = objectMapper.writeValueAsString(response.globalExpansionStrategy),
+                )
+            competitorAnalysisRepository.save(newAnalysis)
+        }
+    }
+
+    fun getAnalysisByBmcId(bmcId: Long): CompetitorAnalysisResponse {
+        val user = userAuthenticationHolder.current()
+        val bmc =
+            businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
+                .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
+        validateUserAccess(bmc, user)
+
+        val analysis =
+            competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(bmc)
+                .orElseThrow { throw IllegalStateException("저장된 경쟁사 분석을 찾을 수 없습니다.") }
+
+        return CompetitorAnalysisResponse(
+            userBmc = objectMapper.readValue(analysis.userBmcSummary, UserBmcSummary::class.java),
+            userScale = objectMapper.readValue(analysis.userScaleAnalysis, UserScaleAnalysis::class.java),
+            strengths = objectMapper.readValue(analysis.strengthsAnalysis, StrengthsAnalysis::class.java),
+            weaknesses = objectMapper.readValue(analysis.weaknessesAnalysis, WeaknessesAnalysis::class.java),
+            globalExpansionStrategy = objectMapper.readValue(analysis.globalExpansionStrategy, GlobalExpansionStrategy::class.java),
+        )
+    }
+
+    fun getAllAnalysesByUser(): List<CompetitorAnalysisResponse> {
+        val user = userAuthenticationHolder.current()
+        val analyses = competitorAnalysisRepository.findAllByUserAndDeletedFalse(user)
+
+        return analyses.map { analysis ->
+            CompetitorAnalysisResponse(
+                userBmc = objectMapper.readValue(analysis.userBmcSummary, UserBmcSummary::class.java),
+                userScale = objectMapper.readValue(analysis.userScaleAnalysis, UserScaleAnalysis::class.java),
+                strengths = objectMapper.readValue(analysis.strengthsAnalysis, StrengthsAnalysis::class.java),
+                weaknesses = objectMapper.readValue(analysis.weaknessesAnalysis, WeaknessesAnalysis::class.java),
+                globalExpansionStrategy = objectMapper.readValue(analysis.globalExpansionStrategy, GlobalExpansionStrategy::class.java),
+            )
         }
     }
 
