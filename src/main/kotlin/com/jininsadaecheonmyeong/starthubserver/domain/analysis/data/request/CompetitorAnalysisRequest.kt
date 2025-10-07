@@ -15,10 +15,4 @@ data class CompetitorAnalysisRequest(
         required = true,
     )
     val bmcId: Long,
-    @Schema(
-        description = "특정 검색 키워드 (선택사항). 미지정 시 BMC 내용 기반으로 자동 생성",
-        example = "[\"AI 학습\", \"온라인 교육\", \"에듀테크\"]",
-        nullable = true,
-    )
-    val searchKeywords: List<String>? = null,
 )
