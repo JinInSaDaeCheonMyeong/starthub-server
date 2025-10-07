@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request
 
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.enums.BmcTemplateType
 import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
@@ -29,6 +30,7 @@ data class UpdateBmcSessionRequest(
         ]""",
     )
     val answers: List<AnswerUpdate>,
+    val templateType: BmcTemplateType? = null,
 )
 
 data class AnswerUpdate(

@@ -59,6 +59,7 @@ class BusinessModelCanvasService(
 
         bmc.updateCanvas(
             title = request.title,
+            templateType = request.templateType,
             customerSegments = request.customerSegments,
             valueProposition = request.valueProposition,
             channels = request.channels,

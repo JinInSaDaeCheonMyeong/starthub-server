@@ -25,6 +25,7 @@ class BmcQuestionService(
             BmcQuestion(
                 user = user,
                 title = request.title,
+                templateType = request.templateType,
             )
 
         val savedBmcQuestion = bmcQuestionRepository.save(bmcQuestion)
@@ -118,8 +119,9 @@ class BmcQuestionService(
             bmcQuestion.updateAnswer(answerUpdate.questionNumber, answerUpdate.answer)
         }
 
-        if (isSessionCompleted(bmcQuestion)) bmcQuestion.markAsCompleted()
+        request.templateType?.let { bmcQuestion.templateType = it }
 
+        if (isSessionCompleted(bmcQuestion)) bmcQuestion.markAsCompleted()
         val savedBmcQuestion = bmcQuestionRepository.save(bmcQuestion)
         return BmcSessionResponse.from(savedBmcQuestion)
     }

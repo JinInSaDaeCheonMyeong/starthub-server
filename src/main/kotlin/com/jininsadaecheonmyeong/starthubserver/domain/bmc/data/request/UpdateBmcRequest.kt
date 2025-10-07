@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request
 
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.enums.BmcTemplateType
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
 
@@ -8,6 +9,7 @@ data class UpdateBmcRequest(
     val bmcId: Long,
     @field:Size(max = 100, message = "제목은 100자 이하로 입력해주세요.")
     val title: String? = null,
+    val templateType: BmcTemplateType? = null,
     @field:Size(max = 2000, message = "목표 고객은 2000자 이하로 입력해주세요.")
     val customerSegments: String? = null,
     @field:Size(max = 2000, message = "제공 가치는 2000자 이하로 입력해주세요.")

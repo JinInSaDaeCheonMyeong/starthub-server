@@ -1,10 +1,13 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity
 
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.enums.BmcTemplateType
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -25,6 +28,9 @@ class BmcQuestion(
     val user: User,
     @Column(nullable = false)
     var title: String,
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    var templateType: BmcTemplateType = BmcTemplateType.STARTHUB,
     @Column(columnDefinition = "TEXT")
     var question1Answer: String? = null,
     @Column(columnDefinition = "TEXT")

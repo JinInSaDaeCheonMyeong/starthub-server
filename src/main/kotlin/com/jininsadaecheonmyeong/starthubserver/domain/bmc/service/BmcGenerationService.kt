@@ -38,6 +38,7 @@ class BmcGenerationService(
                 BusinessModelCanvas(
                     user = user,
                     title = bmcQuestion.title,
+                    templateType = bmcQuestion.templateType,
                     customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
                     valueProposition = bmcElements["VALUE_PROPOSITION"],
                     channels = bmcElements["CHANNELS"],
@@ -146,6 +147,7 @@ class BmcGenerationService(
                 BusinessModelCanvas(
                     user = user,
                     title = bmcQuestion.title,
+                    templateType = bmcQuestion.templateType,
                     customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
                     valueProposition = bmcElements["VALUE_PROPOSITION"],
                     channels = bmcElements["CHANNELS"],
