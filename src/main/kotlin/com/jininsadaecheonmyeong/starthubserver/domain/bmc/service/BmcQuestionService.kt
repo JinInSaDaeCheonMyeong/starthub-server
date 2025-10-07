@@ -2,6 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.bmc.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.AnswerQuestionRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.CreateBmcSessionRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBmcSessionRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcFormResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcSessionResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcQuestion
@@ -102,5 +103,24 @@ class BmcQuestionService(
         val user = userAuthenticationHolder.current()
         return bmcQuestionRepository.findByIdAndUser(sessionId, user)
             .orElseThrow { BmcSessionNotFoundException("BMC 세션을 찾을 수 없습니다.") }
+    }
+
+    fun updateSessionAnswers(
+        sessionId: Long,
+        request: UpdateBmcSessionRequest,
+    ): BmcSessionResponse {
+        val user = userAuthenticationHolder.current()
+        val bmcQuestion =
+            bmcQuestionRepository.findByIdAndUser(sessionId, user)
+                .orElseThrow { BmcSessionNotFoundException("BMC 세션을 찾을 수 없습니다.") }
+
+        request.answers.forEach { answerUpdate ->
+            bmcQuestion.updateAnswer(answerUpdate.questionNumber, answerUpdate.answer)
+        }
+
+        if (isSessionCompleted(bmcQuestion)) bmcQuestion.markAsCompleted()
+
+        val savedBmcQuestion = bmcQuestionRepository.save(bmcQuestion)
+        return BmcSessionResponse.from(savedBmcQuestion)
     }
 }
