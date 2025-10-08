@@ -7,6 +7,9 @@ import com.jininsadaecheonmyeong.starthubserver.domain.analysis.service.Competit
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -16,10 +19,25 @@ import org.springframework.web.bind.annotation.RestController
 class CompetitorAnalysisController(
     private val competitorAnalysisService: CompetitorAnalysisService,
 ) : CompetitorAnalysisDocs {
+    @PostMapping("/competitors")
     override fun analyzeCompetitors(
         @Valid @RequestBody request: CompetitorAnalysisRequest,
     ): ResponseEntity<BaseResponse<CompetitorAnalysisResponse>> {
         val result = competitorAnalysisService.analyzeCompetitors(request)
         return BaseResponse.of(result, "경쟁사 분석 완료")
+    }
+
+    @GetMapping("/competitors/bmc/{bmcId}")
+    override fun getAnalysisByBmcId(
+        @PathVariable bmcId: Long,
+    ): ResponseEntity<BaseResponse<CompetitorAnalysisResponse>> {
+        val result = competitorAnalysisService.getAnalysisByBmcId(bmcId)
+        return BaseResponse.of(result, "경쟁사 분석 조회 성공")
+    }
+
+    @GetMapping("/competitors")
+    override fun getAllAnalyses(): ResponseEntity<BaseResponse<List<CompetitorAnalysisResponse>>> {
+        val result = competitorAnalysisService.getAllAnalysesByUser()
+        return BaseResponse.of(result, "경쟁사 분석 목록 조회 성공")
     }
 }

@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.service
 
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.GenerateBmcRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBmcSessionRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BusinessModelCanvasResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcSessionNotCompletedException
@@ -25,34 +26,15 @@ class BmcGenerationService(
     fun generateBusinessModelCanvas(request: GenerateBmcRequest): BusinessModelCanvasResponse {
         val user = userAuthenticationHolder.current()
         val bmcQuestion = bmcQuestionService.getBmcQuestionEntity(request.sessionId)
-
         if (!bmcQuestion.isCompleted) {
             throw BmcSessionNotCompletedException("모든 질문에 답변을 완료해야 BMC를 생성할 수 있습니다.")
         }
-
         val prompt = bmcPromptService.generateBmcPrompt(bmcQuestion)
 
         try {
             val response = chatModel.call(prompt)
-
             val bmcElements = parseBmcResponse(response)
-
-            val businessModelCanvas =
-                BusinessModelCanvas(
-                    user = user,
-                    title = bmcQuestion.title,
-                    customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
-                    valueProposition = bmcElements["VALUE_PROPOSITION"],
-                    channels = bmcElements["CHANNELS"],
-                    customerRelationships = bmcElements["CUSTOMER_RELATIONSHIPS"],
-                    revenueStreams = bmcElements["REVENUE_STREAMS"],
-                    keyResources = bmcElements["KEY_RESOURCES"],
-                    keyActivities = bmcElements["KEY_ACTIVITIES"],
-                    keyPartners = bmcElements["KEY_PARTNERS"],
-                    costStructure = bmcElements["COST_STRUCTURE"],
-                    isCompleted = true,
-                    bmcQuestion = bmcQuestion,
-                )
+            val businessModelCanvas = createBusinessModelCanvas(user, bmcQuestion, bmcElements, bmcQuestion)
 
             val savedBmc = businessModelCanvasRepository.save(businessModelCanvas)
             log.info("BMC 생성 완료: sessionId={}, userId={}, bmcId={}", request.sessionId, user.id, savedBmc.id)
@@ -127,5 +109,54 @@ class BmcGenerationService(
         }
 
         return content.toString().trim()
+    }
+
+    fun updateSessionAnswersAndRegenerate(
+        sessionId: Long,
+        request: UpdateBmcSessionRequest,
+    ): BusinessModelCanvasResponse {
+        val user = userAuthenticationHolder.current()
+        bmcQuestionService.updateSessionAnswers(sessionId, request)
+        val bmcQuestion = bmcQuestionService.getBmcQuestionEntity(sessionId)
+        if (!bmcQuestion.isCompleted) {
+            throw BmcSessionNotCompletedException("모든 질문에 답변을 완료해야 BMC를 생성할 수 있습니다.")
+        }
+        val prompt = bmcPromptService.generateBmcPrompt(bmcQuestion)
+
+        try {
+            val response = chatModel.call(prompt)
+            val bmcElements = parseBmcResponse(response)
+            val businessModelCanvas = createBusinessModelCanvas(user, bmcQuestion, bmcElements, null)
+
+            val savedBmc = businessModelCanvasRepository.save(businessModelCanvas)
+            return BusinessModelCanvasResponse.from(savedBmc)
+        } catch (e: Exception) {
+            log.error("BMC 재생성 중 오류 발생: sessionId={}, userId={}, error={}", sessionId, user.id, e.message, e)
+            throw RuntimeException("BMC 재생성 중 오류가 발생했습니다. 다시 시도해주세요.", e)
+        }
+    }
+
+    private fun createBusinessModelCanvas(
+        user: com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User,
+        bmcQuestion: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcQuestion,
+        bmcElements: Map<String, String>,
+        associatedBmcQuestion: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcQuestion?,
+    ): BusinessModelCanvas {
+        return BusinessModelCanvas(
+            user = user,
+            title = bmcQuestion.title,
+            templateType = bmcQuestion.templateType,
+            customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
+            valueProposition = bmcElements["VALUE_PROPOSITION"],
+            channels = bmcElements["CHANNELS"],
+            customerRelationships = bmcElements["CUSTOMER_RELATIONSHIPS"],
+            revenueStreams = bmcElements["REVENUE_STREAMS"],
+            keyResources = bmcElements["KEY_RESOURCES"],
+            keyActivities = bmcElements["KEY_ACTIVITIES"],
+            keyPartners = bmcElements["KEY_PARTNERS"],
+            costStructure = bmcElements["COST_STRUCTURE"],
+            isCompleted = true,
+            bmcQuestion = associatedBmcQuestion,
+        )
     }
 }

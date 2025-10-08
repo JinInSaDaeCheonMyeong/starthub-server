@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.CreateBm
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.GenerateBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.ModifyBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBmcRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBmcSessionRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcFormResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcModificationResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcSessionResponse
@@ -19,12 +20,15 @@ import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/bmc")
@@ -122,5 +126,23 @@ class BmcController(
     ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>> {
         val result = businessModelCanvasService.updateBusinessModelCanvas(request)
         return BaseResponse.of(result, "BMC 수정 성공")
+    }
+
+    @PostMapping("/canvases/{bmcId}/image")
+    override fun uploadBmcImage(
+        @PathVariable bmcId: Long,
+        @RequestParam image: MultipartFile,
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>> {
+        val result = businessModelCanvasService.uploadBmcImage(bmcId, image)
+        return BaseResponse.of(result, "BMC 이미지 업로드 성공")
+    }
+
+    @PatchMapping("/sessions/{sessionId}")
+    override fun updateSessionAnswersAndRegenerate(
+        @PathVariable sessionId: Long,
+        @Valid @RequestBody request: UpdateBmcSessionRequest,
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>> {
+        val result = bmcGenerationService.updateSessionAnswersAndRegenerate(sessionId, request)
+        return BaseResponse.of(result, "답변 수정 및 BMC 재생성 완료")
     }
 }

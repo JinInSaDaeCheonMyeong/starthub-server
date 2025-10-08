@@ -1,11 +1,13 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response
 
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.enums.BmcTemplateType
 import java.time.LocalDateTime
 
 data class BusinessModelCanvasResponse(
     val id: Long,
     val title: String,
+    val templateType: BmcTemplateType,
     val customerSegments: String?,
     val valueProposition: String?,
     val channels: String?,
@@ -16,6 +18,7 @@ data class BusinessModelCanvasResponse(
     val keyPartners: String?,
     val costStructure: String?,
     val isCompleted: Boolean,
+    val imageUrl: String?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {
@@ -24,6 +27,7 @@ data class BusinessModelCanvasResponse(
             return BusinessModelCanvasResponse(
                 id = bmc.id!!,
                 title = bmc.title,
+                templateType = bmc.templateType,
                 customerSegments = bmc.customerSegments,
                 valueProposition = bmc.valueProposition,
                 channels = bmc.channels,
@@ -34,6 +38,7 @@ data class BusinessModelCanvasResponse(
                 keyPartners = bmc.keyPartners,
                 costStructure = bmc.costStructure,
                 isCompleted = bmc.isCompleted,
+                imageUrl = bmc.imageUrl,
                 createdAt = bmc.createdAt,
                 updatedAt = bmc.updatedAt,
             )
