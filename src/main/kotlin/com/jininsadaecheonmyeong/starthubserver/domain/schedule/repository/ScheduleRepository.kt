@@ -25,5 +25,8 @@ interface ScheduleRepository : JpaRepository<Schedule, Long> {
         date2: LocalDate,
     ): List<Schedule>
 
-    fun deleteByAnnouncementIdAndUserId(announcementId: Long, userId: Long)
+    fun deleteByAnnouncementIdAndUserId(
+        announcementId: Long,
+        userId: Long,
+    )
 }

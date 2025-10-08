@@ -46,7 +46,10 @@ class ScheduleService(
     }
 
     @Transactional
-    fun deleteSchedule(userId: Long, announcementId: Long) {
+    fun deleteSchedule(
+        userId: Long,
+        announcementId: Long,
+    ) {
         scheduleRepository.deleteByAnnouncementIdAndUserId(announcementId, userId)
     }
 

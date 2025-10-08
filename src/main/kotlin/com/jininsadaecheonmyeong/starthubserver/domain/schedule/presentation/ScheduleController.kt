@@ -35,7 +35,9 @@ class ScheduleController(
     }
 
     @DeleteMapping
-    override fun deleteSchedule(@RequestParam announcementId: Long): ResponseEntity<BaseResponse<Unit>> {
+    override fun deleteSchedule(
+        @RequestParam announcementId: Long,
+    ): ResponseEntity<BaseResponse<Unit>> {
         val user = userAuthenticationHolder.current()
         scheduleService.deleteSchedule(user.id!!, announcementId)
         return BaseResponse.of(Unit, HttpStatus.OK, "일정 삭제 성공")

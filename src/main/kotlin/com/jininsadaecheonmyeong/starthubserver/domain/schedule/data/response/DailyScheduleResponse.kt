@@ -15,5 +15,5 @@ data class DailyScheduleResponse(
     val startupHistory: String,
     val departmentInCharge: String,
     val content: String,
-    val isLiked: Boolean
+    val isLiked: Boolean,
 )
