@@ -29,4 +29,9 @@ interface AnnouncementLikeRepository : JpaRepository<AnnouncementLike, Long> {
         user: User,
         announcements: List<Announcement>,
     ): List<AnnouncementLike>
+
+    fun findAllByUserIdAndAnnouncementIn(
+        userId: Long,
+        announcements: List<Announcement>,
+    ): List<AnnouncementLike>
 }
