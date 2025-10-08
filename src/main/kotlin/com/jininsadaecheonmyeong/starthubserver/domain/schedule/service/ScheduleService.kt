@@ -68,29 +68,32 @@ class ScheduleService(
         userId: Long,
         date: LocalDate,
     ): List<DailyScheduleResponse> {
-        val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
-        return scheduleRepository.findByUserIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(userId, date, date)
-            .filter { it.announcement.status == AnnouncementStatus.ACTIVE }
-            .map {
-                val announcement = it.announcement
-                val isLiked = announcementLikeRepository.existsByUserAndAnnouncement(user, announcement)
-                DailyScheduleResponse(
-                    id = announcement.id!!,
-                    title = announcement.title,
-                    url = announcement.url,
-                    organization = announcement.organization,
-                    receptionPeriod = announcement.receptionPeriod,
-                    likeCount = announcement.likeCount,
-                    supportField = announcement.supportField,
-                    targetAge = announcement.targetAge,
-                    contactNumber = announcement.contactNumber,
-                    region = announcement.region,
-                    organizationType = announcement.organizationType,
-                    startupHistory = announcement.startupHistory,
-                    departmentInCharge = announcement.departmentInCharge,
-                    content = announcement.content,
-                    isLiked = isLiked,
-                )
-            }
+        val schedules =
+            scheduleRepository.findByUserIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(userId, date, date)
+                .filter { it.announcement.status == AnnouncementStatus.ACTIVE }
+        val announcements = schedules.map { it.announcement }
+        val likedAnnouncementIds =
+            announcementLikeRepository.findAllByUserIdAndAnnouncementIn(userId, announcements).map { it.announcement.id }
+                .toSet()
+
+        return announcements.map { announcement ->
+            DailyScheduleResponse(
+                id = announcement.id!!,
+                title = announcement.title,
+                url = announcement.url,
+                organization = announcement.organization,
+                receptionPeriod = announcement.receptionPeriod,
+                likeCount = announcement.likeCount,
+                supportField = announcement.supportField,
+                targetAge = announcement.targetAge,
+                contactNumber = announcement.contactNumber,
+                region = announcement.region,
+                organizationType = announcement.organizationType,
+                startupHistory = announcement.startupHistory,
+                departmentInCharge = announcement.departmentInCharge,
+                content = announcement.content,
+                isLiked = likedAnnouncementIds.contains(announcement.id),
+            )
+        }
     }
 }
