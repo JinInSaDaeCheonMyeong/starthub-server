@@ -134,13 +134,7 @@ class CompetitorAnalysisService(
             competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(bmc)
                 .orElseThrow { throw IllegalStateException("저장된 경쟁사 분석을 찾을 수 없습니다.") }
 
-        return CompetitorAnalysisResponse(
-            userBmc = objectMapper.readValue(analysis.userBmcSummary, UserBmcSummary::class.java),
-            userScale = objectMapper.readValue(analysis.userScaleAnalysis, UserScaleAnalysis::class.java),
-            strengths = objectMapper.readValue(analysis.strengthsAnalysis, StrengthsAnalysis::class.java),
-            weaknesses = objectMapper.readValue(analysis.weaknessesAnalysis, WeaknessesAnalysis::class.java),
-            globalExpansionStrategy = objectMapper.readValue(analysis.globalExpansionStrategy, GlobalExpansionStrategy::class.java),
-        )
+        return deserializeAnalysisResponse(analysis)
     }
 
     fun getAllAnalysesByUser(): List<CompetitorAnalysisResponse> {
@@ -148,14 +142,18 @@ class CompetitorAnalysisService(
         val analyses = competitorAnalysisRepository.findAllByUserAndDeletedFalse(user)
 
         return analyses.map { analysis ->
-            CompetitorAnalysisResponse(
-                userBmc = objectMapper.readValue(analysis.userBmcSummary, UserBmcSummary::class.java),
-                userScale = objectMapper.readValue(analysis.userScaleAnalysis, UserScaleAnalysis::class.java),
-                strengths = objectMapper.readValue(analysis.strengthsAnalysis, StrengthsAnalysis::class.java),
-                weaknesses = objectMapper.readValue(analysis.weaknessesAnalysis, WeaknessesAnalysis::class.java),
-                globalExpansionStrategy = objectMapper.readValue(analysis.globalExpansionStrategy, GlobalExpansionStrategy::class.java),
-            )
+            deserializeAnalysisResponse(analysis)
         }
+    }
+
+    private fun deserializeAnalysisResponse(analysis: CompetitorAnalysis): CompetitorAnalysisResponse {
+        return CompetitorAnalysisResponse(
+            userBmc = objectMapper.readValue(analysis.userBmcSummary, UserBmcSummary::class.java),
+            userScale = objectMapper.readValue(analysis.userScaleAnalysis, UserScaleAnalysis::class.java),
+            strengths = objectMapper.readValue(analysis.strengthsAnalysis, StrengthsAnalysis::class.java),
+            weaknesses = objectMapper.readValue(analysis.weaknessesAnalysis, WeaknessesAnalysis::class.java),
+            globalExpansionStrategy = objectMapper.readValue(analysis.globalExpansionStrategy, GlobalExpansionStrategy::class.java),
+        )
     }
 
     private fun createSearchRequest(
