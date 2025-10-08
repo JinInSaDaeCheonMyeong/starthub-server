@@ -34,23 +34,7 @@ class BmcGenerationService(
         try {
             val response = chatModel.call(prompt)
             val bmcElements = parseBmcResponse(response)
-            val businessModelCanvas =
-                BusinessModelCanvas(
-                    user = user,
-                    title = bmcQuestion.title,
-                    templateType = bmcQuestion.templateType,
-                    customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
-                    valueProposition = bmcElements["VALUE_PROPOSITION"],
-                    channels = bmcElements["CHANNELS"],
-                    customerRelationships = bmcElements["CUSTOMER_RELATIONSHIPS"],
-                    revenueStreams = bmcElements["REVENUE_STREAMS"],
-                    keyResources = bmcElements["KEY_RESOURCES"],
-                    keyActivities = bmcElements["KEY_ACTIVITIES"],
-                    keyPartners = bmcElements["KEY_PARTNERS"],
-                    costStructure = bmcElements["COST_STRUCTURE"],
-                    isCompleted = true,
-                    bmcQuestion = bmcQuestion,
-                )
+            val businessModelCanvas = createBusinessModelCanvas(user, bmcQuestion, bmcElements, bmcQuestion)
 
             val savedBmc = businessModelCanvasRepository.save(businessModelCanvas)
             log.info("BMC 생성 완료: sessionId={}, userId={}, bmcId={}", request.sessionId, user.id, savedBmc.id)
@@ -142,24 +126,7 @@ class BmcGenerationService(
         try {
             val response = chatModel.call(prompt)
             val bmcElements = parseBmcResponse(response)
-
-            val businessModelCanvas =
-                BusinessModelCanvas(
-                    user = user,
-                    title = bmcQuestion.title,
-                    templateType = bmcQuestion.templateType,
-                    customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
-                    valueProposition = bmcElements["VALUE_PROPOSITION"],
-                    channels = bmcElements["CHANNELS"],
-                    customerRelationships = bmcElements["CUSTOMER_RELATIONSHIPS"],
-                    revenueStreams = bmcElements["REVENUE_STREAMS"],
-                    keyResources = bmcElements["KEY_RESOURCES"],
-                    keyActivities = bmcElements["KEY_ACTIVITIES"],
-                    keyPartners = bmcElements["KEY_PARTNERS"],
-                    costStructure = bmcElements["COST_STRUCTURE"],
-                    isCompleted = true,
-                    bmcQuestion = null,
-                )
+            val businessModelCanvas = createBusinessModelCanvas(user, bmcQuestion, bmcElements, null)
 
             val savedBmc = businessModelCanvasRepository.save(businessModelCanvas)
             return BusinessModelCanvasResponse.from(savedBmc)
@@ -167,5 +134,29 @@ class BmcGenerationService(
             log.error("BMC 재생성 중 오류 발생: sessionId={}, userId={}, error={}", sessionId, user.id, e.message, e)
             throw RuntimeException("BMC 재생성 중 오류가 발생했습니다. 다시 시도해주세요.", e)
         }
+    }
+
+    private fun createBusinessModelCanvas(
+        user: com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User,
+        bmcQuestion: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcQuestion,
+        bmcElements: Map<String, String>,
+        associatedBmcQuestion: com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BmcQuestion?,
+    ): BusinessModelCanvas {
+        return BusinessModelCanvas(
+            user = user,
+            title = bmcQuestion.title,
+            templateType = bmcQuestion.templateType,
+            customerSegments = bmcElements["CUSTOMER_SEGMENTS"],
+            valueProposition = bmcElements["VALUE_PROPOSITION"],
+            channels = bmcElements["CHANNELS"],
+            customerRelationships = bmcElements["CUSTOMER_RELATIONSHIPS"],
+            revenueStreams = bmcElements["REVENUE_STREAMS"],
+            keyResources = bmcElements["KEY_RESOURCES"],
+            keyActivities = bmcElements["KEY_ACTIVITIES"],
+            keyPartners = bmcElements["KEY_PARTNERS"],
+            costStructure = bmcElements["COST_STRUCTURE"],
+            isCompleted = true,
+            bmcQuestion = associatedBmcQuestion,
+        )
     }
 }

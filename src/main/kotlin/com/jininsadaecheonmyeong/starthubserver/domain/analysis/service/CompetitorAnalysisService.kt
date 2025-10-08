@@ -60,7 +60,7 @@ class CompetitorAnalysisService(
 
         validateUserAccess(userBmc, user)
 
-        val searchKeywords = request.searchKeywords ?: generateSearchKeywords(userBmc)
+        val searchKeywords = generateSearchKeywords(userBmc)
 
         val competitors =
             try {
