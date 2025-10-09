@@ -28,4 +28,5 @@ data class UpdateBmcRequest(
     val keyPartners: String? = null,
     @field:Size(max = 2000, message = "비용 구조는 2000자 이하로 입력해주세요.")
     val costStructure: String? = null,
+    val imageUrl: String? = null,
 )

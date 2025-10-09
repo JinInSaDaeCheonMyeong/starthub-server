@@ -71,6 +71,7 @@ class BusinessModelCanvas(
         keyActivities: String? = null,
         keyPartners: String? = null,
         costStructure: String? = null,
+        imageUrl: String? = null,
     ) {
         title?.let { this.title = it }
         templateType?.let { this.templateType = it }
@@ -83,6 +84,7 @@ class BusinessModelCanvas(
         keyActivities?.let { this.keyActivities = it }
         keyPartners?.let { this.keyPartners = it }
         costStructure?.let { this.costStructure = it }
+        imageUrl?.let { this.imageUrl = it }
     }
 
     fun markAsCompleted() {

@@ -69,6 +69,7 @@ class BusinessModelCanvasService(
             keyActivities = request.keyActivities,
             keyPartners = request.keyPartners,
             costStructure = request.costStructure,
+            imageUrl = request.imageUrl,
         )
 
         val updatedBmc = businessModelCanvasRepository.save(bmc)
