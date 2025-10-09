@@ -14,4 +14,9 @@ interface BmcQuestionRepository : JpaRepository<BmcQuestion, Long> {
     ): Optional<BmcQuestion>
 
     fun findAllByUserOrderByCreatedAtDesc(user: User): List<BmcQuestion>
+
+    fun findByUserAndTitleAndIsCompletedFalse(
+        user: User,
+        title: String,
+    ): Optional<BmcQuestion>
 }

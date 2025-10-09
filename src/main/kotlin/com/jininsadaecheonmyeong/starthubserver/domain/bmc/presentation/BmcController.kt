@@ -42,8 +42,8 @@ class BmcController(
     override fun createBmcSession(
         @Valid @RequestBody request: CreateBmcSessionRequest,
     ): ResponseEntity<BaseResponse<BmcSessionResponse>> {
-        val result = bmcQuestionService.createBmcSession(request)
-        return BaseResponse.of(result, "BMC 세션 생성 성공")
+        val (result, message) = bmcQuestionService.createBmcSession(request)
+        return BaseResponse.of(result, message)
     }
 
     @PostMapping("/sessions/answer")
@@ -58,8 +58,8 @@ class BmcController(
     override fun generateBmc(
         @Valid @RequestBody request: GenerateBmcRequest,
     ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>> {
-        val result = bmcGenerationService.generateBusinessModelCanvas(request)
-        return BaseResponse.of(result, "BMC 생성 성공")
+        val (result, message) = bmcGenerationService.generateBusinessModelCanvas(request)
+        return BaseResponse.of(result, message)
     }
 
     @PostMapping("/modify")

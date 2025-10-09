@@ -18,8 +18,13 @@ class BmcQuestionService(
     private val bmcQuestionRepository: BmcQuestionRepository,
     private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {
-    fun createBmcSession(request: CreateBmcSessionRequest): BmcSessionResponse {
+    fun createBmcSession(request: CreateBmcSessionRequest): Pair<BmcSessionResponse, String> {
         val user = userAuthenticationHolder.current()
+
+        val existingSession = bmcQuestionRepository.findByUserAndTitleAndIsCompletedFalse(user, request.title)
+        if (existingSession.isPresent) {
+            return BmcSessionResponse.from(existingSession.get()) to "동일한 제목의 미완료 세션이 존재하여 기존 세션을 반환합니다."
+        }
 
         val bmcQuestion =
             BmcQuestion(
@@ -29,7 +34,7 @@ class BmcQuestionService(
             )
 
         val savedBmcQuestion = bmcQuestionRepository.save(bmcQuestion)
-        return BmcSessionResponse.from(savedBmcQuestion)
+        return BmcSessionResponse.from(savedBmcQuestion) to "BMC 세션 생성 성공"
     }
 
     fun answerQuestion(request: AnswerQuestionRequest): BmcSessionResponse {
