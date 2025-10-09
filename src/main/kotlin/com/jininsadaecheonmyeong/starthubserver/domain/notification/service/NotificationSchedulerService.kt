@@ -105,7 +105,10 @@ class NotificationSchedulerService(
                         val titleTemplate = AI_RECOMMENDATION_TITLES.random()
                         val title = titleTemplate.format(user.username ?: "회원")
                         val body = announcement.title
-                        val data = mapOf("announcementId" to announcement.id.toString())
+                        val data = mapOf(
+                            "announcementId" to announcement.id.toString(),
+                            "channelId" to NOTIFICATION_TYPE_AI_RECOMMENDATION
+                        )
 
                         fcmService.sendPushNotificationToUser(user, title, body, data)
                         notificationHistoryRepository.save(
@@ -173,7 +176,10 @@ class NotificationSchedulerService(
                             val titleTemplate = INTEREST_CATEGORY_TITLES.random()
                             val title = titleTemplate.format(matchedInterest)
                             val body = announcement.title
-                            val data = mapOf("announcementId" to announcement.id.toString())
+                            val data = mapOf(
+                                "announcementId" to announcement.id.toString(),
+                                "channelId" to NOTIFICATION_TYPE_INTEREST_CATEGORY
+                            )
 
                             fcmService.sendPushNotificationToUser(user, title, body, data)
                             notificationHistoryRepository.save(
@@ -241,7 +247,10 @@ class NotificationSchedulerService(
                                 }
 
                             val body = schedule.announcement.title
-                            val data = mapOf("announcementId" to schedule.announcement.id.toString())
+                            val data = mapOf(
+                                "announcementId" to schedule.announcement.id.toString(),
+                                "channelId" to NOTIFICATION_TYPE_DEADLINE
+                            )
 
                             fcmService.sendPushNotificationToUser(user, title, body, data)
                             notificationHistoryRepository.save(
