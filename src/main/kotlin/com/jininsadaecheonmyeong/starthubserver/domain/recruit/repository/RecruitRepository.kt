@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import java.util.Optional
 
 interface RecruitRepository : JpaRepository<Recruit, Long> {
     fun findAllByDeletedFalse(pageable: Pageable): Page<Recruit>
@@ -17,5 +16,5 @@ interface RecruitRepository : JpaRepository<Recruit, Long> {
             "LEFT JOIN FETCH r.company " +
             "WHERE r.id = :id AND r.deleted = false",
     )
-    fun findByIdAndDeletedFalse(id: Long): Optional<Recruit>
+    fun findByIdAndDeletedFalse(id: Long): Recruit?
 }

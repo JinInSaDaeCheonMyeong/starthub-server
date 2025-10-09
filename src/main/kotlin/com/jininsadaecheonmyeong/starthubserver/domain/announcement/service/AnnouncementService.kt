@@ -19,6 +19,7 @@ import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
@@ -170,7 +171,7 @@ class AnnouncementService(
         includeLikeStatus: Boolean,
     ): AnnouncementDetailResponse {
         val announcement =
-            repository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
+            repository.findByIdOrNull(announcementId) ?: throw AnnouncementNotFoundException("찾을 수 없는 공고")
 
         return if (includeLikeStatus) {
             val user = userAuthenticationHolder.current()

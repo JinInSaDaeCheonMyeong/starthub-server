@@ -26,6 +26,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.Token
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.service.TokenService
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -200,7 +201,7 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun getUserProfile(userId: Long): UserProfileResponse {
-        val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+        val user = userRepository.findByIdOrNull(userId) ?: throw UserNotFoundException("찾을 수 없는 유저")
         val companies = companyRepository.findByFounderAndDeletedFalse(user)
         val startupFields =
             userStartupFieldRepository.findByUser(user).map {
