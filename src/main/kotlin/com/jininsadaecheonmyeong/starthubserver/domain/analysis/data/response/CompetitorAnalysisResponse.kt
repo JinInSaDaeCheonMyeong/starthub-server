@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema
     description = "BMC 기반 경쟁사 분석 결과를 5개 주요 섹션으로 구조화한 데이터",
 )
 data class CompetitorAnalysisResponse(
+    @Schema(description = "BMC ID", example = "1")
+    val bmcId: Long,
     @Schema(description = "사용자 BMC 요약 정보")
     val userBmc: UserBmcSummary,
     @Schema(description = "사용자 규모 분석 결과")
