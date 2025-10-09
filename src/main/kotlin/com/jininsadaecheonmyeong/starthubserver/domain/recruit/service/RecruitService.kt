@@ -34,7 +34,7 @@ class RecruitService(
         val user = userAuthenticationHolder.current()
         val company =
             companyRepository.findByIdAndDeletedFalse(request.companyId)
-                .orElseThrow { CompanyNotFoundException("회사를 찾을 수 없습니다.") }
+                ?: throw CompanyNotFoundException("회사를 찾을 수 없습니다.")
 
         val recruit =
             Recruit(
@@ -64,7 +64,7 @@ class RecruitService(
     ): RecruitResponse {
         val recruit =
             recruitRepository.findByIdAndDeletedFalse(recruitId)
-                .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
+                ?: throw RecruitNotFoundException("채용 공고를 찾을 수 없습니다.")
 
         val user = userAuthenticationHolder.current()
         if (recruit.writer.id != user.id) {
@@ -90,7 +90,7 @@ class RecruitService(
     fun deleteRecruit(recruitId: Long) {
         val recruit =
             recruitRepository.findByIdAndDeletedFalse(recruitId)
-                .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
+                ?: throw RecruitNotFoundException("채용 공고를 찾을 수 없습니다.")
 
         val user = userAuthenticationHolder.current()
         if (recruit.writer.id != user.id) {
@@ -105,7 +105,7 @@ class RecruitService(
     fun closeRecruit(recruitId: Long) {
         val recruit =
             recruitRepository.findByIdAndDeletedFalse(recruitId)
-                .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
+                ?: throw RecruitNotFoundException("채용 공고를 찾을 수 없습니다.")
 
         val user = userAuthenticationHolder.current()
         if (recruit.writer.id != user.id) {
@@ -128,7 +128,7 @@ class RecruitService(
     fun getRecruit(recruitId: Long): RecruitResponse {
         val recruit =
             recruitRepository.findByIdAndDeletedFalse(recruitId)
-                .orElseThrow { RecruitNotFoundException("채용 공고를 찾을 수 없습니다.") }
+                ?: throw RecruitNotFoundException("채용 공고를 찾을 수 없습니다.")
         recruit.viewCount++
         val techStacks = getTechStacksForRecruit(recruit)
         return recruit.toResponse(techStacks)

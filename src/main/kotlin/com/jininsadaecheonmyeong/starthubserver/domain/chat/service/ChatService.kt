@@ -14,6 +14,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.Compan
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -32,8 +33,8 @@ class ChatService(
         userId: Long,
         companyId: Long,
     ): ChatRoomResponse {
-        val user = userRepository.findById(userId).orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
-        val company = companyRepository.findById(companyId).orElseThrow { CompanyNotFoundException("찾을 수 없는 기업") }
+        val user = userRepository.findByIdOrNull(userId) ?: throw UserNotFoundException("찾을 수 없는 유저")
+        val company = companyRepository.findByIdOrNull(companyId) ?: throw CompanyNotFoundException("찾을 수 없는 기업")
         val founder = company.founder
 
         val room =
@@ -46,11 +47,11 @@ class ChatService(
     @Transactional
     fun saveAndSendMessage(createChatMessageDto: CreateChatMessageDto): ChatMessageResponse {
         val room =
-            chatRoomRepository.findById(createChatMessageDto.roomId)
-                .orElseThrow { ChatRoomNotFoundException("찾을 수 없는 채팅방") }
+            chatRoomRepository.findByIdOrNull(createChatMessageDto.roomId)
+                ?: throw ChatRoomNotFoundException("찾을 수 없는 채팅방")
         val sender =
-            userRepository.findById(createChatMessageDto.senderId)
-                .orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+            userRepository.findByIdOrNull(createChatMessageDto.senderId)
+                ?: throw UserNotFoundException("찾을 수 없는 유저")
 
         val chatMessage =
             ChatMessage(

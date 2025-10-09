@@ -11,6 +11,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.schedule.entity.Schedule
 import com.jininsadaecheonmyeong.starthubserver.domain.schedule.repository.ScheduleRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -28,11 +29,11 @@ class ScheduleService(
         request: ScheduleRequest,
     ) {
         val user =
-            userRepository.findById(userId)
-                .orElseThrow { UserNotFoundException("찾을 수 없는 유저") }
+            userRepository.findByIdOrNull(userId)
+                ?: throw UserNotFoundException("찾을 수 없는 유저")
         val announcement =
-            announcementRepository.findById(request.announcementId)
-                .orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
+            announcementRepository.findByIdOrNull(request.announcementId)
+                ?: throw AnnouncementNotFoundException("찾을 수 없는 공고")
 
         val schedule =
             Schedule(

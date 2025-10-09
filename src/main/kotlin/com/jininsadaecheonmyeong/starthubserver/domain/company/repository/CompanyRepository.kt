@@ -5,7 +5,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import java.util.Optional
 
 interface CompanyRepository : JpaRepository<Company, Long> {
     fun findAllByDeletedFalse(): List<Company>
@@ -17,14 +16,14 @@ interface CompanyRepository : JpaRepository<Company, Long> {
             "LEFT JOIN FETCH c.founder " +
             "WHERE c.id = :id AND c.deleted = false",
     )
-    fun findByIdAndDeletedFalse(id: Long): Optional<Company>
+    fun findByIdAndDeletedFalse(id: Long): Company?
 
     @Query(
         "SELECT c FROM Company c " +
             "LEFT JOIN FETCH c.founder " +
             "WHERE c.companyName = :name AND c.deleted = false",
     )
-    fun findByCompanyNameAndDeletedFalse(name: String): Optional<Company>
+    fun findByCompanyNameAndDeletedFalse(name: String): Company?
 
     @Query(
         "SELECT c FROM Company c " +

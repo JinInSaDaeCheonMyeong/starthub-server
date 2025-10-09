@@ -9,6 +9,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.NotComp
 import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.enums.BusinessType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -45,7 +46,7 @@ class CompanyService(
 
     private fun findCompanyAndVerifyFounder(companyId: Long): Company {
         val user = userAuthenticationHolder.current()
-        val company = repository.findById(companyId).orElseThrow { CompanyNotFoundException("찾을 수 없는 기업") }
+        val company = repository.findByIdOrNull(companyId) ?: throw CompanyNotFoundException("찾을 수 없는 기업")
         if (!company.isFounder(user)) {
             throw NotCompanyFounderException("기업 등록자만 접근할 수 있습니다.")
         }
@@ -59,12 +60,12 @@ class CompanyService(
 
     @Transactional(readOnly = true)
     fun findById(id: Long): Company? {
-        return repository.findByIdAndDeletedFalse(id).orElse(null)
+        return repository.findByIdAndDeletedFalse(id)
     }
 
     @Transactional(readOnly = true)
     fun findByCompanyName(name: String): Company? {
-        return repository.findByCompanyNameAndDeletedFalse(name).orElse(null)
+        return repository.findByCompanyNameAndDeletedFalse(name)
     }
 
     @Transactional(readOnly = true)

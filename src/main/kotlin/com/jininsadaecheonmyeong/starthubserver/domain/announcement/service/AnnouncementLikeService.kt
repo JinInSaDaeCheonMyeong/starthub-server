@@ -7,6 +7,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.Li
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,7 +21,7 @@ class AnnouncementLikeService(
     fun addLike(announcementId: Long) {
         val user = userAuthenticationHolder.current()
         val announcement =
-            announcementRepository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
+            announcementRepository.findByIdOrNull(announcementId) ?: throw AnnouncementNotFoundException("찾을 수 없는 공고")
 
         if (announcementLikeRepository.existsByUserAndAnnouncement(user, announcement)) {
             throw LikeAlreadyExistsException("이미 좋아요를 누른 공고")
@@ -41,7 +42,7 @@ class AnnouncementLikeService(
     fun removeLike(announcementId: Long) {
         val user = userAuthenticationHolder.current()
         val announcement =
-            announcementRepository.findById(announcementId).orElseThrow { AnnouncementNotFoundException("찾을 수 없는 공고") }
+            announcementRepository.findByIdOrNull(announcementId) ?: throw AnnouncementNotFoundException("찾을 수 없는 공고")
 
         val like =
             announcementLikeRepository.findByUserAndAnnouncement(user, announcement)
