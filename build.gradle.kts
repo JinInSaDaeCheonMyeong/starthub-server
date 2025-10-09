@@ -73,6 +73,9 @@ dependencies {
     // jsoup
     implementation("org.jsoup:jsoup:1.17.2")
 
+    // gcs
+    implementation("com.google.cloud:google-cloud-storage:2.30.1")
+
     // etc
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 }

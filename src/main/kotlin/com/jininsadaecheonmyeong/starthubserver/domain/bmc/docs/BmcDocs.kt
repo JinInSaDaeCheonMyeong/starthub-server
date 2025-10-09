@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.CreateBm
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.GenerateBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.ModifyBmcRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBmcRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBmcSessionRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcFormResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcModificationResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BmcSessionResponse
@@ -18,28 +19,14 @@ import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.multipart.MultipartFile
 
 @Tag(name = "BMC", description = "비즈니스 모델 캔버스 관련 API")
 interface BmcDocs {
     @Operation(
         summary = "BMC 세션 생성",
         description = "새로운 BMC 대화 세션을 생성합니다. 제목을 입력받아 세션을 시작합니다.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "BMC 세션 생성 성공",
-            ),
-            ApiResponse(
-                responseCode = "400",
-                description = "잘못된 요청 (사업 아이디어 필수)",
-            ),
-            ApiResponse(
-                responseCode = "401",
-                description = "인증 필요",
-            ),
-        ],
     )
     fun createBmcSession(
         @Valid @RequestBody request: CreateBmcSessionRequest,
@@ -130,5 +117,23 @@ interface BmcDocs {
     )
     fun updateBmc(
         @Valid @RequestBody request: UpdateBmcRequest,
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>>
+
+    @Operation(
+        summary = "BMC 이미지 업로드",
+        description = "완성된 BMC를 이미지로 업로드하여 GCS에 저장합니다. BMC ID와 이미지 파일을 전송합니다.",
+    )
+    fun uploadBmcImage(
+        @PathVariable bmcId: Long,
+        @RequestParam image: MultipartFile,
+    ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>>
+
+    @Operation(
+        summary = "세션 답변 수정 후 BMC 재생성",
+        description = "세션의 답변을 수정하고 수정된 답변으로 새로운 BMC를 생성합니다. 수정할 질문들의 번호와 답변을 리스트로 입력합니다.",
+    )
+    fun updateSessionAnswersAndRegenerate(
+        @PathVariable sessionId: Long,
+        @Valid @RequestBody request: UpdateBmcSessionRequest,
     ): ResponseEntity<BaseResponse<BusinessModelCanvasResponse>>
 }
