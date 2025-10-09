@@ -23,12 +23,18 @@ class BmcGenerationService(
 ) {
     private val log = logger()
 
-    fun generateBusinessModelCanvas(request: GenerateBmcRequest): BusinessModelCanvasResponse {
+    fun generateBusinessModelCanvas(request: GenerateBmcRequest): Pair<BusinessModelCanvasResponse, String> {
         val user = userAuthenticationHolder.current()
         val bmcQuestion = bmcQuestionService.getBmcQuestionEntity(request.sessionId)
         if (!bmcQuestion.isCompleted) {
             throw BmcSessionNotCompletedException("모든 질문에 답변을 완료해야 BMC를 생성할 수 있습니다.")
         }
+
+        val existingBmc = businessModelCanvasRepository.findByBmcQuestionAndUserAndDeletedFalse(bmcQuestion, user)
+        if (existingBmc.isPresent) {
+            return BusinessModelCanvasResponse.from(existingBmc.get()) to "이미 생성된 BMC가 존재하여 기존 BMC를 반환합니다."
+        }
+
         val prompt = bmcPromptService.generateBmcPrompt(bmcQuestion)
 
         try {
@@ -39,7 +45,7 @@ class BmcGenerationService(
             val savedBmc = businessModelCanvasRepository.save(businessModelCanvas)
             log.info("BMC 생성 완료: sessionId={}, userId={}, bmcId={}", request.sessionId, user.id, savedBmc.id)
 
-            return BusinessModelCanvasResponse.from(savedBmc)
+            return BusinessModelCanvasResponse.from(savedBmc) to "BMC 생성 성공"
         } catch (e: Exception) {
             log.error("BMC 생성 중 오류 발생: sessionId={}, userId={}, error={}", request.sessionId, user.id, e.message, e)
             throw RuntimeException("BMC 생성 중 오류가 발생했습니다. 다시 시도해주세요.", e)
