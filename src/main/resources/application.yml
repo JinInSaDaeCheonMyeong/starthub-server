@@ -134,6 +134,9 @@ gcs:
   project-id: ${GCS_PROJECT_ID}
   credentials-path: ${GCS_CREDENTIALS_PATH:}
 
+firebase:
+  credentials-path: ${FIREBASE_CREDENTIALS_PATH:}
+
 swagger:
   auth:
     enabled: true

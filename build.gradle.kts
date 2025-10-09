@@ -76,6 +76,9 @@ dependencies {
     // gcs
     implementation("com.google.cloud:google-cloud-storage:2.30.1")
 
+    // firebase
+    implementation("com.google.firebase:firebase-admin:9.2.0")
+
     // etc
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 }

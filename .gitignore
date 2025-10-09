@@ -42,5 +42,8 @@ out/
 ### gcs ###
 gcs-key.json
 
+### firebase ###
+firebase-service-account.json
+
 .DS_Store
 .env
