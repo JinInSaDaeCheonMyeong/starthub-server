@@ -54,7 +54,7 @@ class BusinessModelCanvas(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_bmc_question_id")
     var bmcQuestion: BmcQuestion? = null,
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "MEDIUMTEXT")
     var imageUrl: String? = null,
 ) : BaseEntity() {
     fun isOwner(user: User): Boolean = this.user.id == user.id
