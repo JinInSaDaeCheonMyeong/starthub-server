@@ -153,6 +153,7 @@ class CompetitorAnalysisService(
 
     private fun deserializeAnalysisResponse(analysis: CompetitorAnalysis): CompetitorAnalysisResponse {
         return CompetitorAnalysisResponse(
+            bmcId = analysis.businessModelCanvas.id!!,
             userBmc = objectMapper.readValue(analysis.userBmcSummary, UserBmcSummary::class.java),
             userScale = objectMapper.readValue(analysis.userScaleAnalysis, UserScaleAnalysis::class.java),
             strengths = objectMapper.readValue(analysis.strengthsAnalysis, StrengthsAnalysis::class.java),
@@ -215,6 +216,7 @@ class CompetitorAnalysisService(
         competitors: List<CompetitorInfo>,
     ): CompetitorAnalysisResponse {
         return CompetitorAnalysisResponse(
+            bmcId = userBmc.id!!,
             userBmc = createUserBmcSummary(userBmc, gptResponse),
             userScale = parseUserScaleAnalysis(gptResponse, competitors),
             strengths = parseStrengthsAnalysis(gptResponse),
@@ -686,6 +688,7 @@ class CompetitorAnalysisService(
         competitors: List<CompetitorInfo>,
     ): CompetitorAnalysisResponse {
         return CompetitorAnalysisResponse(
+            bmcId = userBmc.id!!,
             userBmc = createFallbackUserBmcSummary(userBmc),
             userScale = createFallbackUserScale(competitors),
             strengths = createFallbackStrengths(),
