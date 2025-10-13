@@ -60,6 +60,11 @@ class CompetitorAnalysisService(
 
         validateUserAccess(userBmc, user)
 
+        val existingAnalysis = competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(userBmc)
+        if (existingAnalysis.isPresent) {
+            return deserializeAnalysisResponse(existingAnalysis.get())
+        }
+
         val searchKeywords = generateSearchKeywords(userBmc)
 
         val competitors =

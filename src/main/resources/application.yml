@@ -126,8 +126,8 @@ perplexity:
   api-key: ${PERPLEXITY_API_KEY}
   base-url: https://api.perplexity.ai
   model: sonar-pro
-  timeout: 30000
-  max-tokens: 4000
+  timeout: 45000
+  max-tokens: 2000
 
 gcs:
   bucket-name: ${GCS_BUCKET_NAME}
