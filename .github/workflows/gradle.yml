@@ -22,8 +22,8 @@ jobs:
       - name: make application.yml
         run: |
           mkdir -p ./src/main/resources
-          touch ./src/main/resources/application.yml
-          echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
+          echo "${{ secrets.APPLICATION }}" | base64 --decode > ./src/main/resources/application.yml
+
 
       - name: Build with Gradle
         run: ./gradlew build
