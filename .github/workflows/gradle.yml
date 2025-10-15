@@ -24,6 +24,13 @@ jobs:
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION }}" | base64 --decode > ./src/main/resources/application.yml
 
+      - name: Make gcs-key.json
+        run: |
+          echo "${{ secrets.GCS_KEY_JSON }}" | base64 --decode > ./src/main/resources/gcs-key.json
+
+      - name: Make firebase-service-account.json
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" | base64 --decode > ./src/main/resources/firebase-service-account.json
 
       - name: Build with Gradle
         run: ./gradlew build
