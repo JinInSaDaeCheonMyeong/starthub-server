@@ -13,6 +13,8 @@ interface BusinessModelCanvasRepository : JpaRepository<BusinessModelCanvas, Lon
 
     fun findAllByUserAndDeletedFalse(user: User): List<BusinessModelCanvas>
 
+    fun findTop3ByUserAndDeletedFalseOrderByCreatedAtDesc(user: User): List<BusinessModelCanvas>
+
     fun findAllByDeletedFalse(): List<BusinessModelCanvas>
 
     fun existsByIdAndDeletedFalse(id: Long): Boolean

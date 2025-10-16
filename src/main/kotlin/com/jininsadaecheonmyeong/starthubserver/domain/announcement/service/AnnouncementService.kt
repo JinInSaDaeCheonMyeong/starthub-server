@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.BmcInfo
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.LikedAnnouncementUrl
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.LikedAnnouncementsContent
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.RecommendationRequest
@@ -12,6 +13,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.Announ
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.exception.AnnouncementNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserInterestNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserStartupFieldRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
@@ -35,6 +37,7 @@ class AnnouncementService(
     private val repository: AnnouncementRepository,
     private val announcementLikeRepository: AnnouncementLikeRepository,
     private val userStartupFieldRepository: UserStartupFieldRepository,
+    private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val webClient: WebClient,
     private val userAuthenticationHolder: UserAuthenticationHolder,
     @param:Value("\${recommendation.fastapi-url}") private val fastapiUrl: String,
@@ -220,10 +223,26 @@ class AnnouncementService(
         val likedUrls = likedAnnouncements.map { LikedAnnouncementUrl(it.announcement.url) }.toList()
         val likedContent = LikedAnnouncementsContent(content = likedUrls)
 
+        val userBmcs = businessModelCanvasRepository.findTop3ByUserAndDeletedFalseOrderByCreatedAtDesc(user)
+        val bmcInfos = userBmcs.map {
+            BmcInfo(
+                customerSegments = it.customerSegments,
+                valueProposition = it.valueProposition,
+                channels = it.channels,
+                customerRelationships = it.customerRelationships,
+                revenueStreams = it.revenueStreams,
+                keyResources = it.keyResources,
+                keyActivities = it.keyActivities,
+                keyPartners = it.keyPartners,
+                costStructure = it.costStructure,
+            )
+        }
+
         val request =
             RecommendationRequest(
                 interests = interestNames,
                 likedAnnouncements = likedContent,
+                bmcs = bmcInfos,
             )
 
         val recommendationResponse =
