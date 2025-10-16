@@ -224,19 +224,20 @@ class AnnouncementService(
         val likedContent = LikedAnnouncementsContent(content = likedUrls)
 
         val userBmcs = businessModelCanvasRepository.findTop3ByUserAndDeletedFalseOrderByCreatedAtDesc(user)
-        val bmcInfos = userBmcs.map {
-            BmcInfo(
-                customerSegments = it.customerSegments,
-                valueProposition = it.valueProposition,
-                channels = it.channels,
-                customerRelationships = it.customerRelationships,
-                revenueStreams = it.revenueStreams,
-                keyResources = it.keyResources,
-                keyActivities = it.keyActivities,
-                keyPartners = it.keyPartners,
-                costStructure = it.costStructure,
-            )
-        }
+        val bmcInfos =
+            userBmcs.map {
+                BmcInfo(
+                    customerSegments = it.customerSegments,
+                    valueProposition = it.valueProposition,
+                    channels = it.channels,
+                    customerRelationships = it.customerRelationships,
+                    revenueStreams = it.revenueStreams,
+                    keyResources = it.keyResources,
+                    keyActivities = it.keyActivities,
+                    keyPartners = it.keyPartners,
+                    costStructure = it.costStructure,
+                )
+            }
 
         val request =
             RecommendationRequest(
