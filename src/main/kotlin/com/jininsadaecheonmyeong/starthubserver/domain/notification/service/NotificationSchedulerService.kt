@@ -6,8 +6,10 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendationResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.BmcInfo
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.entity.NotificationHistory
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.repository.NotificationHistoryRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.schedule.repository.ScheduleRepository
@@ -35,6 +37,7 @@ class NotificationSchedulerService(
     private val announcementLikeRepository: AnnouncementLikeRepository,
     private val scheduleRepository: ScheduleRepository,
     private val notificationHistoryRepository: NotificationHistoryRepository,
+    private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val webClient: WebClient,
     @param:Value("\${recommendation.fastapi-url}") private val fastapiUrl: String,
 ) {
@@ -64,8 +67,6 @@ class NotificationSchedulerService(
     @Scheduled(cron = "0 0 12 * * *")
     @Transactional
     fun sendAiRecommendationNotifications() {
-        logger.info("Starting AI recommendation notifications")
-
         val users = userRepository.findAll()
         val today = LocalDate.now().atStartOfDay()
 
@@ -77,7 +78,6 @@ class NotificationSchedulerService(
                 }
 
         if (newAnnouncements.isEmpty()) {
-            logger.info("No new announcements today")
             return
         }
 
@@ -85,7 +85,6 @@ class NotificationSchedulerService(
             try {
                 val userInterests = userStartupFieldRepository.findByUser(user)
                 if (userInterests.isEmpty()) {
-                    logger.info("User ${user.id} has no interests set")
                     return@forEach
                 }
 
@@ -128,16 +127,12 @@ class NotificationSchedulerService(
                 logger.error("Error sending AI recommendation notification to user ${user.id}", e)
             }
         }
-
-        logger.info("Completed AI recommendation notifications")
     }
 
     // 매일 오전 7시 - 관심 카테고리 새 공고 푸시 알림
     @Scheduled(cron = "0 0 7 * * *")
     @Transactional
     fun sendInterestCategoryNotifications() {
-        logger.info("Starting interest category notifications")
-
         val users = userRepository.findAll()
         val today = LocalDate.now().atStartOfDay()
         val newAnnouncements =
@@ -148,7 +143,6 @@ class NotificationSchedulerService(
                 }
 
         if (newAnnouncements.isEmpty()) {
-            logger.info("No new announcements today")
             return
         }
 
@@ -289,10 +283,27 @@ class NotificationSchedulerService(
             val likedAnnouncements = announcementLikeRepository.findByUserOrderByCreatedAtDesc(user, Pageable.unpaged())
             val likedUrls = likedAnnouncements.map { LikedAnnouncementUrl(it.announcement.url) }.toList()
             val likedContent = LikedAnnouncementsContent(content = likedUrls)
+
+            val bmcs = businessModelCanvasRepository.findAllByUserAndDeletedFalse(user)
+            val bmcInfos = bmcs.map {
+                BmcInfo(
+                    customerSegments = it.customerSegments,
+                    valueProposition = it.valueProposition,
+                    channels = it.channels,
+                    customerRelationships = it.customerRelationships,
+                    revenueStreams = it.revenueStreams,
+                    keyResources = it.keyResources,
+                    keyActivities = it.keyActivities,
+                    keyPartners = it.keyPartners,
+                    costStructure = it.costStructure,
+                )
+            }
+
             val request =
                 RecommendationRequest(
                     interests = interestNames,
                     likedAnnouncements = likedContent,
+                    bmcs = bmcInfos,
                 )
             val recommendationResponse =
                 webClient.post()
