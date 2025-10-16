@@ -1,12 +1,12 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.notification.service
 
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.BmcInfo
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.LikedAnnouncementUrl
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.LikedAnnouncementsContent
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.RecommendationRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendationResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.entity.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.enums.AnnouncementStatus
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.BmcInfo
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementLikeRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.AnnouncementRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
@@ -285,19 +285,20 @@ class NotificationSchedulerService(
             val likedContent = LikedAnnouncementsContent(content = likedUrls)
 
             val bmcs = businessModelCanvasRepository.findAllByUserAndDeletedFalse(user)
-            val bmcInfos = bmcs.map {
-                BmcInfo(
-                    customerSegments = it.customerSegments,
-                    valueProposition = it.valueProposition,
-                    channels = it.channels,
-                    customerRelationships = it.customerRelationships,
-                    revenueStreams = it.revenueStreams,
-                    keyResources = it.keyResources,
-                    keyActivities = it.keyActivities,
-                    keyPartners = it.keyPartners,
-                    costStructure = it.costStructure,
-                )
-            }
+            val bmcInfos =
+                bmcs.map {
+                    BmcInfo(
+                        customerSegments = it.customerSegments,
+                        valueProposition = it.valueProposition,
+                        channels = it.channels,
+                        customerRelationships = it.customerRelationships,
+                        revenueStreams = it.revenueStreams,
+                        keyResources = it.keyResources,
+                        keyActivities = it.keyActivities,
+                        keyPartners = it.keyPartners,
+                        costStructure = it.costStructure,
+                    )
+                }
 
             val request =
                 RecommendationRequest(
