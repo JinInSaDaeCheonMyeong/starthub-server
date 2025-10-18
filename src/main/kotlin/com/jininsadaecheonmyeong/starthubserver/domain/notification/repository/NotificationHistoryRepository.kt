@@ -18,4 +18,6 @@ interface NotificationHistoryRepository : JpaRepository<NotificationHistory, Lon
         user: User,
         notificationType: String,
     ): List<NotificationHistory>
+
+    fun findAllByUserOrderByCreatedAtDesc(user: User): List<NotificationHistory>
 }

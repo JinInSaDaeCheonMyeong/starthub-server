@@ -1,7 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.notification.presentation
 
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.data.request.RegisterFcmTokenRequest
+import com.jininsadaecheonmyeong.starthubserver.domain.notification.data.request.TestNotificationRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.data.response.FcmTokenResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.notification.data.response.NotificationHistoryResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.docs.NotificationDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.service.FcmService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
@@ -45,5 +47,21 @@ class NotificationController(
         val user = userAuthenticationHolder.current()
         val tokens = fcmService.getTokensByUser(user)
         return BaseResponse.of(tokens, HttpStatus.OK, "FCM 토큰 조회 성공")
+    }
+
+    @GetMapping("/history")
+    override fun getNotificationHistory(): ResponseEntity<BaseResponse<List<NotificationHistoryResponse>>> {
+        val user = userAuthenticationHolder.current()
+        val histories = fcmService.getNotificationHistory(user)
+        return BaseResponse.of(histories, HttpStatus.OK, "알림 히스토리 조회 성공")
+    }
+
+    @PostMapping("/test")
+    override fun sendTestNotification(
+        @Valid @RequestBody request: TestNotificationRequest,
+    ): ResponseEntity<BaseResponse<Unit>> {
+        val user = userAuthenticationHolder.current()
+        fcmService.sendPushNotificationToUser(user, request.title, request.body, request.data)
+        return BaseResponse.of(Unit, HttpStatus.OK, "테스트 알림 전송 성공")
     }
 }

@@ -4,9 +4,11 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.Message
 import com.google.firebase.messaging.Notification
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.data.response.FcmTokenResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.notification.data.response.NotificationHistoryResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.entity.FcmToken
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.enums.DeviceType
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.repository.FcmTokenRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.notification.repository.NotificationHistoryRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class FcmService(
     private val fcmTokenRepository: FcmTokenRepository,
+    private val notificationHistoryRepository: NotificationHistoryRepository,
 ) {
     private val logger = LoggerFactory.getLogger(FcmService::class.java)
 
@@ -118,6 +121,14 @@ class FcmService(
         val tokens = fcmTokenRepository.findByUser(user)
         return tokens.map {
             FcmTokenResponse.from(it)
+        }
+    }
+
+    @Transactional(readOnly = true)
+    fun getNotificationHistory(user: User): List<NotificationHistoryResponse> {
+        val histories = notificationHistoryRepository.findAllByUserOrderByCreatedAtDesc(user)
+        return histories.map {
+            NotificationHistoryResponse.from(it)
         }
     }
 }
