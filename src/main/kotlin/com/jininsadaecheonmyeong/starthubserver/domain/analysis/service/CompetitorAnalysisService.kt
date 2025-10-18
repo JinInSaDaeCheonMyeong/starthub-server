@@ -11,6 +11,8 @@ import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.Us
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.UserScaleAnalysis
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.WeaknessesAnalysis
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.entity.CompetitorAnalysis
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.exception.BmcAccessDeniedException
+import com.jininsadaecheonmyeong.starthubserver.domain.analysis.exception.CompetitorAnalysisNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.analysis.repository.CompetitorAnalysisRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcNotFoundException
@@ -23,6 +25,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 
 @Service
 @Transactional(readOnly = true)
@@ -137,7 +140,7 @@ class CompetitorAnalysisService(
 
         val analysis =
             competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(bmc)
-                .orElseThrow { throw IllegalStateException("저장된 경쟁사 분석을 찾을 수 없습니다.") }
+                .orElseThrow { CompetitorAnalysisNotFoundException("경쟁사 분석을 찾을 수 없습니다.") }
 
         return deserializeAnalysisResponse(analysis)
     }
@@ -159,6 +162,7 @@ class CompetitorAnalysisService(
             strengths = objectMapper.readValue(analysis.strengthsAnalysis, StrengthsAnalysis::class.java),
             weaknesses = objectMapper.readValue(analysis.weaknessesAnalysis, WeaknessesAnalysis::class.java),
             globalExpansionStrategy = objectMapper.readValue(analysis.globalExpansionStrategy, GlobalExpansionStrategy::class.java),
+            createdAt = analysis.createdAt,
         )
     }
 
@@ -185,7 +189,7 @@ class CompetitorAnalysisService(
         user: User,
     ) {
         if (!userBmc.isOwner(user)) {
-            throw BmcNotFoundException("접근 권한이 없습니다.")
+            throw BmcAccessDeniedException("해당 BMC에 접근할 권한이 없습니다.")
         }
     }
 
@@ -222,6 +226,7 @@ class CompetitorAnalysisService(
             strengths = parseStrengthsAnalysis(gptResponse),
             weaknesses = parseWeaknessesAnalysis(gptResponse),
             globalExpansionStrategy = parseGlobalExpansionStrategy(gptResponse),
+            createdAt = LocalDateTime.now(),
         )
     }
 
@@ -694,6 +699,7 @@ class CompetitorAnalysisService(
             strengths = createFallbackStrengths(),
             weaknesses = createFallbackWeaknesses(),
             globalExpansionStrategy = createFallbackGlobalStrategy(),
+            createdAt = LocalDateTime.now(),
         )
     }
 

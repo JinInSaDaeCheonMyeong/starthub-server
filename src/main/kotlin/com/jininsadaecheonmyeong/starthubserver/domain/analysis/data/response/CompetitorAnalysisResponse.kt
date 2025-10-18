@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response
 
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Schema(
     title = "경쟁사 분석 응답",
@@ -19,6 +20,8 @@ data class CompetitorAnalysisResponse(
     val weaknesses: WeaknessesAnalysis,
     @Schema(description = "글로벌 진출 전략")
     val globalExpansionStrategy: GlobalExpansionStrategy,
+    @Schema(description = "경쟁사 분석 생성 시간", example = "2025-10-19T02:30:00")
+    val createdAt: LocalDateTime,
 )
 
 @Schema(description = "사용자 BMC 요약 정보")
