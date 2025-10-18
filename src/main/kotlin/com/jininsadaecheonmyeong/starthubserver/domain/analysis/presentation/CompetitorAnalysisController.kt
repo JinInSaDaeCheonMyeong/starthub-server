@@ -40,4 +40,12 @@ class CompetitorAnalysisController(
         val result = competitorAnalysisService.getAllAnalysesByUser()
         return BaseResponse.of(result, "경쟁사 분석 목록 조회 성공")
     }
+
+    @PostMapping("/competitors/bmc/{bmcId}/regenerate")
+    override fun regenerateAnalysis(
+        @PathVariable bmcId: Long,
+    ): ResponseEntity<BaseResponse<CompetitorAnalysisResponse>> {
+        val result = competitorAnalysisService.regenerateAnalysis(bmcId)
+        return BaseResponse.of(result, "경쟁사 분석 재생성 완료")
+    }
 }

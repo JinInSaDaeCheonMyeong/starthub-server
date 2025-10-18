@@ -68,6 +68,23 @@ class CompetitorAnalysisService(
             return deserializeAnalysisResponse(existingAnalysis.get())
         }
 
+        return performAnalysis(user, userBmc)
+    }
+
+    @Transactional
+    fun regenerateAnalysis(bmcId: Long): CompetitorAnalysisResponse {
+        val user = userAuthenticationHolder.current()
+        val userBmc =
+            businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
+                .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
+        validateUserAccess(userBmc, user)
+        return performAnalysis(user, userBmc)
+    }
+
+    private fun performAnalysis(
+        user: User,
+        userBmc: BusinessModelCanvas,
+    ): CompetitorAnalysisResponse {
         val searchKeywords = generateSearchKeywords(userBmc)
 
         val competitors =

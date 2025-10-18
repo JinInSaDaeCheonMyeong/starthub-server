@@ -45,4 +45,13 @@ interface CompetitorAnalysisDocs {
         description = "현재 사용자가 저장한 모든 경쟁사 분석 결과를 조회합니다.",
     )
     fun getAllAnalyses(): ResponseEntity<BaseResponse<List<CompetitorAnalysisResponse>>>
+
+    @Operation(
+        summary = "경쟁사 분석 재생성",
+        description = "특정 BMC에 대한 경쟁사 분석을 다시 수행합니다. 기존 분석 결과가 있다면 덮어씁니다.",
+    )
+    fun regenerateAnalysis(
+        @Parameter(description = "BMC ID", required = true, example = "1")
+        @PathVariable bmcId: Long,
+    ): ResponseEntity<BaseResponse<CompetitorAnalysisResponse>>
 }
