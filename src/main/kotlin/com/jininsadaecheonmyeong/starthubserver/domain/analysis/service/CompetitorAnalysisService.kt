@@ -37,6 +37,7 @@ class CompetitorAnalysisService(
     private val chatModel: ChatModel,
     private val promptBuilder: CompetitorAnalysisPromptBuilder,
     private val objectMapper: ObjectMapper,
+    private val taskManager: CompetitorAnalysisTaskManager,
 ) {
     private val logger = LoggerFactory.getLogger(CompetitorAnalysisService::class.java)
 
@@ -68,6 +69,15 @@ class CompetitorAnalysisService(
             return deserializeAnalysisResponse(existingAnalysis.get())
         }
 
+        val ongoingTask = taskManager.getOngoingTask(request.bmcId)
+        if (ongoingTask != null) {
+            try {
+                return ongoingTask.get()
+            } catch (e: Exception) {
+                logger.error("Error waiting for ongoing task for BMC ID: {}", request.bmcId, e)
+            }
+        }
+
         return performAnalysis(user, userBmc)
     }
 
@@ -78,6 +88,19 @@ class CompetitorAnalysisService(
             businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
                 .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
         validateUserAccess(userBmc, user)
+        return performAnalysis(user, userBmc)
+    }
+
+    @Transactional
+    fun performAnalysisInternal(
+        user: User,
+        userBmc: BusinessModelCanvas,
+    ): CompetitorAnalysisResponse {
+        val existingAnalysis = competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(userBmc)
+        if (existingAnalysis.isPresent) {
+            return deserializeAnalysisResponse(existingAnalysis.get())
+        }
+
         return performAnalysis(user, userBmc)
     }
 
