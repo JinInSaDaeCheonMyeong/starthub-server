@@ -27,7 +27,7 @@ class CompetitorAnalysisAsyncService(
                 try {
                     competitorAnalysisService.performAnalysisInternal(user, businessModelCanvas)
                 } catch (e: Exception) {
-                    logger.error("Failed async competitor analysis for BMC ID: {}", bmcId, e)
+                    logger.error("경쟁사 분석 실패 - BMC ID: {}", bmcId, e)
                     throw e
                 }
             }

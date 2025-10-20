@@ -74,7 +74,7 @@ class CompetitorAnalysisService(
             try {
                 return ongoingTask.get()
             } catch (e: Exception) {
-                logger.error("Error waiting for ongoing task for BMC ID: {}", request.bmcId, e)
+                logger.error("진행 중인 분석 대기 실패 - BMC ID: {}", request.bmcId, e)
             }
         }
 
@@ -567,7 +567,6 @@ class CompetitorAnalysisService(
         }
 
         if (startIndex == -1) {
-            logger.warn("Section start marker '{}' not found", startMarker)
             return ""
         }
 
@@ -657,7 +656,6 @@ class CompetitorAnalysisService(
             }
 
         if (startIndex == -1) {
-            logger.warn("Key '{}' not found in section", key)
             return generateFallbackList(key, maxItems)
         }
 

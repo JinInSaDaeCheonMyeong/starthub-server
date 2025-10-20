@@ -138,10 +138,7 @@ class BmcGenerationService(
             val response = chatModel.call(prompt)
             val bmcElements = parseBmcResponse(response)
             val businessModelCanvas = createBusinessModelCanvas(user, bmcQuestion, bmcElements, null)
-
             val savedBmc = businessModelCanvasRepository.save(businessModelCanvas)
-
-            // Publish event to trigger async competitor analysis for regenerated BMC
             publishBmcCreatedEvent(savedBmc, user)
 
             return BusinessModelCanvasResponse.from(savedBmc)
