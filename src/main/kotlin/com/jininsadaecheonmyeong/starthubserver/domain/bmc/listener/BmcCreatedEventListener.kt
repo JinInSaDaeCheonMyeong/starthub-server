@@ -20,7 +20,7 @@ class BmcCreatedEventListener(
                 businessModelCanvas = event.businessModelCanvas,
             )
         } catch (e: Exception) {
-            logger.error("Failed to trigger async competitor analysis for BMC ID: {}", event.businessModelCanvas.id, e)
+            logger.error("경쟁사 분석 비동기 실행 실패 - BMC ID: {}", event.businessModelCanvas.id, e)
         }
     }
 }
