@@ -139,6 +139,7 @@ firebase:
 
 swagger:
   auth:
-    enabled: true
     username: ${SWAGGER_USERNAME}
     password: ${SWAGGER_PASSWORD}
+
+SEARCH_SERVER_URL: ${SEARCH_SERVER_URL}
