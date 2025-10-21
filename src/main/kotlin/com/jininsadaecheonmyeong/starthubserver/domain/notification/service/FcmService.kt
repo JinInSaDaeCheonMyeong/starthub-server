@@ -56,35 +56,23 @@ class FcmService(
         title: String,
         body: String,
         data: Map<String, String> = emptyMap(),
-    ): Boolean {
-        return try {
-            val notification =
-                Notification
-                    .builder()
-                    .setTitle(title)
-                    .setBody(body)
-                    .build()
-
-            val messageBuilder =
-                Message
-                    .builder()
-                    .setToken(token)
-                    .setNotification(notification)
-
-            if (data.isNotEmpty()) {
-                messageBuilder.putAllData(data)
-            }
-
-            val message = messageBuilder.build()
-            val response = FirebaseMessaging.getInstance().send(message)
-
-            logger.info("Successfully sent message: $response")
-            true
-        } catch (e: Exception) {
-            logger.error("Error sending FCM message to token: $token", e)
-            false
+    ): Result<String> =
+        runCatching {
+            message {
+                setToken(token)
+                setNotification(
+                    notification {
+                        setTitle(title)
+                        setBody(body)
+                    },
+                )
+                data.takeIf { it.isNotEmpty() }?.let { putAllData(it) }
+            }.let { FirebaseMessaging.getInstance().send(it) }
+        }.onSuccess {
+            logger.info("Successfully sent message: $it")
+        }.onFailure {
+            logger.error("Error sending FCM message to token: $token", it)
         }
-    }
 
     fun sendPushNotificationToUser(
         user: User,
@@ -99,10 +87,10 @@ class FcmService(
         }
 
         tokens.forEach { fcmToken ->
-            val success = sendPushNotification(fcmToken.token, title, body, data)
-            if (!success) {
-                logger.warn("Failed to send notification to token: ${fcmToken.token}")
-            }
+            sendPushNotification(fcmToken.token, title, body, data)
+                .onFailure {
+                    logger.warn("Failed to send notification to token: ${fcmToken.token}")
+                }
         }
     }
 
@@ -132,3 +120,7 @@ class FcmService(
         }
     }
 }
+
+private inline fun notification(block: Notification.Builder.() -> Unit): Notification = Notification.builder().apply(block).build()
+
+private inline fun message(block: Message.Builder.() -> Unit): Message = Message.builder().apply(block).build()

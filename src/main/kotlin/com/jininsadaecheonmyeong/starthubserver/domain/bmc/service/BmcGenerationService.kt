@@ -4,11 +4,13 @@ import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.Generate
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.request.UpdateBmcSessionRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.data.response.BusinessModelCanvasResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
+import com.jininsadaecheonmyeong.starthubserver.domain.bmc.event.BmcCreatedEvent
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.exception.BmcSessionNotCompletedException
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.logger
 import org.springframework.ai.chat.model.ChatModel
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,6 +22,7 @@ class BmcGenerationService(
     private val bmcPromptService: BmcPromptService,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val userAuthenticationHolder: UserAuthenticationHolder,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     private val log = logger()
 
@@ -44,6 +47,8 @@ class BmcGenerationService(
 
             val savedBmc = businessModelCanvasRepository.save(businessModelCanvas)
             log.info("BMC 생성 완료: sessionId={}, userId={}, bmcId={}", request.sessionId, user.id, savedBmc.id)
+
+            publishBmcCreatedEvent(savedBmc, user)
 
             return BusinessModelCanvasResponse.from(savedBmc) to "BMC 생성 성공"
         } catch (e: Exception) {
@@ -133,8 +138,9 @@ class BmcGenerationService(
             val response = chatModel.call(prompt)
             val bmcElements = parseBmcResponse(response)
             val businessModelCanvas = createBusinessModelCanvas(user, bmcQuestion, bmcElements, null)
-
             val savedBmc = businessModelCanvasRepository.save(businessModelCanvas)
+            publishBmcCreatedEvent(savedBmc, user)
+
             return BusinessModelCanvasResponse.from(savedBmc)
         } catch (e: Exception) {
             log.error("BMC 재생성 중 오류 발생: sessionId={}, userId={}, error={}", sessionId, user.id, e.message, e)
@@ -164,5 +170,22 @@ class BmcGenerationService(
             isCompleted = true,
             bmcQuestion = associatedBmcQuestion,
         )
+    }
+
+    private fun publishBmcCreatedEvent(
+        businessModelCanvas: BusinessModelCanvas,
+        user: com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User,
+    ) {
+        try {
+            val event =
+                BmcCreatedEvent(
+                    source = this,
+                    businessModelCanvas = businessModelCanvas,
+                    user = user,
+                )
+            eventPublisher.publishEvent(event)
+        } catch (e: Exception) {
+            log.error("Failed to publish BmcCreatedEvent for BMC ID: {}", businessModelCanvas.id, e)
+        }
     }
 }
