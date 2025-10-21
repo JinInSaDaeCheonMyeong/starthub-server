@@ -1,7 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs
 
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.NaturalLanguageSearchRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.NaturalLanguageSearchResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendedAnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
@@ -15,7 +17,9 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
+import reactor.core.publisher.Mono
 
 @Tag(name = "공고", description = "공고 관련 API")
 interface AnnouncementDocs {
@@ -88,4 +92,10 @@ interface AnnouncementDocs {
     )
     @GetMapping("/recommendations")
     fun getRecommendedAnnouncements(): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>>
+
+    @Operation(summary = "자연어 공고 검색")
+    @PostMapping("/search/natural")
+    fun searchAnnouncement(
+        @RequestBody request: NaturalLanguageSearchRequest,
+    ): Mono<BaseResponse<NaturalLanguageSearchResponse>>
 }
