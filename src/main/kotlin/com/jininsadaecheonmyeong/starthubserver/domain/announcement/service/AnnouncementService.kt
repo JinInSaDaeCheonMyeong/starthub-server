@@ -3,6 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.domain.announcement.service
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.BmcInfo
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.LikedAnnouncementUrl
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.LikedAnnouncementsContent
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.NaturalLanguageSearchRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.RecommendationRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
@@ -20,6 +21,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.Us
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
@@ -27,6 +29,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -38,6 +41,7 @@ class AnnouncementService(
     private val announcementLikeRepository: AnnouncementLikeRepository,
     private val userStartupFieldRepository: UserStartupFieldRepository,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
+    private val announcementSearchService: AnnouncementSearchService,
     private val webClient: WebClient,
     private val userAuthenticationHolder: UserAuthenticationHolder,
     @param:Value("\${recommendation.fastapi-url}") private val fastapiUrl: String,
@@ -195,7 +199,7 @@ class AnnouncementService(
         includeLikeStatus: Boolean,
         pageable: Pageable,
     ): Page<AnnouncementResponse> {
-        val announcements =
+        var announcements =
             repository.searchAnnouncements(
                 title = title,
                 supportField = supportField,
@@ -205,6 +209,33 @@ class AnnouncementService(
                 businessExperience = businessExperience,
                 pageable = pageable,
             )
+
+        if (announcements.isEmpty) {
+            val queryBuilder = StringBuilder()
+            title?.let { queryBuilder.append("제목: $it. ") }
+            supportField?.let { queryBuilder.append("지원분야: $it. ") }
+            targetRegion?.let { queryBuilder.append("지역: $it. ") }
+            targetGroup?.let { queryBuilder.append("대상그룹: $it. ") }
+            targetAge?.let { queryBuilder.append("대상연령: $it. ") }
+            businessExperience?.let { queryBuilder.append("창업경험: $it. ") }
+
+
+            val naturalLanguageRequest = NaturalLanguageSearchRequest(queryBuilder.toString().trim())
+            val naturalLanguageResponseMono = announcementSearchService.searchAnnouncement(naturalLanguageRequest)
+            val naturalLanguageResponse = naturalLanguageResponseMono.block()
+
+            naturalLanguageResponse?.let {
+                val titles = it.results.map { result -> result.title }
+                val foundAnnouncements = repository.findAllByTitleIn(titles)
+
+                val sortedFoundAnnouncements = titles.mapNotNull { title ->
+                    foundAnnouncements.find { announcement -> announcement.title == title }
+                }
+
+                announcements = PageImpl(sortedFoundAnnouncements, pageable, sortedFoundAnnouncements.size.toLong())
+            }
+        }
+
         return if (includeLikeStatus) {
             mapAnnouncementsToResponseWithLikeStatus(announcements)
         } else {
@@ -259,7 +290,7 @@ class AnnouncementService(
                         Mono.error(UserInterestNotFoundException(detail))
                     }
                 }
-                .bodyToMono(RecommendationResponse::class.java)
+                .bodyToMono<RecommendationResponse>()
                 .block()
 
         if (recommendationResponse == null || recommendationResponse.recommendations.isEmpty()) {

@@ -1,32 +1,26 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.presentation
 
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.request.NaturalLanguageSearchRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.NaturalLanguageSearchResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendedAnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs.AnnouncementDocs
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementLikeService
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementSearchService
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.service.AnnouncementService
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("/announcements")
 class AnnouncementController(
     private val announcementService: AnnouncementService,
     private val announcementLikeService: AnnouncementLikeService,
-    private val announcementSearchService: AnnouncementSearchService,
 ) : AnnouncementDocs {
     override fun getAllAnnouncements(
         @ParameterObject pageable: Pageable,
@@ -95,10 +89,5 @@ class AnnouncementController(
     override fun getRecommendedAnnouncements(): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>> {
         val response = announcementService.getRecommendedAnnouncements()
         return BaseResponse.of(response, "추천 공고 조회 성공")
-    }
-
-    override fun searchAnnouncement(request: NaturalLanguageSearchRequest): Mono<BaseResponse<NaturalLanguageSearchResponse>> {
-        return announcementSearchService.searchAnnouncement(request)
-            .map { BaseResponse(it, HttpStatus.OK, "자연어 공고 검색 성공") }
     }
 }
