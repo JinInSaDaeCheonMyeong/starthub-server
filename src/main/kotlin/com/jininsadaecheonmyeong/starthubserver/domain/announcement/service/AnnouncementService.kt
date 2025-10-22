@@ -199,6 +199,7 @@ class AnnouncementService(
         includeLikeStatus: Boolean,
         pageable: Pageable,
     ): Page<AnnouncementResponse> {
+        var isNaturalLanguageSearch = false
         var announcements =
             repository.searchAnnouncements(
                 title = title,
@@ -233,14 +234,15 @@ class AnnouncementService(
                     }
 
                 announcements = PageImpl(sortedFoundAnnouncements, pageable, sortedFoundAnnouncements.size.toLong())
+                isNaturalLanguageSearch = true
             }
         }
 
         return if (includeLikeStatus) {
-            mapAnnouncementsToResponseWithLikeStatus(announcements)
+            mapAnnouncementsToResponseWithLikeStatus(announcements, isNaturalLanguageSearch)
         } else {
             announcements.map {
-                AnnouncementResponse.from(it)
+                AnnouncementResponse.from(it, isNatural = isNaturalLanguageSearch)
             }
         }
     }
@@ -317,7 +319,10 @@ class AnnouncementService(
         }
     }
 
-    private fun mapAnnouncementsToResponseWithLikeStatus(announcements: Page<Announcement>): Page<AnnouncementResponse> {
+    private fun mapAnnouncementsToResponseWithLikeStatus(
+        announcements: Page<Announcement>,
+        isNatural: Boolean? = null,
+    ): Page<AnnouncementResponse> {
         val user = userAuthenticationHolder.current()
         val announcementList = announcements.content
         val userLikes = announcementLikeRepository.findAllByUserAndAnnouncementIn(user, announcementList)
@@ -327,6 +332,7 @@ class AnnouncementService(
             AnnouncementResponse.from(
                 announcement = announcement,
                 isLiked = likedAnnouncementIds.contains(announcement.id),
+                isNatural = isNatural,
             )
         }
     }

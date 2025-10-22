@@ -18,11 +18,13 @@ data class AnnouncementResponse(
     val departmentInCharge: String,
     val content: String,
     val isLiked: Boolean? = null,
+    val isNatural: Boolean? = null,
 ) {
     companion object {
         fun from(
             announcement: Announcement,
             isLiked: Boolean? = null,
+            isNatural: Boolean? = null,
         ) = AnnouncementResponse(
             id = announcement.id!!,
             title = announcement.title,
@@ -39,6 +41,7 @@ data class AnnouncementResponse(
             departmentInCharge = announcement.departmentInCharge,
             content = announcement.content,
             isLiked = isLiked,
+            isNatural = isNatural,
         )
     }
 }
