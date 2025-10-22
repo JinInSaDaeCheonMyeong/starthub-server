@@ -219,7 +219,6 @@ class AnnouncementService(
             targetAge?.let { queryBuilder.append("대상연령: $it. ") }
             businessExperience?.let { queryBuilder.append("창업경험: $it. ") }
 
-
             val naturalLanguageRequest = NaturalLanguageSearchRequest(queryBuilder.toString().trim())
             val naturalLanguageResponseMono = announcementSearchService.searchAnnouncement(naturalLanguageRequest)
             val naturalLanguageResponse = naturalLanguageResponseMono.block()
@@ -228,9 +227,10 @@ class AnnouncementService(
                 val titles = it.results.map { result -> result.title }
                 val foundAnnouncements = repository.findAllByTitleIn(titles)
 
-                val sortedFoundAnnouncements = titles.mapNotNull { title ->
-                    foundAnnouncements.find { announcement -> announcement.title == title }
-                }
+                val sortedFoundAnnouncements =
+                    titles.mapNotNull { title ->
+                        foundAnnouncements.find { announcement -> announcement.title == title }
+                    }
 
                 announcements = PageImpl(sortedFoundAnnouncements, pageable, sortedFoundAnnouncements.size.toLong())
             }
