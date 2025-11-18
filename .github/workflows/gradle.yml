@@ -49,18 +49,19 @@ jobs:
           platforms: linux/amd64
           tags: ${{ secrets.DOCKER_USERNAME }}/starthub-server:latest
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: GCP SSH Run
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.GCP_HOST }}
-          username: ${{ secrets.GCP_USERNAME }}
-          key: ${{ secrets.GCP_KEY }}
-          script: |
-            echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-            docker pull ${{ secrets.DOCKER_USERNAME }}/starthub-server:latest
-            docker-compose down
-            docker-compose up -d
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: GCP SSH Run
+  #       uses: appleboy/ssh-action@v1.0.3
+  #       with:
+  #         host: ${{ secrets.GCP_HOST }}
+  #         username: ${{ secrets.GCP_USERNAME }}
+  #         key: ${{ secrets.GCP_KEY }}
+  #         script: |
+  #           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+  #           docker pull ${{ secrets.DOCKER_USERNAME }}/starthub-server:latest
+  #           docker-compose down
+  #           docker-compose up -d
+# 
