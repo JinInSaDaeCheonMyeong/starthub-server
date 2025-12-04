@@ -1,12 +1,12 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.analysis.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.analysis.data.response.CompetitorAnalysisResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.entity.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.logger
-import org.springframework.scheduling.annotation.Async
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.springframework.stereotype.Service
-import java.util.concurrent.CompletableFuture
 
 @Service
 class CompetitorAnalysisAsyncService(
@@ -14,22 +14,21 @@ class CompetitorAnalysisAsyncService(
     private val taskManager: CompetitorAnalysisTaskManager,
 ) {
     private val logger = logger()
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-    @Async("taskExecutor")
     fun performAnalysisAsync(
         user: User,
         businessModelCanvas: BusinessModelCanvas,
-    ): CompletableFuture<CompetitorAnalysisResponse> {
+    ) {
         val bmcId = businessModelCanvas.id!!
 
-        return taskManager.getOrCreateTask(bmcId) {
-            CompletableFuture.supplyAsync {
-                try {
+        coroutineScope.launch {
+            try {
+                taskManager.getOrCreateTask(bmcId) {
                     competitorAnalysisService.performAnalysisInternal(user, businessModelCanvas)
-                } catch (e: Exception) {
-                    logger.error("경쟁사 분석 실패 - BMC ID: {}", bmcId, e)
-                    throw e
                 }
+            } catch (e: Exception) {
+                logger.error("경쟁사 분석 실패 - BMC ID: {}", bmcId, e)
             }
         }
     }

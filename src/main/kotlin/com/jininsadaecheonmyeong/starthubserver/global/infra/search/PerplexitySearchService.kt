@@ -7,6 +7,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.Compet
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.EnhancedSearchResult
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchRequest
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchResultType
+import kotlinx.coroutines.reactive.awaitSingle
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.MediaType
@@ -26,7 +27,7 @@ class PerplexitySearchService(
 ) {
     private val logger = LoggerFactory.getLogger(PerplexitySearchService::class.java)
 
-    fun searchCompetitors(request: SearchRequest): List<CompetitorSearchResult> {
+    suspend fun searchCompetitors(request: SearchRequest): List<CompetitorSearchResult> {
         if (properties.apiKey.isBlank() || properties.apiKey.startsWith("\${")) {
             logger.error("Perplexity API 키가 설정되지 않음")
             throw SearchException("Perplexity API Key를 찾을 수 없음")
@@ -34,7 +35,7 @@ class PerplexitySearchService(
 
         return try {
             val searchQuery = buildCompetitorSearchQuery(request)
-            val response = performSearch(searchQuery)
+            val response = performSearchSuspend(searchQuery)
             parseCompetitorResults(response, request.maxResults)
         } catch (e: Exception) {
             logger.error("경쟁사 검색 실패: {}", e.message)
@@ -49,7 +50,7 @@ class PerplexitySearchService(
         }
     }
 
-    fun searchWithEnhancedResults(request: SearchRequest): List<EnhancedSearchResult> {
+    suspend fun searchWithEnhancedResults(request: SearchRequest): List<EnhancedSearchResult> {
         val basicResults = searchCompetitors(request)
 
         return basicResults.map { result ->
@@ -134,7 +135,7 @@ class PerplexitySearchService(
         }
     }
 
-    private fun performSearch(query: String): PerplexityResponse {
+    private suspend fun performSearchSuspend(query: String): PerplexityResponse {
         val requestBody =
             PerplexityRequest(
                 model = properties.model,
@@ -185,7 +186,7 @@ class PerplexitySearchService(
                     else -> SearchException("Perplexity API 오류: ${ex.statusText}", ex)
                 }
             }
-            .block() ?: throw SearchException("Perplexity API 응답 없음")
+            .awaitSingle()
     }
 
     private fun parseCompetitorResults(

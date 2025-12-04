@@ -56,7 +56,7 @@ class CompetitorAnalysisService(
     }
 
     @Transactional
-    fun analyzeCompetitors(request: CompetitorAnalysisRequest): CompetitorAnalysisResponse {
+    suspend fun analyzeCompetitors(request: CompetitorAnalysisRequest): CompetitorAnalysisResponse {
         val user = userAuthenticationHolder.current()
         val userBmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(request.bmcId)
@@ -72,27 +72,27 @@ class CompetitorAnalysisService(
         val ongoingTask = taskManager.getOngoingTask(request.bmcId)
         if (ongoingTask != null) {
             try {
-                return ongoingTask.get()
+                return ongoingTask.await()
             } catch (e: Exception) {
                 logger.error("진행 중인 분석 대기 실패 - BMC ID: {}", request.bmcId, e)
             }
         }
 
-        return performAnalysis(user, userBmc)
+        return performAnalysisSuspend(user, userBmc)
     }
 
     @Transactional
-    fun regenerateAnalysis(bmcId: Long): CompetitorAnalysisResponse {
+    suspend fun regenerateAnalysis(bmcId: Long): CompetitorAnalysisResponse {
         val user = userAuthenticationHolder.current()
         val userBmc =
             businessModelCanvasRepository.findByIdAndDeletedFalse(bmcId)
                 .orElseThrow { BmcNotFoundException("BMC를 찾을 수 없습니다.") }
         validateUserAccess(userBmc, user)
-        return performAnalysis(user, userBmc)
+        return performAnalysisSuspend(user, userBmc)
     }
 
     @Transactional
-    fun performAnalysisInternal(
+    suspend fun performAnalysisInternal(
         user: User,
         userBmc: BusinessModelCanvas,
     ): CompetitorAnalysisResponse {
@@ -101,10 +101,10 @@ class CompetitorAnalysisService(
             return deserializeAnalysisResponse(existingAnalysis.get())
         }
 
-        return performAnalysis(user, userBmc)
+        return performAnalysisSuspend(user, userBmc)
     }
 
-    private fun performAnalysis(
+    private suspend fun performAnalysisSuspend(
         user: User,
         userBmc: BusinessModelCanvas,
     ): CompetitorAnalysisResponse {

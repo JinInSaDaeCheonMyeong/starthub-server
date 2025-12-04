@@ -29,6 +29,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
+    // kotlin coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.8.0")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.2.2")
+
     // websocket + stomp
     implementation("org.springframework.boot:spring-boot-starter-websocket")
 

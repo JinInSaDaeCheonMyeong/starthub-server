@@ -18,7 +18,7 @@ interface CompetitorAnalysisDocs {
         summary = "경쟁사 분석 수행",
         description = "BMC를 기반으로 Perplexity AI를 활용한 실시간 웹 검색을 통해 경쟁사를 분석합니다. 검색 키워드를 직접 입력하지 않으면 BMC 내용을 기반으로 자동 생성됩니다. 분석 결과는 자동으로 저장됩니다.",
     )
-    fun analyzeCompetitors(
+    suspend fun analyzeCompetitors(
         @Parameter(
             description = "경쟁사 분석 요청 정보",
             required = true,
@@ -50,7 +50,7 @@ interface CompetitorAnalysisDocs {
         summary = "경쟁사 분석 재생성",
         description = "특정 BMC에 대한 경쟁사 분석을 다시 수행합니다. 기존 분석 결과가 있다면 덮어씁니다.",
     )
-    fun regenerateAnalysis(
+    suspend fun regenerateAnalysis(
         @Parameter(description = "BMC ID", required = true, example = "1")
         @PathVariable bmcId: Long,
     ): ResponseEntity<BaseResponse<CompetitorAnalysisResponse>>
