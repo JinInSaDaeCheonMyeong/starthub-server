@@ -20,7 +20,7 @@ class CompetitorAnalysisController(
     private val competitorAnalysisService: CompetitorAnalysisService,
 ) : CompetitorAnalysisDocs {
     @PostMapping("/competitors")
-    override fun analyzeCompetitors(
+    override suspend fun analyzeCompetitors(
         @Valid @RequestBody request: CompetitorAnalysisRequest,
     ): ResponseEntity<BaseResponse<CompetitorAnalysisResponse>> {
         val result = competitorAnalysisService.analyzeCompetitors(request)
@@ -42,7 +42,7 @@ class CompetitorAnalysisController(
     }
 
     @PostMapping("/competitors/bmc/{bmcId}/regenerate")
-    override fun regenerateAnalysis(
+    override suspend fun regenerateAnalysis(
         @PathVariable bmcId: Long,
     ): ResponseEntity<BaseResponse<CompetitorAnalysisResponse>> {
         val result = competitorAnalysisService.regenerateAnalysis(bmcId)
