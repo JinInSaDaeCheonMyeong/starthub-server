@@ -42,8 +42,8 @@ jobs:
         id: current
         env:
           TAILSCALE_API_KEY: ${{ secrets.TAILSCALE_API_KEY }}
+          STARTHUB_DEVICE_ID: ${{ secrets.STARTHUB_DEVICE_ID }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
-          TAILNET_NAME: "starthub.noreply@gmail.com"
         run: |
           set -e
 
@@ -52,34 +52,37 @@ jobs:
             exit 1
           fi
 
+          if [ -z "$STARTHUB_DEVICE_ID" ]; then
+            echo "STARTHUB_DEVICE_ID is not set"
+            exit 1
+          fi
+
           if [ -z "$DISCORD_WEBHOOK_URL" ]; then
             echo "DISCORD_WEBHOOK_URL is not set"
             exit 1
           fi
 
-          DEVICES_JSON=$(curl -sS \
+          DEVICE_JSON=$(curl -sS \
             -H "Authorization: Bearer $TAILSCALE_API_KEY" \
-            "https://api.tailscale.com/api/v2/tailnet/${TAILNET_NAME}/devices")
+            "https://api.tailscale.com/api/v2/device/${STARTHUB_DEVICE_ID}")
 
-          START_HUB=$(echo "$DEVICES_JSON" | jq '.devices[] | select(.name == "starthub")')
-
-          if [ -z "$START_HUB" ]; then
-            echo "starthub device not found in tailnet"
+          if [ -z "$DEVICE_JSON" ] || [ "$DEVICE_JSON" = "null" ]; then
+            echo "Failed to fetch device info"
             echo "current_status=unknown" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          ONLINE=$(echo "$START_HUB" | jq -r '.online // empty')
-          LAST_SEEN=$(echo "$START_HUB" | jq -r '.lastSeen // empty')
-          HOSTNAME=$(echo "$START_HUB" | jq -r '.hostname // "unknown"')
-          DEVICE_ID=$(echo "$START_HUB" | jq -r '.id // "unknown"')
+          CONNECTED=$(echo "$DEVICE_JSON" | jq -r '.connectedToControl // empty')
+          LAST_SEEN=$(echo "$DEVICE_JSON" | jq -r '.lastSeen // empty')
+          HOSTNAME=$(echo "$DEVICE_JSON" | jq -r '.hostname // "unknown"')
+          NAME=$(echo "$DEVICE_JSON" | jq -r '.name // "unknown"')
 
+          echo "Device Name: $NAME"
           echo "Hostname: $HOSTNAME"
-          echo "Online: $ONLINE"
+          echo "ConnectedToControl: $CONNECTED"
           echo "Last seen: $LAST_SEEN"
-          echo "Device ID: $DEVICE_ID"
 
-          if [ "$ONLINE" = "true" ]; then
+          if [ "$CONNECTED" = "true" ]; then
             CUR_STATUS="online"
           else
             CUR_STATUS="offline"
@@ -90,7 +93,7 @@ jobs:
           echo "current_status=$CUR_STATUS" >> $GITHUB_OUTPUT
           echo "hostname=$HOSTNAME" >> $GITHUB_OUTPUT
           echo "last_seen=$LAST_SEEN" >> $GITHUB_OUTPUT
-          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "device_name=$NAME" >> $GITHUB_OUTPUT
 
       - name: Compare status and notify if changed
         env:
@@ -99,7 +102,7 @@ jobs:
           CUR_STATUS: ${{ steps.current.outputs.current_status }}
           HOSTNAME: ${{ steps.current.outputs.hostname }}
           LAST_SEEN: ${{ steps.current.outputs.last_seen }}
-          DEVICE_ID: ${{ steps.current.outputs.device_id }}
+          DEVICE_NAME: ${{ steps.current.outputs.device_name }}
         run: |
           echo "Previous: $PREV_STATUS"
           echo "Current : $CUR_STATUS"
@@ -116,8 +119,7 @@ jobs:
 
           echo "Status changed! Sending Discord notification..."
 
-          # 타임스탬프 생성 (UTC 기준)
-          NOW=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          NOW=$(date -u '+%Y-%m-%d %H:%M:%S KST' --date='9 hours ago')
 
           if [ "$CUR_STATUS" = "offline" ]; then
             TITLE="⚠️ starthub-ubuntu 호스트가 오프라인임"
@@ -127,7 +129,7 @@ jobs:
             BODY="서버가 정상 작동합니다."
           fi
 
-          MESSAGE_CONTENT="**${TITLE}**\n\n${BODY}\n\n**상세정보:**\n• 호스트: ${HOSTNAME}\n• 마지막 접속: ${LAST_SEEN}\n• 기기 ID: ${DEVICE_ID}\n\n**알림시간:** ${NOW}"
+          MESSAGE_CONTENT="**${TITLE}**\n\n${BODY}\n\n**상세정보:**\n• 호스트: ${HOSTNAME}\n• 기기명: ${DEVICE_NAME}\n• 마지막 접속: ${LAST_SEEN}\n\n**알림시간:** ${NOW}"
 
           curl -sS -H "Content-Type: application/json" \
             -X POST \
@@ -136,8 +138,8 @@ jobs:
               --arg description "$BODY" \
               --arg timestamp "$NOW" \
               --arg hostname "$HOSTNAME" \
+              --arg device_name "$DEVICE_NAME" \
               --arg last_seen "$LAST_SEEN" \
-              --arg device_id "$DEVICE_ID" \
               '{
                 content: $title,
                 embeds: [{
@@ -145,8 +147,8 @@ jobs:
                   color: ($cur_status == "offline" | if . then 16711680 else 65280 end),
                   fields: [
                     {name: "호스트", value: $hostname, inline: true},
-                    {name: "마지막 접속", value: $last_seen, inline: true},
-                    {name: "기기 ID", value: $device_id, inline: false}
+                    {name: "기기명", value: $device_name, inline: true},
+                    {name: "마지막 접속", value: $last_seen, inline: false}
                   ],
                   timestamp: $timestamp
                 }]
