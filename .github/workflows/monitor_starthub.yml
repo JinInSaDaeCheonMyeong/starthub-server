@@ -131,21 +131,35 @@ jobs:
             COLOR=65280
           fi
 
-          MESSAGE_CONTENT="**${TITLE}**\n\n${BODY}\n\n**상세정보:**\n• 호스트: ${HOSTNAME}\n• 기기명: ${DEVICE_NAME}\n• 마지막 접속: ${LAST_SEEN}\n\n**⏰ 알림시간:** ${NOW}"
+          MESSAGE_CONTENT="**${TITLE}**\n\n${BODY}\n\n**상세정보:**\n• 호스트: ${HOSTNAME}\n• 기기명: ${DEVICE_NAME}\n• 마지막 접속: ${LAST_SEEN}\n\n**알림시간:** ${NOW}"
+
+          JSON_PAYLOAD=$(jq -n \
+            --arg content "$MESSAGE_CONTENT" \
+            --arg description "$BODY" \
+            --arg timestamp "$NOW" \
+            --arg hostname "$HOSTNAME" \
+            --arg device_name "$DEVICE_NAME" \
+            --arg last_seen "$LAST_SEEN" \
+            --argjson color "$COLOR" \
+            '{
+              content: $content,
+              embeds: [{
+                description: $description,
+                color: $color,
+                fields: [
+                  {name: "호스트", value: $hostname, inline: true},
+                  {name: "기기명", value: $device_name, inline: true},
+                  {name: "마지막 접속", value: $last_seen, inline: false}
+                ],
+                timestamp: $timestamp
+              }]
+            }')
+
+          echo "$JSON_PAYLOAD"
 
           curl -sS -H "Content-Type: application/json" \
             -X POST \
-            -d "$(jq -n \
-              --arg title "$TITLE" \
-              --arg description "$BODY" \
-              --arg timestamp "$NOW" \
-              --arg hostname "$HOSTNAME" \
-              --arg device_name "$DEVICE_NAME" \
-              --arg last_seen "$LAST_SEEN" \
-              --arg content "$MESSAGE_CONTENT" \
-              --argjson color "$COLOR" \
-              '{
-                content: $content,
-                embeds: [{
-                  description: $description,
-                  color
+            -d "$JSON_PAYLOAD" \
+            "$DISCORD_WEBHOOK_URL"
+
+          echo "$CUR_STATUS" > starthub_status.txt
