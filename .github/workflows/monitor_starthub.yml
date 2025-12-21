@@ -124,9 +124,11 @@ jobs:
           if [ "$CUR_STATUS" = "offline" ]; then
             TITLE="⚠️ starthub-ubuntu 호스트가 오프라인임"
             BODY="서버의 작동 상태를 확인해주세요."
+            COLOR=16711680
           else
             TITLE="✅ 서버가 온라인 상태로 변경됨"
             BODY="서버가 정상 작동합니다."
+            COLOR=65280
           fi
 
           MESSAGE_CONTENT="**${TITLE}**\n\n${BODY}\n\n**상세정보:**\n• 호스트: ${HOSTNAME}\n• 기기명: ${DEVICE_NAME}\n• 마지막 접속: ${LAST_SEEN}\n\n**⏰ 알림시간:** ${NOW}"
@@ -140,19 +142,10 @@ jobs:
               --arg hostname "$HOSTNAME" \
               --arg device_name "$DEVICE_NAME" \
               --arg last_seen "$LAST_SEEN" \
+              --arg content "$MESSAGE_CONTENT" \
+              --argjson color "$COLOR" \
               '{
-                content: $title,
+                content: $content,
                 embeds: [{
                   description: $description,
-                  color: ($cur_status == "offline" | if . then 16711680 else 65280 end),
-                  fields: [
-                    {name: "호스트", value: $hostname, inline: true},
-                    {name: "기기명", value: $device_name, inline: true},
-                    {name: "마지막 접속", value: $last_seen, inline: false}
-                  ],
-                  timestamp: $timestamp
-                }]
-              }')" \
-            "$DISCORD_WEBHOOK_URL"
-
-          echo "$CUR_STATUS" > starthub_status.txt
+                  color
