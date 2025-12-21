@@ -1,0 +1,166 @@
+name: Monitor Tailscale starthub
+
+on:
+  schedule:
+    - cron: "*/3 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check-starthub:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up dependencies (jq)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Load previous status
+        id: prev
+        run: |
+          FILE="starthub_status.txt"
+
+          if [ ! -f "$FILE" ]; then
+            echo "unknown" > "$FILE"
+          fi
+
+          PREV_STATUS=$(cat "$FILE" | tr -d '[:space:]')
+
+          if [ -z "$PREV_STATUS" ]; then
+            PREV_STATUS="unknown"
+          fi
+
+          echo "Previous status: $PREV_STATUS"
+          echo "prev_status=$PREV_STATUS" >> $GITHUB_OUTPUT
+
+      - name: Check current status from Tailscale
+        id: current
+        env:
+          TAILSCALE_API_KEY: ${{ secrets.TAILSCALE_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+          TAILNET_NAME: "starthub.noreply@gmail.com"
+        run: |
+          set -e
+
+          if [ -z "$TAILSCALE_API_KEY" ]; then
+            echo "TAILSCALE_API_KEY is not set"
+            exit 1
+          fi
+
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL is not set"
+            exit 1
+          fi
+
+          DEVICES_JSON=$(curl -sS \
+            -H "Authorization: Bearer $TAILSCALE_API_KEY" \
+            "https://api.tailscale.com/api/v2/tailnet/${TAILNET_NAME}/devices")
+
+          START_HUB=$(echo "$DEVICES_JSON" | jq '.devices[] | select(.name == "starthub")')
+
+          if [ -z "$START_HUB" ]; then
+            echo "starthub device not found in tailnet"
+            echo "current_status=unknown" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          ONLINE=$(echo "$START_HUB" | jq -r '.online // empty')
+          LAST_SEEN=$(echo "$START_HUB" | jq -r '.lastSeen // empty')
+          HOSTNAME=$(echo "$START_HUB" | jq -r '.hostname // "unknown"')
+          DEVICE_ID=$(echo "$START_HUB" | jq -r '.id // "unknown"')
+
+          echo "Hostname: $HOSTNAME"
+          echo "Online: $ONLINE"
+          echo "Last seen: $LAST_SEEN"
+          echo "Device ID: $DEVICE_ID"
+
+          if [ "$ONLINE" = "true" ]; then
+            CUR_STATUS="online"
+          else
+            CUR_STATUS="offline"
+          fi
+
+          echo "Current status: $CUR_STATUS"
+
+          echo "current_status=$CUR_STATUS" >> $GITHUB_OUTPUT
+          echo "hostname=$HOSTNAME" >> $GITHUB_OUTPUT
+          echo "last_seen=$LAST_SEEN" >> $GITHUB_OUTPUT
+          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+
+      - name: Compare status and notify if changed
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+          PREV_STATUS: ${{ steps.prev.outputs.prev_status }}
+          CUR_STATUS: ${{ steps.current.outputs.current_status }}
+          HOSTNAME: ${{ steps.current.outputs.hostname }}
+          LAST_SEEN: ${{ steps.current.outputs.last_seen }}
+          DEVICE_ID: ${{ steps.current.outputs.device_id }}
+        run: |
+          echo "Previous: $PREV_STATUS"
+          echo "Current : $CUR_STATUS"
+
+          if [ -z "$CUR_STATUS" ]; then
+            echo "No current status (maybe device not found). Skipping notification."
+            exit 0
+          fi
+
+          if [ "$PREV_STATUS" = "$CUR_STATUS" ]; then
+            echo "Status not changed. No notification."
+            exit 0
+          fi
+
+          echo "Status changed! Sending Discord notification..."
+
+          # 타임스탬프 생성 (UTC 기준)
+          NOW=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+          if [ "$CUR_STATUS" = "offline" ]; then
+            TITLE="⚠️ starthub-ubuntu 호스트가 오프라인임"
+            BODY="서버의 작동 상태를 확인해주세요."
+          else
+            TITLE="✅ 서버가 온라인 상태로 변경됨"
+            BODY="서버가 정상 작동합니다."
+          fi
+
+          MESSAGE_CONTENT="**${TITLE}**\n\n${BODY}\n\n**상세정보:**\n• 호스트: ${HOSTNAME}\n• 마지막 접속: ${LAST_SEEN}\n• 기기 ID: ${DEVICE_ID}\n\n**알림시간:** ${NOW}"
+
+          curl -sS -H "Content-Type: application/json" \
+            -X POST \
+            -d "$(jq -n \
+              --arg title "$TITLE" \
+              --arg description "$BODY" \
+              --arg timestamp "$NOW" \
+              --arg hostname "$HOSTNAME" \
+              --arg last_seen "$LAST_SEEN" \
+              --arg device_id "$DEVICE_ID" \
+              '{
+                content: $title,
+                embeds: [{
+                  description: $description,
+                  color: ($cur_status == "offline" | if . then 16711680 else 65280 end),
+                  fields: [
+                    {name: "호스트", value: $hostname, inline: true},
+                    {name: "마지막 접속", value: $last_seen, inline: true},
+                    {name: "기기 ID", value: $device_id, inline: false}
+                  ],
+                  timestamp: $timestamp
+                }]
+              }')" \
+            "$DISCORD_WEBHOOK_URL"
+
+          echo "$CUR_STATUS" > starthub_status.txt
+
+      - name: Commit status change
+        if: steps.prev.outputs.prev_status != steps.current.outputs.current_status
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add starthub_status.txt
+          git commit -m "Update starthub status: ${{ steps.prev.outputs.prev_status }} -> ${{ steps.current.outputs.current_status }}" || echo "No changes to commit"
+          git push
