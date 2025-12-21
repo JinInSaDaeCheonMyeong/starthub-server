@@ -129,7 +129,7 @@ jobs:
             BODY="서버가 정상 작동합니다."
           fi
 
-          MESSAGE_CONTENT="**${TITLE}**\n\n${BODY}\n\n**상세정보:**\n• 호스트: ${HOSTNAME}\n• 기기명: ${DEVICE_NAME}\n• 마지막 접속: ${LAST_SEEN}\n\n**알림시간:** ${NOW}"
+          MESSAGE_CONTENT="**${TITLE}**\n\n${BODY}\n\n**상세정보:**\n• 호스트: ${HOSTNAME}\n• 기기명: ${DEVICE_NAME}\n• 마지막 접속: ${LAST_SEEN}\n\n**⏰ 알림시간:** ${NOW}"
 
           curl -sS -H "Content-Type: application/json" \
             -X POST \
@@ -156,13 +156,3 @@ jobs:
             "$DISCORD_WEBHOOK_URL"
 
           echo "$CUR_STATUS" > starthub_status.txt
-
-      - name: Commit status change
-        if: steps.prev.outputs.prev_status != steps.current.outputs.current_status
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add starthub_status.txt
-          git commit -m "Update starthub status: ${{ steps.prev.outputs.prev_status }} -> ${{ steps.current.outputs.current_status }}" || echo "No changes to commit"
-          git push
