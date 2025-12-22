@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.user.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.company.adapter.out.persistence.repository.CompanyJpaRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.email.exception.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.email.repository.EmailRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.cache.UserCache
@@ -42,7 +42,7 @@ class UserService(
     private val tokenRedisService: TokenRedisService,
     private val emailRepository: EmailRepository,
     private val userStartupFieldRepository: UserStartupFieldRepository,
-    private val companyRepository: CompanyRepository,
+    private val companyRepository: CompanyJpaRepository,
     private val tokenService: TokenService,
     private val userCache: UserCache,
 ) {

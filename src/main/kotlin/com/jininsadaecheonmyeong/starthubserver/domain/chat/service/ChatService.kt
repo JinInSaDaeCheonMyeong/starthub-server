@@ -9,8 +9,8 @@ import com.jininsadaecheonmyeong.starthubserver.domain.chat.entity.toResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.exception.ChatRoomNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.repository.ChatMessageRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.chat.repository.ChatRoomRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.CompanyNotFoundException
-import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.company.domain.exception.CompanyNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.domain.company.adapter.out.persistence.repository.CompanyJpaRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
@@ -24,7 +24,7 @@ class ChatService(
     private val chatRoomRepository: ChatRoomRepository,
     private val chatMessageRepository: ChatMessageRepository,
     private val userRepository: UserRepository,
-    private val companyRepository: CompanyRepository,
+    private val companyRepository: CompanyJpaRepository,
     private val messagingTemplate: SimpMessagingTemplate,
     private val userAuthenticationHolder: UserAuthenticationHolder,
 ) {

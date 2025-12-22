@@ -1,10 +1,10 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.announcement.docs
 
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementDetailResponse
-import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.AnnouncementResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.adapter.`in`.web.response.AnnouncementDetailWebResponse
+import com.jininsadaecheonmyeong.starthubserver.domain.announcement.adapter.`in`.web.response.AnnouncementWebResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.announcement.data.response.RecommendedAnnouncementResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
-import com.jininsadaecheonmyeong.starthubserver.global.common.CustomPageResponse
+import org.springframework.data.domain.Page
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -27,22 +27,22 @@ interface AnnouncementDocs {
     fun getAllAnnouncements(
         @ParameterObject pageable: Pageable,
         @Parameter(description = "'좋아요' 여부 포함 여부") @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
-    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
+    ): ResponseEntity<BaseResponse<Page<AnnouncementWebResponse>>>
 
     @Operation(
         summary = "좋아요 누른 공고 조회",
         description = "현재 로그인한 사용자가 좋아요를 누른 공고 목록을 최신순으로 조회합니다.",
     )
-    @GetMapping("/likes")
+    @GetMapping("/liked")
     fun getLikedAnnouncements(
         @ParameterObject pageable: Pageable,
-    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
+    ): ResponseEntity<BaseResponse<Page<AnnouncementWebResponse>>>
 
     @Operation(
         summary = "공고 좋아요 추가",
         description = "특정 공고에 '좋아요'를 추가합니다.",
     )
-    @PostMapping("/{announcementId}/likes")
+    @PostMapping("/{announcementId}/like")
     fun addLike(
         @PathVariable announcementId: Long,
     ): ResponseEntity<BaseResponse<Unit>>
@@ -51,7 +51,7 @@ interface AnnouncementDocs {
         summary = "공고 좋아요 삭제",
         description = "특정 공고의 '좋아요'를 삭제합니다.",
     )
-    @DeleteMapping("/{announcementId}/likes")
+    @DeleteMapping("/{announcementId}/like")
     fun removeLike(
         @PathVariable announcementId: Long,
     ): ResponseEntity<BaseResponse<Unit>>
@@ -64,7 +64,7 @@ interface AnnouncementDocs {
     fun getAnnouncementDetail(
         @PathVariable announcementId: Long,
         @Parameter(description = "'좋아요' 여부 포함 여부") @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
-    ): ResponseEntity<BaseResponse<AnnouncementDetailResponse>>
+    ): ResponseEntity<BaseResponse<AnnouncementDetailWebResponse>>
 
     @Operation(
         summary = "공고 검색",
@@ -79,13 +79,14 @@ interface AnnouncementDocs {
         @Parameter(description = "연령 필터") @RequestParam(required = false) targetAge: String?,
         @Parameter(description = "창업업력 필터") @RequestParam(required = false) businessExperience: String?,
         @Parameter(description = "'좋아요' 여부 포함 여부") @RequestParam(defaultValue = "false") includeLikeStatus: Boolean,
+        @Parameter(description = "자연어 검색 여부") @RequestParam(defaultValue = "false") natural: Boolean,
         @ParameterObject pageable: Pageable,
-    ): ResponseEntity<BaseResponse<CustomPageResponse<AnnouncementResponse>>>
+    ): ResponseEntity<BaseResponse<Any>>
 
     @Operation(
         summary = "추천 공고 조회",
         description = "사용자의 창업 분야를 기반으로 추천된 공고 목록을 조회합니다.",
     )
-    @GetMapping("/recommendations")
+    @GetMapping("/recommended")
     fun getRecommendedAnnouncements(): ResponseEntity<BaseResponse<List<RecommendedAnnouncementResponse>>>
 }

@@ -1,7 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.company.exception.CompanyNotFoundException
-import com.jininsadaecheonmyeong.starthubserver.domain.company.repository.CompanyRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.company.domain.exception.CompanyNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.domain.company.adapter.out.persistence.repository.CompanyJpaRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.CreateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.request.UpdateRecruitRequest
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class RecruitService(
     private val recruitRepository: RecruitRepository,
-    private val companyRepository: CompanyRepository,
+    private val companyRepository: CompanyJpaRepository,
     private val techStackRepository: TechStackRepository,
     private val recruitTechStackRepository: RecruitTechStackRepository,
     private val userAuthenticationHolder: UserAuthenticationHolder,

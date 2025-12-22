@@ -12,7 +12,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.announcement.repository.A
 import com.jininsadaecheonmyeong.starthubserver.domain.bmc.repository.BusinessModelCanvasRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.entity.NotificationHistory
 import com.jininsadaecheonmyeong.starthubserver.domain.notification.repository.NotificationHistoryRepository
-import com.jininsadaecheonmyeong.starthubserver.domain.schedule.repository.ScheduleRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.schedule.adapter.out.persistence.repository.ScheduleJpaRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserStartupFieldRepository
@@ -35,7 +35,7 @@ class NotificationSchedulerService(
     private val userStartupFieldRepository: UserStartupFieldRepository,
     private val announcementRepository: AnnouncementRepository,
     private val announcementLikeRepository: AnnouncementLikeRepository,
-    private val scheduleRepository: ScheduleRepository,
+    private val scheduleRepository: ScheduleJpaRepository,
     private val notificationHistoryRepository: NotificationHistoryRepository,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val webClient: WebClient,

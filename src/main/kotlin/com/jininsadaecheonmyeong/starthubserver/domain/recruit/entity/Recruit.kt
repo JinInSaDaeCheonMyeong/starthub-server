@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.recruit.entity
 
-import com.jininsadaecheonmyeong.starthubserver.domain.company.entity.Company
+import com.jininsadaecheonmyeong.starthubserver.domain.company.adapter.out.persistence.entity.CompanyJpaEntity as Company
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitPreviewResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.recruit.data.response.RecruitResponse
 import com.jininsadaecheonmyeong.starthubserver.domain.user.entity.User
