@@ -1,8 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.filter
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.cache.UserCache
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.cache.user.UserCache
+import com.jininsadaecheonmyeong.starthubserver.exception.user.InvalidTokenException
+import com.jininsadaecheonmyeong.starthubserver.exception.user.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType

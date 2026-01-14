@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.filter
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
+import com.jininsadaecheonmyeong.starthubserver.exception.user.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.ExpiredTokenException
 import com.jininsadaecheonmyeong.starthubserver.logger
 import jakarta.servlet.FilterChain
