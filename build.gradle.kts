@@ -85,7 +85,7 @@ dependencies {
     implementation("com.google.firebase:firebase-admin:9.2.0")
 
     // etc
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    // developmentOnly("org.springframework.boot:spring-boot-devtools") // 코루틴 ClassLoader 충돌로 비활성화
 }
 
 allOpen {

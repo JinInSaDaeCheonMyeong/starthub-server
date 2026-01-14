@@ -1,12 +1,12 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.filter
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.UserNotFoundException
-import com.jininsadaecheonmyeong.starthubserver.domain.user.repository.UserRepository
+import com.jininsadaecheonmyeong.starthubserver.exception.user.InvalidTokenException
+import com.jininsadaecheonmyeong.starthubserver.exception.user.UserNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenParser
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenValidator
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.ExpiredTokenException
+import com.jininsadaecheonmyeong.starthubserver.repository.user.UserRepository
 import io.jsonwebtoken.ExpiredJwtException
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
