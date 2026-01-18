@@ -1,8 +1,8 @@
 package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.common
 
-import com.jininsadaecheonmyeong.starthubserver.entity.user.User
-import com.jininsadaecheonmyeong.starthubserver.enums.user.AuthType
-import com.jininsadaecheonmyeong.starthubserver.enums.user.UserRole
+import com.jininsadaecheonmyeong.starthubserver.domain.entity.user.User
+import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.AuthType
+import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.UserRole
 
 interface OAuthUserInfo {
     val sub: String

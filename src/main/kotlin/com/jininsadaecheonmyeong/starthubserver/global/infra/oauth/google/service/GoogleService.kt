@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.service
 
-import com.jininsadaecheonmyeong.starthubserver.exception.user.InvalidTokenException
+import com.jininsadaecheonmyeong.starthubserver.domain.exception.user.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.configuration.GoogleProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data.GoogleTokenResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.google.data.GoogleUserInfo

@@ -1,9 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.support
 
-import com.jininsadaecheonmyeong.starthubserver.entity.user.User
-import com.jininsadaecheonmyeong.starthubserver.exception.user.InvalidTokenException
-import com.jininsadaecheonmyeong.starthubserver.exception.user.UserNotFoundException
-import com.jininsadaecheonmyeong.starthubserver.repository.user.UserRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.entity.user.User
+import com.jininsadaecheonmyeong.starthubserver.domain.exception.user.InvalidTokenException
+import com.jininsadaecheonmyeong.starthubserver.domain.exception.user.UserNotFoundException
+import com.jininsadaecheonmyeong.starthubserver.domain.repository.user.UserRepository
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 

@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.core
 
-import com.jininsadaecheonmyeong.starthubserver.exception.user.InvalidTokenException
+import com.jininsadaecheonmyeong.starthubserver.domain.exception.user.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.exception.ExpiredTokenException
 import io.jsonwebtoken.ExpiredJwtException

@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.core
 
-import com.jininsadaecheonmyeong.starthubserver.entity.user.User
+import com.jininsadaecheonmyeong.starthubserver.domain.entity.user.User
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.enums.TokenType
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.properties.TokenProperties
 import io.jsonwebtoken.Jwts

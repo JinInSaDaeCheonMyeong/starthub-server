@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.token.service
 
-import com.jininsadaecheonmyeong.starthubserver.entity.user.User
+import com.jininsadaecheonmyeong.starthubserver.domain.entity.user.User
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenProvider
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.core.TokenRedisService
 import org.springframework.stereotype.Service
