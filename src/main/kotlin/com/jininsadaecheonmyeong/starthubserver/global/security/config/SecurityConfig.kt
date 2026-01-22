@@ -1,13 +1,13 @@
 package com.jininsadaecheonmyeong.starthubserver.global.security.config
 
-import com.jininsadaecheonmyeong.starthubserver.domain.oauth2.handler.OAuth2FailureHandler
-import com.jininsadaecheonmyeong.starthubserver.domain.oauth2.handler.OAuth2SuccessHandler
-import com.jininsadaecheonmyeong.starthubserver.domain.oauth2.service.CustomOAuth2UserService
+import com.jininsadaecheonmyeong.starthubserver.application.service.oauth2.CustomOAuth2UserService
 import com.jininsadaecheonmyeong.starthubserver.global.security.filter.PlatformAuthenticationFilter
 import com.jininsadaecheonmyeong.starthubserver.global.security.filter.TokenExceptionFilter
 import com.jininsadaecheonmyeong.starthubserver.global.security.oauth2.CookieOAuth2AuthorizationRequestRepository
 import com.jininsadaecheonmyeong.starthubserver.global.security.oauth2.CustomOAuth2AccessTokenResponseClient
 import com.jininsadaecheonmyeong.starthubserver.global.security.oauth2.CustomOAuth2AuthorizationRequestResolver
+import com.jininsadaecheonmyeong.starthubserver.infrastructure.handler.oauth2.OAuth2FailureHandler
+import com.jininsadaecheonmyeong.starthubserver.infrastructure.handler.oauth2.OAuth2SuccessHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order

@@ -1,6 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.service
 
-import com.jininsadaecheonmyeong.starthubserver.domain.user.exception.InvalidTokenException
+import com.jininsadaecheonmyeong.starthubserver.domain.exception.user.InvalidTokenException
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.configuration.NaverProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.data.NaverTokenResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.naver.data.NaverUserInfo
