@@ -62,7 +62,7 @@ class ClaudeAIService(
                     null
                 }
             }
-            .takeWhile { it.type != StreamEventType.MESSAGE_STOP }
+            .takeWhile { it?.type != StreamEventType.MESSAGE_STOP }
             .asFlow()
     }
 
