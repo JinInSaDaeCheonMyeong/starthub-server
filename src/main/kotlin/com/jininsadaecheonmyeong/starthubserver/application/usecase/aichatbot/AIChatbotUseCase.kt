@@ -48,10 +48,11 @@ class AIChatbotUseCase(
     @Transactional
     fun createSession(title: String?): AIChatSession {
         val user = userAuthenticationHolder.current()
-        val session = AIChatSession(
-            user = user,
-            title = title ?: "New Chat",
-        )
+        val session =
+            AIChatSession(
+                user = user,
+                title = title ?: "New Chat",
+            )
         return sessionRepository.save(session)
     }
 
@@ -69,14 +70,18 @@ class AIChatbotUseCase(
 
     fun getSessionWithMessages(sessionId: Long): AIChatSession {
         val user = userAuthenticationHolder.current()
-        val session = sessionRepository.findByIdWithMessages(sessionId)
-            ?: throw ChatSessionNotFoundException("채팅 세션을 찾을 수 없습니다.")
+        val session =
+            sessionRepository.findByIdWithMessages(sessionId)
+                ?: throw ChatSessionNotFoundException("채팅 세션을 찾을 수 없습니다.")
         verifyOwnership(session, user)
         return session
     }
 
     @Transactional
-    fun updateSessionTitle(sessionId: Long, title: String): AIChatSession {
+    fun updateSessionTitle(
+        sessionId: Long,
+        title: String,
+    ): AIChatSession {
         val user = userAuthenticationHolder.current()
         val session = findSessionOrThrow(sessionId)
         verifyOwnership(session, user)
@@ -159,13 +164,14 @@ class AIChatbotUseCase(
         val session = findSessionOrThrow(sessionId)
         verifyOwnership(session, user)
 
-        val document = AIChatDocument(
-            session = session,
-            fileName = fileName,
-            fileUrl = fileUrl,
-            fileType = fileType,
-            extractedText = extractedText,
-        )
+        val document =
+            AIChatDocument(
+                session = session,
+                fileName = fileName,
+                fileUrl = fileUrl,
+                fileType = fileType,
+                extractedText = extractedText,
+            )
         val savedDocument = documentRepository.save(document)
 
         if (!extractedText.isNullOrBlank()) {
@@ -175,9 +181,10 @@ class AIChatbotUseCase(
                     EmbedDocumentRequest(
                         documentId = savedDocument.id.toString(),
                         sessionId = sessionId,
-                        chunks = chunks.mapIndexed { index, content ->
-                            DocumentChunk(index, content)
-                        },
+                        chunks =
+                            chunks.mapIndexed { index, content ->
+                                DocumentChunk(index, content)
+                            },
                     ),
                 )
             } catch (e: Exception) {
@@ -189,7 +196,10 @@ class AIChatbotUseCase(
     }
 
     @Transactional
-    suspend fun deleteDocument(sessionId: Long, documentId: Long) {
+    suspend fun deleteDocument(
+        sessionId: Long,
+        documentId: Long,
+    ) {
         val user = userAuthenticationHolder.current()
         val session = findSessionOrThrow(sessionId)
         verifyOwnership(session, user)
@@ -208,27 +218,38 @@ class AIChatbotUseCase(
             ?: throw ChatSessionNotFoundException("채팅 세션을 찾을 수 없습니다.")
     }
 
-    private fun verifyOwnership(session: AIChatSession, user: User) {
+    private fun verifyOwnership(
+        session: AIChatSession,
+        user: User,
+    ) {
         if (!session.isOwner(user)) {
             throw UnauthorizedChatAccessException("접근 권한이 없습니다.")
         }
     }
 
-    private fun saveUserMessage(session: AIChatSession, content: String): AIChatMessage {
-        val message = AIChatMessage(
-            session = session,
-            role = MessageRole.USER,
-            content = content,
-        )
+    private fun saveUserMessage(
+        session: AIChatSession,
+        content: String,
+    ): AIChatMessage {
+        val message =
+            AIChatMessage(
+                session = session,
+                role = MessageRole.USER,
+                content = content,
+            )
         return messageRepository.save(message)
     }
 
-    private fun saveAssistantMessage(session: AIChatSession, content: String): AIChatMessage {
-        val message = AIChatMessage(
-            session = session,
-            role = MessageRole.ASSISTANT,
-            content = content,
-        )
+    private fun saveAssistantMessage(
+        session: AIChatSession,
+        content: String,
+    ): AIChatMessage {
+        val message =
+            AIChatMessage(
+                session = session,
+                role = MessageRole.ASSISTANT,
+                content = content,
+            )
         return messageRepository.save(message)
     }
 
@@ -236,7 +257,10 @@ class AIChatbotUseCase(
         return messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId)
     }
 
-    private fun getRecentMessagesForHistory(sessionId: Long, limit: Int): List<ChatHistoryMessage> {
+    private fun getRecentMessagesForHistory(
+        sessionId: Long,
+        limit: Int,
+    ): List<ChatHistoryMessage> {
         val messages = messageRepository.findRecentMessages(sessionId, PageRequest.of(0, limit)).reversed()
         return messages.map {
             ChatHistoryMessage(role = it.role, content = it.content)
@@ -245,10 +269,11 @@ class AIChatbotUseCase(
 
     private fun generateTitleFromFirstMessage(message: String): String {
         val maxLength = 50
-        val cleanMessage = message
-            .replace("\n", " ")
-            .replace(Regex("\\s+"), " ")
-            .trim()
+        val cleanMessage =
+            message
+                .replace("\n", " ")
+                .replace(Regex("\\s+"), " ")
+                .trim()
         return if (cleanMessage.length > maxLength) {
             cleanMessage.take(maxLength - 3) + "..."
         } else {
@@ -295,13 +320,14 @@ class AIChatbotUseCase(
         if (textDocuments.isEmpty()) return null
 
         return try {
-            val ragResponse = chatbotRAGClient.queryDocument(
-                QueryDocumentRequest(
-                    sessionId = sessionId,
-                    query = query,
-                    topK = 5,
-                ),
-            )
+            val ragResponse =
+                chatbotRAGClient.queryDocument(
+                    QueryDocumentRequest(
+                        sessionId = sessionId,
+                        query = query,
+                        topK = 5,
+                    ),
+                )
 
             if (ragResponse == null || ragResponse.results.isEmpty()) {
                 return buildFallbackDocumentContext(textDocuments)
@@ -330,12 +356,13 @@ class AIChatbotUseCase(
     }
 
     private fun buildFallbackDocumentContext(documents: List<AIChatDocument>): String? {
-        val localContext = documents
-            .filter { it.extractedText != null }
-            .take(3)
-            .joinToString("\n\n") { doc ->
-                "📄 **${doc.fileName}**:\n${doc.extractedText!!.take(2000)}"
-            }
+        val localContext =
+            documents
+                .filter { it.extractedText != null }
+                .take(3)
+                .joinToString("\n\n") { doc ->
+                    "📄 **${doc.fileName}**:\n${doc.extractedText!!.take(2000)}"
+                }
 
         if (localContext.isBlank()) return null
 
@@ -353,9 +380,10 @@ class AIChatbotUseCase(
 
     private suspend fun performWebSearch(message: String): String? {
         return try {
-            val results = perplexitySearchService.searchCompetitors(
-                SearchRequest(query = message, maxResults = 3),
-            )
+            val results =
+                perplexitySearchService.searchCompetitors(
+                    SearchRequest(query = message, maxResults = 3),
+                )
 
             if (results.isEmpty()) return null
 
@@ -380,16 +408,20 @@ class AIChatbotUseCase(
         }
     }
 
-    private suspend fun queryAnnouncementContext(userId: Long, query: String): String? {
+    private suspend fun queryAnnouncementContext(
+        userId: Long,
+        query: String,
+    ): String? {
         return try {
-            val response = chatbotRAGClient.queryContext(
-                QueryContextRequest(
-                    query = query,
-                    userId = userId,
-                    topK = 5,
-                    includeAnnouncements = true,
-                ),
-            )
+            val response =
+                chatbotRAGClient.queryContext(
+                    QueryContextRequest(
+                        query = query,
+                        userId = userId,
+                        topK = 5,
+                        includeAnnouncements = true,
+                    ),
+                )
 
             if (response?.announcements.isNullOrEmpty()) return null
 
@@ -408,7 +440,11 @@ class AIChatbotUseCase(
         }
     }
 
-    private fun chunkText(text: String, chunkSize: Int = 1000, overlap: Int = 200): List<String> {
+    private fun chunkText(
+        text: String,
+        chunkSize: Int = 1000,
+        overlap: Int = 200,
+    ): List<String> {
         val chunks = mutableListOf<String>()
         var start = 0
 

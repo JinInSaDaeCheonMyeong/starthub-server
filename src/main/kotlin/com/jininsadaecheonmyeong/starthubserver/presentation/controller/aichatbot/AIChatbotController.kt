@@ -18,6 +18,7 @@ import jakarta.validation.Valid
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.reactor.asFlux
 import kotlinx.coroutines.runBlocking
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
@@ -48,17 +49,13 @@ class AIChatbotController(
         @RequestBody request: CreateSessionRequest,
     ): ResponseEntity<BaseResponse<ChatSessionResponse>> {
         val session = aiChatbotUseCase.createSession(request.title)
-        return ResponseEntity.ok(
-            BaseResponse.of(ChatSessionResponse.from(session), "세션이 생성되었습니다."),
-        )
+        return BaseResponse.of(ChatSessionResponse.from(session), "세션이 생성되었습니다.")
     }
 
     @GetMapping("/sessions")
     override fun getSessions(): ResponseEntity<BaseResponse<List<ChatSessionResponse>>> {
         val sessions = aiChatbotUseCase.getSessions()
-        return ResponseEntity.ok(
-            BaseResponse.of(ChatSessionResponse.fromList(sessions), "세션 목록을 조회했습니다."),
-        )
+        return BaseResponse.of(ChatSessionResponse.fromList(sessions), "세션 목록을 조회했습니다.")
     }
 
     @GetMapping("/sessions/{sessionId}")
@@ -66,9 +63,7 @@ class AIChatbotController(
         @PathVariable sessionId: Long,
     ): ResponseEntity<BaseResponse<ChatSessionDetailResponse>> {
         val session = aiChatbotUseCase.getSessionWithMessages(sessionId)
-        return ResponseEntity.ok(
-            BaseResponse.of(ChatSessionDetailResponse.from(session), "세션을 조회했습니다."),
-        )
+        return BaseResponse.of(ChatSessionDetailResponse.from(session), "세션을 조회했습니다.")
     }
 
     @PatchMapping("/sessions/{sessionId}")
@@ -77,9 +72,7 @@ class AIChatbotController(
         @Valid @RequestBody request: UpdateSessionTitleRequest,
     ): ResponseEntity<BaseResponse<ChatSessionResponse>> {
         val session = aiChatbotUseCase.updateSessionTitle(sessionId, request.title)
-        return ResponseEntity.ok(
-            BaseResponse.of(ChatSessionResponse.from(session), "세션 제목이 수정되었습니다."),
-        )
+        return BaseResponse.of(ChatSessionResponse.from(session), "세션 제목이 수정되었습니다.")
     }
 
     @DeleteMapping("/sessions/{sessionId}")
@@ -87,9 +80,7 @@ class AIChatbotController(
         @PathVariable sessionId: Long,
     ): ResponseEntity<BaseResponse<Unit>> {
         aiChatbotUseCase.deleteSession(sessionId)
-        return ResponseEntity.ok(
-            BaseResponse.of(Unit, "세션이 삭제되었습니다."),
-        )
+        return BaseResponse.of(Unit, "세션이 삭제되었습니다.")
     }
 
     @PostMapping(
@@ -125,32 +116,30 @@ class AIChatbotController(
 
         val supportedTypes = listOf("pdf", "docx", "doc", "png", "jpg", "jpeg", "gif", "webp")
         if (fileExtension !in supportedTypes) {
-            return ResponseEntity.badRequest().body(
-                BaseResponse.of(null, "지원하지 않는 파일 형식입니다. (지원: PDF, DOCX, 이미지)"),
-            )
+            return BaseResponse.of(null, HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다. (지원: PDF, DOCX, 이미지)")
         }
 
         val fileUrl = gcsStorageService.uploadFile(file, "chatbot-documents")
 
-        val extractedText = when (fileExtension) {
-            "pdf" -> fileProcessingService.extractTextFromPdf(file)
-            "docx", "doc" -> fileProcessingService.extractTextFromDocx(file)
-            else -> null
-        }
+        val extractedText =
+            when (fileExtension) {
+                "pdf" -> fileProcessingService.extractTextFromPdf(file)
+                "docx", "doc" -> fileProcessingService.extractTextFromDocx(file)
+                else -> null
+            }
 
-        val document = runBlocking {
-            aiChatbotUseCase.addDocument(
-                sessionId = sessionId,
-                fileName = fileName,
-                fileUrl = fileUrl,
-                fileType = fileExtension,
-                extractedText = extractedText,
-            )
-        }
+        val document =
+            runBlocking {
+                aiChatbotUseCase.addDocument(
+                    sessionId = sessionId,
+                    fileName = fileName,
+                    fileUrl = fileUrl,
+                    fileType = fileExtension,
+                    extractedText = extractedText,
+                )
+            }
 
-        return ResponseEntity.ok(
-            BaseResponse.of(ChatDocumentResponse.from(document), "파일이 업로드되었습니다."),
-        )
+        return BaseResponse.of(ChatDocumentResponse.from(document), "파일이 업로드되었습니다.")
     }
 
     @GetMapping("/sessions/{sessionId}/files")
@@ -158,9 +147,7 @@ class AIChatbotController(
         @PathVariable sessionId: Long,
     ): ResponseEntity<BaseResponse<List<ChatDocumentResponse>>> {
         val documents = aiChatbotUseCase.getDocuments(sessionId)
-        return ResponseEntity.ok(
-            BaseResponse.of(documents.map { ChatDocumentResponse.from(it) }, "파일 목록을 조회했습니다."),
-        )
+        return BaseResponse.of(documents.map { ChatDocumentResponse.from(it) }, "파일 목록을 조회했습니다.")
     }
 
     @DeleteMapping("/sessions/{sessionId}/files/{fileId}")
@@ -171,8 +158,6 @@ class AIChatbotController(
         runBlocking {
             aiChatbotUseCase.deleteDocument(sessionId, fileId)
         }
-        return ResponseEntity.ok(
-            BaseResponse.of(Unit, "파일이 삭제되었습니다."),
-        )
+        return BaseResponse.of(Unit, "파일이 삭제되었습니다.")
     }
 }

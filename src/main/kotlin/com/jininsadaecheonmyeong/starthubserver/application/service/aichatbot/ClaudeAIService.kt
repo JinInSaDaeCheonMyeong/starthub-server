@@ -54,7 +54,7 @@ class ClaudeAIService(
             .retrieve()
             .bodyToFlux<String>()
             .filter { it.isNotBlank() && it.startsWith("data: ") }
-            .mapNotNull { line ->
+            .map { line ->
                 try {
                     parseStreamEvent(line.removePrefix("data: ").trim())
                 } catch (e: Exception) {
@@ -62,7 +62,9 @@ class ClaudeAIService(
                     null
                 }
             }
-            .takeWhile { it?.type != StreamEventType.MESSAGE_STOP }
+            .filter { it != null }
+            .map { it!! }
+            .takeWhile { it.type != StreamEventType.MESSAGE_STOP }
             .asFlow()
     }
 
