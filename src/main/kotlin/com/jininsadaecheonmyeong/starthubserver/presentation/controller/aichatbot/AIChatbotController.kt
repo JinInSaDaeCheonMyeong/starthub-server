@@ -55,7 +55,7 @@ class AIChatbotController(
     @GetMapping("/sessions")
     override fun getSessions(): ResponseEntity<BaseResponse<List<ChatSessionResponse>>> {
         val sessions = aiChatbotUseCase.getSessions()
-        return BaseResponse.of(ChatSessionResponse.fromList(sessions), "세션 목록을 조회했습니다.")
+        return BaseResponse.of(sessions, "세션 목록을 조회했습니다.")
     }
 
     @GetMapping("/sessions/{sessionId}")

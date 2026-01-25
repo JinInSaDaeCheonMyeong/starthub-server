@@ -23,6 +23,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.search.PerplexitySe
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchRequest
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.logger
+import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
@@ -56,9 +57,10 @@ class AIChatbotUseCase(
         return sessionRepository.save(session)
     }
 
-    fun getSessions(): List<AIChatSession> {
+    fun getSessions(): List<ChatSessionResponse> {
         val user = userAuthenticationHolder.current()
-        return sessionRepository.findByUserAndDeletedFalseOrderByUpdatedAtDesc(user)
+        val sessions = sessionRepository.findByUserAndDeletedFalseOrderByUpdatedAtDesc(user)
+        return sessions.map { ChatSessionResponse.from(it) }
     }
 
     fun getSession(sessionId: Long): AIChatSession {
