@@ -72,7 +72,7 @@ class AIChatbotUseCase(
     fun getSessionWithMessages(sessionId: Long): AIChatSession {
         val user = userAuthenticationHolder.current()
         val session =
-            sessionRepository.findByIdWithMessages(sessionId)
+            sessionRepository.findByIdWithCollections(sessionId)
                 ?: throw ChatSessionNotFoundException("채팅 세션을 찾을 수 없습니다.")
         verifyOwnership(session, user)
         return session

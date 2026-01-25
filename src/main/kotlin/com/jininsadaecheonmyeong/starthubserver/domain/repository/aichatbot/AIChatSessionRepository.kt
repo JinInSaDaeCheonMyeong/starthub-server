@@ -26,23 +26,13 @@ interface AIChatSessionRepository : JpaRepository<AIChatSession, Long> {
 
     @Query(
         """
-        SELECT s FROM AIChatSession s
+        SELECT DISTINCT s FROM AIChatSession s
         LEFT JOIN FETCH s.messages
-        WHERE s.id = :id AND s.deleted = false
-        """,
-    )
-    fun findByIdWithMessages(
-        @Param("id") id: Long,
-    ): AIChatSession?
-
-    @Query(
-        """
-        SELECT s FROM AIChatSession s
         LEFT JOIN FETCH s.documents
         WHERE s.id = :id AND s.deleted = false
         """,
     )
-    fun findByIdWithDocuments(
+    fun findByIdWithCollections(
         @Param("id") id: Long,
     ): AIChatSession?
 }
