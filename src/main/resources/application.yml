@@ -19,7 +19,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create #TODO Change to validate and add migration tool
+      ddl-auto: update #TODO Change to validate and add migration tool
     show-sql: false
     open-in-view: false
 
