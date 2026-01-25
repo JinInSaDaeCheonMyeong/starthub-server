@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.application.usecase.analysis
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.UserContextService
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.analysis.CompetitorAnalysis
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.bmc.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.user.User
@@ -29,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.model.ChatModel
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -41,7 +43,8 @@ class AnalysisUseCase(
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val competitorAnalysisRepository: CompetitorAnalysisRepository,
     private val perplexitySearchService: PerplexitySearchService,
-    private val chatModel: ChatModel,
+    private val userContextService: UserContextService,
+    @Qualifier("openAiChatModel") private val chatModel: ChatModel,
     private val objectMapper: ObjectMapper,
 ) {
     private val logger = LoggerFactory.getLogger(AnalysisUseCase::class.java)
@@ -110,9 +113,10 @@ class AnalysisUseCase(
         user: User,
         userBmc: BusinessModelCanvas,
     ): CompetitorAnalysisResponse {
-        val existingAnalysis = withContext(Dispatchers.IO) {
-            competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(userBmc)
-        }
+        val existingAnalysis =
+            withContext(Dispatchers.IO) {
+                competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(userBmc)
+            }
         if (existingAnalysis.isPresent) {
             return deserializeAnalysisResponse(existingAnalysis.get())
         }
@@ -202,6 +206,9 @@ class AnalysisUseCase(
                 )
             competitorAnalysisRepository.save(newAnalysis)
         }
+
+        userContextService.embedUserContextAsync(user)
+        logger.info("경쟁사분석 저장으로 인한 사용자 컨텍스트 임베딩 트리거 - BMC ID: {}, User ID: {}", bmc.id, user.id)
     }
 
     fun getAnalysisByBmcId(bmcId: Long): CompetitorAnalysisResponse {

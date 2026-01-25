@@ -32,4 +32,23 @@ interface ScheduleRepository : JpaRepository<Schedule, Long> {
         announcementId: Long,
         userId: Long,
     )
+
+    @Query(
+        "SELECT s FROM Schedule s JOIN FETCH s.announcement " +
+            "WHERE s.user = :user AND s.endDate >= :today ORDER BY s.endDate ASC",
+    )
+    fun findUpcomingSchedulesWithAnnouncement(
+        @Param("user") user: User,
+        @Param("today") today: LocalDate,
+    ): List<Schedule>
+
+    @Query(
+        "SELECT s FROM Schedule s JOIN FETCH s.announcement " +
+            "WHERE s.user = :user AND s.endDate BETWEEN :startDate AND :endDate ORDER BY s.endDate ASC",
+    )
+    fun findSchedulesByEndDateRange(
+        @Param("user") user: User,
+        @Param("startDate") startDate: LocalDate,
+        @Param("endDate") endDate: LocalDate,
+    ): List<Schedule>
 }
