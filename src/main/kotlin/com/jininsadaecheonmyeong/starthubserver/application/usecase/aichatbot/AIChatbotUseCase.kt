@@ -104,8 +104,8 @@ class AIChatbotUseCase(
     suspend fun processMessageStream(
         sessionId: Long,
         message: String,
+        user: User,
     ): Flow<StreamChunk> {
-        val user = userAuthenticationHolder.current()
         val session = findSessionOrThrow(sessionId)
         verifyOwnership(session, user)
 

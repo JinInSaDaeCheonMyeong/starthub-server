@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.Fi
 import com.jininsadaecheonmyeong.starthubserver.application.usecase.aichatbot.AIChatbotUseCase
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.storage.GcsStorageService
+import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.logger
 import com.jininsadaecheonmyeong.starthubserver.presentation.docs.aichatbot.AIChatbotDocs
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.CreateSessionRequest
@@ -41,6 +42,7 @@ class AIChatbotController(
     private val fileProcessingService: FileProcessingService,
     private val gcsStorageService: GcsStorageService,
     private val objectMapper: ObjectMapper,
+    private val userAuthenticationHolder: UserAuthenticationHolder,
 ) : AIChatbotDocs {
     private val log = logger()
 
@@ -91,10 +93,11 @@ class AIChatbotController(
         @PathVariable sessionId: Long,
         @Valid @RequestBody request: SendMessageRequest,
     ): Flux<ServerSentEvent<String>> {
+        val user = userAuthenticationHolder.current()
         log.info("스트리밍 메시지 요청: sessionId=$sessionId, message=${request.message.take(50)}...")
 
         return runBlocking {
-            aiChatbotUseCase.processMessageStream(sessionId, request.message)
+            aiChatbotUseCase.processMessageStream(sessionId, request.message, user)
                 .map { chunk ->
                     val response = StreamChunkResponse.from(chunk)
                     ServerSentEvent.builder<String>()

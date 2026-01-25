@@ -84,16 +84,21 @@ interface AIChatbotDocs {
 
     @Operation(
         summary = "메시지 전송 (스트리밍)",
-        description = "AI에게 메시지를 보내고 Server-Sent Events로 스트리밍 응답을 받습니다.",
+        description = "SSE(Server-Sent Events) 방식으로 응답합니다. Swagger에서 테스트 불가하며, curl이나 fetch API로 테스트하세요.",
     )
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "스트리밍 응답 시작"),
+            ApiResponse(
+                responseCode = "200",
+                description = "스트리밍 응답 시작 (Content-Type: text/event-stream)",
+            ),
+            ApiResponse(responseCode = "401", description = "인증 실패"),
+            ApiResponse(responseCode = "403", description = "접근 권한 없음"),
             ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음"),
         ],
     )
     fun sendMessageStream(
-        @Parameter(description = "세션 ID") sessionId: Long,
+        @Parameter(description = "세션 ID", example = "1") sessionId: Long,
         request: SendMessageRequest,
     ): Flux<ServerSentEvent<String>>
 
