@@ -26,6 +26,7 @@ import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.bmc.Bm
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.bmc.BmcSessionResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.bmc.BusinessModelCanvasResponse
 import org.springframework.ai.chat.model.ChatModel
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -34,7 +35,7 @@ import org.springframework.web.multipart.MultipartFile
 @Component
 @Transactional
 class BmcUseCase(
-    private val chatModel: ChatModel,
+    @Qualifier("openAiChatModel") private val chatModel: ChatModel,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val bmcQuestionRepository: BmcQuestionRepository,
     private val bmcModificationRequestRepository: BmcModificationRequestRepository,
