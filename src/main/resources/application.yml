@@ -11,6 +11,11 @@ spring:
   application:
     name: starthub-server
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
@@ -19,7 +24,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update #TODO Change to validate and add migration tool
+      ddl-auto: update
     show-sql: false
     open-in-view: false
 

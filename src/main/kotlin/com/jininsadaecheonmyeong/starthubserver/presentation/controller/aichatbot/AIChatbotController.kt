@@ -6,7 +6,6 @@ import com.jininsadaecheonmyeong.starthubserver.application.usecase.aichatbot.AI
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.storage.GcsStorageService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
-import com.jininsadaecheonmyeong.starthubserver.logger
 import com.jininsadaecheonmyeong.starthubserver.presentation.docs.aichatbot.AIChatbotDocs
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.CreateSessionRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.SendMessageRequest
@@ -16,8 +15,7 @@ import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichat
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.StreamChunkResponse
 import jakarta.validation.Valid
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.reactor.asFlux
+import kotlinx.coroutines.reactor.flux
 import kotlinx.coroutines.runBlocking
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -44,8 +42,6 @@ class AIChatbotController(
     private val objectMapper: ObjectMapper,
     private val userAuthenticationHolder: UserAuthenticationHolder,
 ) : AIChatbotDocs {
-    private val log = logger()
-
     @PostMapping("/sessions")
     override fun createSession(
         @RequestBody request: CreateSessionRequest,
@@ -94,18 +90,18 @@ class AIChatbotController(
         @Valid @RequestBody request: SendMessageRequest,
     ): Flux<ServerSentEvent<String>> {
         val user = userAuthenticationHolder.current()
-        log.info("스트리밍 메시지 요청: sessionId=$sessionId, message=${request.message.take(50)}...")
 
-        return runBlocking {
+        return flux {
             aiChatbotUseCase.processMessageStream(sessionId, request.message, user)
-                .map { chunk ->
+                .collect { chunk ->
                     val response = StreamChunkResponse.from(chunk)
-                    ServerSentEvent.builder<String>()
-                        .event(response.type.lowercase())
-                        .data(objectMapper.writeValueAsString(response))
-                        .build()
+                    send(
+                        ServerSentEvent.builder<String>()
+                            .event(response.type.lowercase())
+                            .data(objectMapper.writeValueAsString(response))
+                            .build(),
+                    )
                 }
-                .asFlux()
         }
     }
 

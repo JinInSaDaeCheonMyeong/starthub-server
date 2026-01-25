@@ -36,4 +36,12 @@ class AIChatDocument(
     fun isPdf(): Boolean = fileType.lowercase() == "pdf"
 
     fun isDocx(): Boolean = fileType.lowercase() in listOf("docx", "doc")
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AIChatDocument) return false
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
 }

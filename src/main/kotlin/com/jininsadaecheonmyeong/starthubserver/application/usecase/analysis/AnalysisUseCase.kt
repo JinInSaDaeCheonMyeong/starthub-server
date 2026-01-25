@@ -1,6 +1,7 @@
 package com.jininsadaecheonmyeong.starthubserver.application.usecase.analysis
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.UserContextService
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.analysis.CompetitorAnalysis
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.bmc.BusinessModelCanvas
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.user.User
@@ -42,6 +43,7 @@ class AnalysisUseCase(
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val competitorAnalysisRepository: CompetitorAnalysisRepository,
     private val perplexitySearchService: PerplexitySearchService,
+    private val userContextService: UserContextService,
     @Qualifier("openAiChatModel") private val chatModel: ChatModel,
     private val objectMapper: ObjectMapper,
 ) {
@@ -204,6 +206,9 @@ class AnalysisUseCase(
                 )
             competitorAnalysisRepository.save(newAnalysis)
         }
+
+        userContextService.embedUserContextAsync(user)
+        logger.info("경쟁사분석 저장으로 인한 사용자 컨텍스트 임베딩 트리거 - BMC ID: {}, User ID: {}", bmc.id, user.id)
     }
 
     fun getAnalysisByBmcId(bmcId: Long): CompetitorAnalysisResponse {

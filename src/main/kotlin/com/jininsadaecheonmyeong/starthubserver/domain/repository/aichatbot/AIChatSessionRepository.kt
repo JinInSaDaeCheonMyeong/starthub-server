@@ -9,6 +9,19 @@ import org.springframework.data.repository.query.Param
 interface AIChatSessionRepository : JpaRepository<AIChatSession, Long> {
     fun findByUserAndDeletedFalseOrderByUpdatedAtDesc(user: User): List<AIChatSession>
 
+    @Query(
+        """
+        SELECT DISTINCT s FROM AIChatSession s
+        LEFT JOIN FETCH s.messages
+        LEFT JOIN FETCH s.documents
+        WHERE s.user = :user AND s.deleted = false
+        ORDER BY s.updatedAt DESC
+        """,
+    )
+    fun findByUserWithCollections(
+        @Param("user") user: User,
+    ): List<AIChatSession>
+
     fun findByIdAndDeletedFalse(id: Long): AIChatSession?
 
     @Query(

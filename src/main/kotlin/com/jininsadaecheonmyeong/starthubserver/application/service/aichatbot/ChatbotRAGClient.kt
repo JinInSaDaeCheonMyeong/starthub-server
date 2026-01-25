@@ -118,6 +118,7 @@ data class EmbedUserContextRequest(
     val bmcs: List<BmcEmbedData>,
     val interests: List<String>,
     val likedAnnouncementUrls: List<String>,
+    val competitorAnalyses: List<CompetitorAnalysisEmbedData>? = null,
 )
 
 data class BmcEmbedData(
@@ -132,6 +133,16 @@ data class BmcEmbedData(
     val keyActivities: String?,
     val keyPartners: String?,
     val costStructure: String?,
+)
+
+data class CompetitorAnalysisEmbedData(
+    val id: Long,
+    val bmcId: Long,
+    val bmcTitle: String,
+    val userBmcSummary: String?,
+    val strengths: String?,
+    val weaknesses: String?,
+    val globalStrategy: String?,
 )
 
 data class QueryContextRequest(

@@ -16,8 +16,8 @@ data class ChatSessionDetailResponse(
             return ChatSessionDetailResponse(
                 id = session.id!!,
                 title = session.title,
-                messages = session.messages.map { ChatMessageResponse.from(it) },
-                documents = session.documents.map { ChatDocumentResponse.from(it) },
+                messages = session.getMessagesSorted().map { ChatMessageResponse.from(it) },
+                documents = session.getDocumentsSorted().map { ChatDocumentResponse.from(it) },
                 createdAt = session.createdAt,
                 updatedAt = session.updatedAt,
             )

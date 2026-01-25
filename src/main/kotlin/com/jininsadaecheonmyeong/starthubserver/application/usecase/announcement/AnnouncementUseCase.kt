@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.application.usecase.announcement
 
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.UserContextService
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.announcement.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.announcement.AnnouncementLike
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.announcement.AnnouncementStatus
@@ -47,6 +48,7 @@ class AnnouncementUseCase(
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val webClient: WebClient,
     private val userAuthenticationHolder: UserAuthenticationHolder,
+    private val userContextService: UserContextService,
     @param:Value("\${recommendation.fastapi-url}") private val fastapiUrl: String,
     @param:Value("\${SEARCH_SERVER_URL}") private val searchServerUrl: String,
 ) {
@@ -343,6 +345,8 @@ class AnnouncementUseCase(
 
         announcement.likeCount++
         repository.save(announcement)
+
+        userContextService.embedUserContextAsync(user)
     }
 
     @Transactional
@@ -359,6 +363,8 @@ class AnnouncementUseCase(
 
         announcement.likeCount--
         repository.save(announcement)
+
+        userContextService.embedUserContextAsync(user)
     }
 
     fun searchAnnouncement(request: NaturalLanguageSearchRequest): Mono<NaturalLanguageSearchResponse> {

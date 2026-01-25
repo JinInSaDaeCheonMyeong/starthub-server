@@ -30,4 +30,12 @@ class AIChatMessage(
     val content: String,
     @Column(nullable = true)
     val tokenCount: Int? = null,
-) : BaseEntity()
+) : BaseEntity() {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AIChatMessage) return false
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+}

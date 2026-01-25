@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
+import org.hibernate.annotations.BatchSize
 
 @Entity
 @Table(name = "ai_chat_sessions")
@@ -28,9 +29,11 @@ class AIChatSession(
     var title: String = "New Chat",
     @OneToMany(mappedBy = "session", cascade = [CascadeType.ALL], orphanRemoval = true)
     @OrderBy("createdAt ASC")
-    val messages: MutableList<AIChatMessage> = mutableListOf(),
+    @BatchSize(size = 100)
+    val messages: MutableSet<AIChatMessage> = mutableSetOf(),
     @OneToMany(mappedBy = "session", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val documents: MutableList<AIChatDocument> = mutableListOf(),
+    @BatchSize(size = 50)
+    val documents: MutableSet<AIChatDocument> = mutableSetOf(),
     @Column(nullable = false)
     var deleted: Boolean = false,
 ) : BaseEntity() {
@@ -53,4 +56,8 @@ class AIChatSession(
     fun addDocument(document: AIChatDocument) {
         documents.add(document)
     }
+
+    fun getMessagesSorted(): List<AIChatMessage> = messages.sortedBy { it.createdAt }
+
+    fun getDocumentsSorted(): List<AIChatDocument> = documents.sortedBy { it.createdAt }
 }

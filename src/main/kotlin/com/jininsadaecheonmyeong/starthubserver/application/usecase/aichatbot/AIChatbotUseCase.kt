@@ -6,7 +6,9 @@ import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.Do
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.EmbedDocumentRequest
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.QueryContextRequest
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.QueryDocumentRequest
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.ReferenceParser
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.StreamChunk
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.StreamEventType
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.UserContextService
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.aichatbot.AIChatDocument
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.aichatbot.AIChatMessage
@@ -22,12 +24,10 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.ai.ClaudePromptTemp
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.PerplexitySearchService
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchRequest
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
-import com.jininsadaecheonmyeong.starthubserver.logger
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onStart
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -43,9 +43,8 @@ class AIChatbotUseCase(
     private val userContextService: UserContextService,
     private val perplexitySearchService: PerplexitySearchService,
     private val userAuthenticationHolder: UserAuthenticationHolder,
+    private val referenceParser: ReferenceParser,
 ) {
-    private val log = logger()
-
     @Transactional
     fun createSession(title: String?): AIChatSession {
         val user = userAuthenticationHolder.current()
@@ -59,7 +58,7 @@ class AIChatbotUseCase(
 
     fun getSessions(): List<ChatSessionResponse> {
         val user = userAuthenticationHolder.current()
-        val sessions = sessionRepository.findByUserAndDeletedFalseOrderByUpdatedAtDesc(user)
+        val sessions = sessionRepository.findByUserWithCollections(user)
         return sessions.map { ChatSessionResponse.from(it) }
     }
 
@@ -112,13 +111,16 @@ class AIChatbotUseCase(
         saveUserMessage(session, message)
 
         if (getAllMessages(sessionId).size == 1) {
-            val title = generateTitleFromFirstMessage(message)
-            session.updateTitle(title)
-            sessionRepository.save(session)
+            try {
+                val title = claudeAIService.generateTitle(message)
+                session.updateTitle(title)
+                sessionRepository.save(session)
+            } catch (e: Exception) {
+            }
         }
 
         val history = getRecentMessagesForHistory(sessionId, 20)
-        val userContextString = userContextService.buildContextString(user)
+        val userContextString = userContextService.buildContextStringWithAnalysis(user)
         val retrievedContext = buildRetrievedContext(session, user, message)
         val systemPrompt = ClaudePromptTemplates.buildStartupAssistantPrompt(userContextString)
 
@@ -129,20 +131,25 @@ class AIChatbotUseCase(
             history = history.dropLast(1),
             userMessage = message,
             retrievedContext = retrievedContext,
-        ).onStart {
-            log.info("스트리밍 시작: sessionId=$sessionId, userId=${user.id}")
-        }.map { chunk ->
+        ).map { chunk ->
             chunk.text?.let { responseBuilder.append(it) }
             chunk
         }.onCompletion { error ->
             if (error == null) {
                 val fullResponse = responseBuilder.toString()
                 if (fullResponse.isNotBlank()) {
-                    saveAssistantMessage(session, fullResponse)
+                    val parseResult = referenceParser.parseAndClean(fullResponse)
+                    saveAssistantMessage(session, parseResult.cleanedContent)
+
+                    if (parseResult.references.isNotEmpty()) {
+                        emit(
+                            StreamChunk(
+                                type = StreamEventType.MESSAGE_STOP,
+                                references = parseResult.references,
+                            ),
+                        )
+                    }
                 }
-                log.info("스트리밍 완료: sessionId=$sessionId, responseLength=${fullResponse.length}")
-            } else {
-                log.error("스트리밍 오류: sessionId=$sessionId, error=${error.message}")
             }
         }
     }
@@ -190,7 +197,6 @@ class AIChatbotUseCase(
                     ),
                 )
             } catch (e: Exception) {
-                log.warn("문서 임베딩 실패 (계속 진행): ${e.message}")
             }
         }
 
@@ -209,7 +215,6 @@ class AIChatbotUseCase(
         try {
             chatbotRAGClient.deleteDocument(documentId.toString())
         } catch (e: Exception) {
-            log.warn("문서 벡터 삭제 실패 (계속 진행): ${e.message}")
         }
 
         documentRepository.deleteById(documentId)
@@ -269,20 +274,6 @@ class AIChatbotUseCase(
         }
     }
 
-    private fun generateTitleFromFirstMessage(message: String): String {
-        val maxLength = 50
-        val cleanMessage =
-            message
-                .replace("\n", " ")
-                .replace(Regex("\\s+"), " ")
-                .trim()
-        return if (cleanMessage.length > maxLength) {
-            cleanMessage.take(maxLength - 3) + "..."
-        } else {
-            cleanMessage
-        }
-    }
-
     private suspend fun buildRetrievedContext(
         session: AIChatSession,
         user: User,
@@ -304,6 +295,11 @@ class AIChatbotUseCase(
         if (isAnnouncementRelated(message)) {
             val announcementContext = queryAnnouncementContext(user.id!!, message)
             announcementContext?.let { contextParts.add(it) }
+        }
+
+        if (isUserContextRelated(message)) {
+            val userRagContext = queryUserContext(user.id!!, message)
+            userRagContext?.let { contextParts.add(it) }
         }
 
         return if (contextParts.isNotEmpty()) {
@@ -352,7 +348,6 @@ class AIChatbotUseCase(
                 }
             }
         } catch (e: Exception) {
-            log.warn("문서 RAG 검색 실패, 로컬 텍스트 사용: ${e.message}")
             buildFallbackDocumentContext(textDocuments)
         }
     }
@@ -399,7 +394,6 @@ class AIChatbotUseCase(
                 }
             }
         } catch (e: Exception) {
-            log.warn("웹 검색 실패: ${e.message}")
             null
         }
     }
@@ -407,6 +401,48 @@ class AIChatbotUseCase(
     private fun isAnnouncementRelated(message: String): Boolean {
         return ClaudePromptTemplates.ANNOUNCEMENT_KEYWORDS.any { keyword ->
             message.contains(keyword, ignoreCase = true)
+        }
+    }
+
+    private fun isUserContextRelated(message: String): Boolean {
+        return ClaudePromptTemplates.USER_CONTEXT_KEYWORDS.any { keyword ->
+            message.contains(keyword, ignoreCase = true)
+        }
+    }
+
+    private suspend fun queryUserContext(
+        userId: Long,
+        query: String,
+    ): String? {
+        return try {
+            val response =
+                chatbotRAGClient.queryContext(
+                    QueryContextRequest(
+                        query = query,
+                        userId = userId,
+                        topK = 5,
+                        includeAnnouncements = false,
+                    ),
+                )
+
+            if (response?.userContext.isNullOrEmpty()) return null
+
+            buildString {
+                appendLine("## 사용자 관련 정보 (RAG 검색 결과)")
+                response!!.userContext!!.forEach { result ->
+                    when (result.type) {
+                        "bmc" -> appendLine("### BMC 관련 (관련도: ${String.format("%.2f", result.score)})")
+                        "interests" -> appendLine("### 관심분야 (관련도: ${String.format("%.2f", result.score)})")
+                        "competitor_analysis" -> appendLine("### 경쟁사분석 (관련도: ${String.format("%.2f", result.score)})")
+                        "liked_preference" -> appendLine("### 관심 공고 기반 (관련도: ${String.format("%.2f", result.score)})")
+                        else -> appendLine("### 기타 (관련도: ${String.format("%.2f", result.score)})")
+                    }
+                    appendLine(result.content)
+                    appendLine()
+                }
+            }
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -437,7 +473,6 @@ class AIChatbotUseCase(
                 }
             }
         } catch (e: Exception) {
-            log.warn("공고 조회 실패: ${e.message}")
             null
         }
     }
