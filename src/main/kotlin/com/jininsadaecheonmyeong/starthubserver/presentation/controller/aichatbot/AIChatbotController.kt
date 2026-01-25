@@ -35,7 +35,7 @@ import org.springframework.web.multipart.MultipartFile
 import reactor.core.publisher.Flux
 
 @RestController
-@RequestMapping("/api/chatbot")
+@RequestMapping("/chatbot")
 class AIChatbotController(
     private val aiChatbotUseCase: AIChatbotUseCase,
     private val fileProcessingService: FileProcessingService,

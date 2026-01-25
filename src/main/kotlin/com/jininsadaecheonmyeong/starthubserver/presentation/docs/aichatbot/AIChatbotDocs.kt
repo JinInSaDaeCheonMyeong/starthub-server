@@ -19,7 +19,7 @@ import org.springframework.http.codec.ServerSentEvent
 import org.springframework.web.multipart.MultipartFile
 import reactor.core.publisher.Flux
 
-@Tag(name = "AI Chatbot", description = "AI 챗봇 API")
+@Tag(name = "챗봇", description = "AI 챗봇 API")
 interface AIChatbotDocs {
     @Operation(summary = "채팅 세션 생성", description = "새로운 AI 채팅 세션을 생성합니다.")
     @ApiResponses(
