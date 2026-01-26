@@ -104,9 +104,21 @@ class AIChatbotUseCase(
         sessionId: Long,
         message: String,
         user: User,
+        files: List<ProcessedFile>? = null,
     ): Flow<StreamChunk> {
         val session = findSessionOrThrow(sessionId)
         verifyOwnership(session, user)
+
+        files?.forEach { file ->
+            addDocument(
+                sessionId = sessionId,
+                fileName = file.fileName,
+                fileUrl = file.fileUrl,
+                fileType = file.fileType,
+                extractedText = file.extractedText,
+                user = user,
+            )
+        }
 
         saveUserMessage(session, message)
 
@@ -168,8 +180,8 @@ class AIChatbotUseCase(
         fileUrl: String,
         fileType: String,
         extractedText: String?,
+        user: User,
     ): AIChatDocument {
-        val user = userAuthenticationHolder.current()
         val session = findSessionOrThrow(sessionId)
         verifyOwnership(session, user)
 
@@ -498,4 +510,11 @@ class AIChatbotUseCase(
 data class ChatHistoryMessage(
     val role: MessageRole,
     val content: String,
+)
+
+data class ProcessedFile(
+    val fileName: String,
+    val fileUrl: String,
+    val fileType: String,
+    val extractedText: String?,
 )
