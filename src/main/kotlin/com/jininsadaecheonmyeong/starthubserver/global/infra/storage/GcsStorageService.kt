@@ -40,6 +40,27 @@ class GcsStorageService(
         storage.delete(blobId)
     }
 
+    fun uploadBytes(
+        bytes: ByteArray,
+        fileName: String,
+        directory: String,
+        contentType: String,
+    ): String {
+        val generatedFileName = generateFileName(fileName)
+        val objectName = "$directory/$generatedFileName"
+
+        val blobId = BlobId.of(bucketName, objectName)
+        val blobInfo =
+            BlobInfo
+                .newBuilder(blobId)
+                .setContentType(contentType)
+                .build()
+
+        storage.create(blobInfo, bytes)
+
+        return "https://storage.googleapis.com/$bucketName/$objectName"
+    }
+
     private fun generateFileName(originalFilename: String): String {
         val extension = originalFilename.substringAfterLast(".", "")
         val uuid = UUID.randomUUID().toString()

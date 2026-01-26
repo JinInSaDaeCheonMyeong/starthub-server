@@ -110,9 +110,10 @@ class AnalysisUseCase(
         user: User,
         userBmc: BusinessModelCanvas,
     ): CompetitorAnalysisResponse {
-        val existingAnalysis = withContext(Dispatchers.IO) {
-            competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(userBmc)
-        }
+        val existingAnalysis =
+            withContext(Dispatchers.IO) {
+                competitorAnalysisRepository.findByBusinessModelCanvasAndDeletedFalse(userBmc)
+            }
         if (existingAnalysis.isPresent) {
             return deserializeAnalysisResponse(existingAnalysis.get())
         }
