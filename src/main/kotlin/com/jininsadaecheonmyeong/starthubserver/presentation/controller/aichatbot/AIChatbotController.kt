@@ -90,31 +90,33 @@ class AIChatbotController(
     ): Flux<ServerSentEvent<String>> {
         val user = userAuthenticationHolder.current()
 
-        val processedFiles = files?.mapNotNull { file ->
-            val fileName = file.originalFilename ?: "unknown"
-            val fileExtension = fileName.substringAfterLast(".", "").lowercase()
+        val processedFiles =
+            files?.mapNotNull { file ->
+                val fileName = file.originalFilename ?: "unknown"
+                val fileExtension = fileName.substringAfterLast(".", "").lowercase()
 
-            val supportedTypes = listOf("pdf", "docx", "doc", "hwp", "png", "jpg", "jpeg", "gif", "webp")
-            if (fileExtension !in supportedTypes) {
-                return@mapNotNull null
+                val supportedTypes = listOf("pdf", "docx", "doc", "hwp", "png", "jpg", "jpeg", "gif", "webp")
+                if (fileExtension !in supportedTypes) {
+                    return@mapNotNull null
+                }
+
+                val fileUrl = gcsStorageService.uploadFile(file, "chatbot-documents")
+
+                val extractedText =
+                    when (fileExtension) {
+                        "pdf" -> fileProcessingService.extractTextFromPdf(file)
+                        "docx", "doc" -> fileProcessingService.extractTextFromDocx(file)
+                        "hwp" -> fileProcessingService.extractTextFromHwp(file)
+                        else -> null
+                    }
+
+                ProcessedFile(
+                    fileName = fileName,
+                    fileUrl = fileUrl,
+                    fileType = fileExtension,
+                    extractedText = extractedText,
+                )
             }
-
-            val fileUrl = gcsStorageService.uploadFile(file, "chatbot-documents")
-
-            val extractedText = when (fileExtension) {
-                "pdf" -> fileProcessingService.extractTextFromPdf(file)
-                "docx", "doc" -> fileProcessingService.extractTextFromDocx(file)
-                "hwp" -> fileProcessingService.extractTextFromHwp(file)
-                else -> null
-            }
-
-            ProcessedFile(
-                fileName = fileName,
-                fileUrl = fileUrl,
-                fileType = fileExtension,
-                extractedText = extractedText,
-            )
-        }
 
         return flux {
             aiChatbotUseCase.processMessageStream(sessionId, message, user, processedFiles)

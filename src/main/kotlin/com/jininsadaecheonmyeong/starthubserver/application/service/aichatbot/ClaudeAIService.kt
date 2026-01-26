@@ -57,11 +57,12 @@ class ClaudeAIService(
                 chunk.split("\n").filter { it.isNotBlank() }
             }
             .handle { line: String, sink: reactor.core.publisher.SynchronousSink<StreamChunk> ->
-                val jsonData = if (line.startsWith("data: ")) {
-                    line.removePrefix("data: ").trim()
-                } else {
-                    line.trim()
-                }
+                val jsonData =
+                    if (line.startsWith("data: ")) {
+                        line.removePrefix("data: ").trim()
+                    } else {
+                        line.trim()
+                    }
                 if (jsonData.isBlank() || !jsonData.startsWith("{")) {
                     return@handle
                 }
@@ -107,7 +108,8 @@ class ClaudeAIService(
     }
 
     suspend fun generateTitle(userMessage: String): String {
-        val systemPrompt = """
+        val systemPrompt =
+            """
             당신은 채팅 세션 제목 생성기입니다.
             사용자의 메시지를 읽고, 해당 대화의 핵심 주제를 10~25자 이내의 짧은 한국어 제목으로 요약하세요.
 
@@ -121,7 +123,7 @@ class ClaudeAIService(
             - "배달 앱 수익 모델 질문"
             - "스타트업 법인 설립 방법"
             - "AI 기반 헬스케어 사업 아이디어"
-        """.trimIndent()
+            """.trimIndent()
 
         val request =
             ClaudeRequest(
@@ -133,13 +135,14 @@ class ClaudeAIService(
             )
 
         return try {
-            val response = webClient.post()
-                .uri("/v1/messages")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(ClaudeResponse::class.java)
-                .block()
+            val response =
+                webClient.post()
+                    .uri("/v1/messages")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(ClaudeResponse::class.java)
+                    .block()
 
             val title = response?.content?.firstOrNull()?.text?.trim() ?: ""
 

@@ -6,9 +6,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.repository.announcement.A
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.bmc.BusinessModelCanvasRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.schedule.ScheduleRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.user.UserStartupFieldRepository
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import com.jininsadaecheonmyeong.starthubserver.logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +13,9 @@ import kotlinx.coroutines.launch
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @Service
 @Transactional(readOnly = true)
@@ -37,13 +37,14 @@ class UserContextService(
                 val bmcEmbedDataList = getBmcEmbedDataList(user)
                 val competitorAnalysisEmbedDataList = getCompetitorAnalysisEmbedDataList(user)
 
-                val request = EmbedUserContextRequest(
-                    userId = context.userId,
-                    bmcs = bmcEmbedDataList,
-                    interests = context.interests,
-                    likedAnnouncementUrls = context.likedAnnouncements.map { it.url },
-                    competitorAnalyses = competitorAnalysisEmbedDataList.ifEmpty { null },
-                )
+                val request =
+                    EmbedUserContextRequest(
+                        userId = context.userId,
+                        bmcs = bmcEmbedDataList,
+                        interests = context.interests,
+                        likedAnnouncementUrls = context.likedAnnouncements.map { it.url },
+                        competitorAnalyses = competitorAnalysisEmbedDataList.ifEmpty { null },
+                    )
 
                 chatbotRAGClient.embedUserContext(request)
             } catch (e: Exception) {
@@ -159,7 +160,9 @@ class UserContextService(
                 appendLine()
                 appendLine("## 경쟁사분석")
                 analyses.forEach { analysis ->
-                    appendLine("### ${analysis.businessModelCanvas.title} 경쟁사분석 (ID: ${analysis.id}, BMC ID: ${analysis.businessModelCanvas.id})")
+                    appendLine(
+                        "### ${analysis.businessModelCanvas.title} 경쟁사분석 (ID: ${analysis.id}, BMC ID: ${analysis.businessModelCanvas.id})",
+                    )
                     analysis.userBmcSummary?.let { appendLine("- BMC 요약: ${it.take(200)}") }
                     analysis.strengthsAnalysis?.let { appendLine("- 강점: ${it.take(200)}") }
                     analysis.weaknessesAnalysis?.let { appendLine("- 약점: ${it.take(200)}") }
@@ -172,13 +175,14 @@ class UserContextService(
                 appendLine("오늘 날짜: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
                 schedules.forEach { schedule ->
                     val daysLeft = ChronoUnit.DAYS.between(LocalDate.now(), schedule.endDate)
-                    val urgency = when {
-                        daysLeft < 0 -> "(마감됨)"
-                        daysLeft == 0L -> "(오늘 마감!)"
-                        daysLeft <= 3 -> "(${daysLeft}일 남음 - 긴급)"
-                        daysLeft <= 7 -> "(${daysLeft}일 남음)"
-                        else -> "(${daysLeft}일 남음)"
-                    }
+                    val urgency =
+                        when {
+                            daysLeft < 0 -> "(마감됨)"
+                            daysLeft == 0L -> "(오늘 마감!)"
+                            daysLeft <= 3 -> "(${daysLeft}일 남음 - 긴급)"
+                            daysLeft <= 7 -> "(${daysLeft}일 남음)"
+                            else -> "(${daysLeft}일 남음)"
+                        }
                     appendLine("- ${schedule.title} $urgency [ID: ${schedule.announcementId}, URL: ${schedule.url}]")
                     appendLine("  기관: ${schedule.organization}, 마감일: ${schedule.endDate}")
                 }
