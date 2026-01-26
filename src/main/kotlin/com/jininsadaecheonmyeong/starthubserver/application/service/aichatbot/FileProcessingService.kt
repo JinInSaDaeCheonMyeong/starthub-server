@@ -1,11 +1,15 @@
 package com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot
 
 import com.jininsadaecheonmyeong.starthubserver.logger
+import kr.dogfoot.hwplib.reader.HWPReader
+import kr.dogfoot.hwplib.tool.textextractor.TextExtractMethod
+import kr.dogfoot.hwplib.tool.textextractor.TextExtractor
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.poi.xwpf.usermodel.XWPFDocument
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.io.File
 
 @Service
 class FileProcessingService {
@@ -55,6 +59,23 @@ class FileProcessingService {
         }
     }
 
+    fun extractTextFromHwp(file: MultipartFile): String? {
+        var tempFile: File? = null
+        return try {
+            tempFile = File.createTempFile("hwp_", ".hwp")
+            file.transferTo(tempFile)
+
+            val hwpFile = HWPReader.fromFile(tempFile.absolutePath)
+            val text = TextExtractor.extract(hwpFile, TextExtractMethod.InsertControlTextBetweenParagraphText)
+            text?.trim()?.takeIf { it.isNotBlank() }
+        } catch (e: Exception) {
+            log.error("HWP 텍스트 추출 실패: ${e.message}")
+            null
+        } finally {
+            tempFile?.delete()
+        }
+    }
+
     fun extractTextFromFile(
         file: MultipartFile,
         fileType: String,
@@ -62,6 +83,7 @@ class FileProcessingService {
         return when (fileType.lowercase()) {
             "pdf" -> extractTextFromPdf(file)
             "docx", "doc" -> extractTextFromDocx(file)
+            "hwp" -> extractTextFromHwp(file)
             else -> null
         }
     }

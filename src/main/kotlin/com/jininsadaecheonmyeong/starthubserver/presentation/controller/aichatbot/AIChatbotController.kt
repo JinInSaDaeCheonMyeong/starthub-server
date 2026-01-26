@@ -3,21 +3,18 @@ package com.jininsadaecheonmyeong.starthubserver.presentation.controller.aichatb
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.FileProcessingService
 import com.jininsadaecheonmyeong.starthubserver.application.usecase.aichatbot.AIChatbotUseCase
+import com.jininsadaecheonmyeong.starthubserver.application.usecase.aichatbot.ProcessedFile
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.global.infra.storage.GcsStorageService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.presentation.docs.aichatbot.AIChatbotDocs
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.CreateSessionRequest
-import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.SendMessageRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.UpdateSessionTitleRequest
-import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatDocumentResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.StreamChunkResponse
 import jakarta.validation.Valid
 import kotlinx.coroutines.reactor.flux
-import kotlinx.coroutines.runBlocking
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
@@ -28,7 +25,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import reactor.core.publisher.Flux
@@ -83,16 +80,44 @@ class AIChatbotController(
 
     @PostMapping(
         "/sessions/{sessionId}/messages/stream",
+        consumes = [MediaType.MULTIPART_FORM_DATA_VALUE],
         produces = [MediaType.TEXT_EVENT_STREAM_VALUE],
     )
     override fun sendMessageStream(
         @PathVariable sessionId: Long,
-        @Valid @RequestBody request: SendMessageRequest,
+        @RequestPart("message") message: String,
+        @RequestPart("files", required = false) files: List<MultipartFile>?,
     ): Flux<ServerSentEvent<String>> {
         val user = userAuthenticationHolder.current()
 
+        val processedFiles = files?.mapNotNull { file ->
+            val fileName = file.originalFilename ?: "unknown"
+            val fileExtension = fileName.substringAfterLast(".", "").lowercase()
+
+            val supportedTypes = listOf("pdf", "docx", "doc", "hwp", "png", "jpg", "jpeg", "gif", "webp")
+            if (fileExtension !in supportedTypes) {
+                return@mapNotNull null
+            }
+
+            val fileUrl = gcsStorageService.uploadFile(file, "chatbot-documents")
+
+            val extractedText = when (fileExtension) {
+                "pdf" -> fileProcessingService.extractTextFromPdf(file)
+                "docx", "doc" -> fileProcessingService.extractTextFromDocx(file)
+                "hwp" -> fileProcessingService.extractTextFromHwp(file)
+                else -> null
+            }
+
+            ProcessedFile(
+                fileName = fileName,
+                fileUrl = fileUrl,
+                fileType = fileExtension,
+                extractedText = extractedText,
+            )
+        }
+
         return flux {
-            aiChatbotUseCase.processMessageStream(sessionId, request.message, user)
+            aiChatbotUseCase.processMessageStream(sessionId, message, user, processedFiles)
                 .collect { chunk ->
                     val response = StreamChunkResponse.from(chunk)
                     send(
@@ -103,60 +128,5 @@ class AIChatbotController(
                     )
                 }
         }
-    }
-
-    @PostMapping("/sessions/{sessionId}/files")
-    override fun uploadFile(
-        @PathVariable sessionId: Long,
-        @RequestParam("file") file: MultipartFile,
-    ): ResponseEntity<BaseResponse<ChatDocumentResponse>> {
-        val fileName = file.originalFilename ?: "unknown"
-        val fileExtension = fileName.substringAfterLast(".", "").lowercase()
-
-        val supportedTypes = listOf("pdf", "docx", "doc", "png", "jpg", "jpeg", "gif", "webp")
-        if (fileExtension !in supportedTypes) {
-            return BaseResponse.of(null, HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다. (지원: PDF, DOCX, 이미지)")
-        }
-
-        val fileUrl = gcsStorageService.uploadFile(file, "chatbot-documents")
-
-        val extractedText =
-            when (fileExtension) {
-                "pdf" -> fileProcessingService.extractTextFromPdf(file)
-                "docx", "doc" -> fileProcessingService.extractTextFromDocx(file)
-                else -> null
-            }
-
-        val document =
-            runBlocking {
-                aiChatbotUseCase.addDocument(
-                    sessionId = sessionId,
-                    fileName = fileName,
-                    fileUrl = fileUrl,
-                    fileType = fileExtension,
-                    extractedText = extractedText,
-                )
-            }
-
-        return BaseResponse.of(ChatDocumentResponse.from(document), "파일이 업로드되었습니다.")
-    }
-
-    @GetMapping("/sessions/{sessionId}/files")
-    override fun getFiles(
-        @PathVariable sessionId: Long,
-    ): ResponseEntity<BaseResponse<List<ChatDocumentResponse>>> {
-        val documents = aiChatbotUseCase.getDocuments(sessionId)
-        return BaseResponse.of(documents.map { ChatDocumentResponse.from(it) }, "파일 목록을 조회했습니다.")
-    }
-
-    @DeleteMapping("/sessions/{sessionId}/files/{fileId}")
-    override fun deleteFile(
-        @PathVariable sessionId: Long,
-        @PathVariable fileId: Long,
-    ): ResponseEntity<BaseResponse<Unit>> {
-        runBlocking {
-            aiChatbotUseCase.deleteDocument(sessionId, fileId)
-        }
-        return BaseResponse.of(Unit, "파일이 삭제되었습니다.")
     }
 }

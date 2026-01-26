@@ -2,9 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.presentation.docs.aichatbot
 
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.CreateSessionRequest
-import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.SendMessageRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.UpdateSessionTitleRequest
-import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatDocumentResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionDetailResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -84,7 +82,10 @@ interface AIChatbotDocs {
 
     @Operation(
         summary = "메시지 전송 (스트리밍)",
-        description = "SSE(Server-Sent Events) 방식으로 응답합니다. Swagger에서 테스트 불가하며, curl이나 fetch API로 테스트하세요.",
+        description = """
+            SSE(Server-Sent Events) 방식으로 응답합니다. Swagger에서 테스트 불가하며, curl이나 fetch API로 테스트하세요.
+            파일 첨부 시 form-data로 전송하며, 지원 형식: PDF, DOCX, 이미지(PNG, JPG, GIF, WEBP)
+        """,
     )
     @ApiResponses(
         value = [
@@ -99,46 +100,7 @@ interface AIChatbotDocs {
     )
     fun sendMessageStream(
         @Parameter(description = "세션 ID", example = "1") sessionId: Long,
-        request: SendMessageRequest,
+        @Parameter(description = "전송할 메시지") message: String,
+        @Parameter(description = "첨부 파일 목록 (선택)") files: List<MultipartFile>?,
     ): Flux<ServerSentEvent<String>>
-
-    @Operation(summary = "파일 업로드", description = "채팅 세션에 파일을 업로드합니다. (PDF, DOCX, 이미지 지원)")
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "파일 업로드 성공",
-                content = [Content(schema = Schema(implementation = ChatDocumentResponse::class))],
-            ),
-            ApiResponse(responseCode = "400", description = "지원하지 않는 파일 형식"),
-            ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음"),
-        ],
-    )
-    fun uploadFile(
-        @Parameter(description = "세션 ID") sessionId: Long,
-        @Parameter(description = "업로드할 파일") file: MultipartFile,
-    ): ResponseEntity<BaseResponse<ChatDocumentResponse>>
-
-    @Operation(summary = "파일 목록 조회", description = "채팅 세션에 업로드된 파일 목록을 조회합니다.")
-    @ApiResponses(
-        value = [
-            ApiResponse(responseCode = "200", description = "파일 목록 조회 성공"),
-            ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음"),
-        ],
-    )
-    fun getFiles(
-        @Parameter(description = "세션 ID") sessionId: Long,
-    ): ResponseEntity<BaseResponse<List<ChatDocumentResponse>>>
-
-    @Operation(summary = "파일 삭제", description = "채팅 세션에서 파일을 삭제합니다.")
-    @ApiResponses(
-        value = [
-            ApiResponse(responseCode = "200", description = "파일 삭제 성공"),
-            ApiResponse(responseCode = "404", description = "세션 또는 파일을 찾을 수 없음"),
-        ],
-    )
-    fun deleteFile(
-        @Parameter(description = "세션 ID") sessionId: Long,
-        @Parameter(description = "파일 ID") fileId: Long,
-    ): ResponseEntity<BaseResponse<Unit>>
 }

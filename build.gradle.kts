@@ -44,6 +44,7 @@ dependencies {
     // document processing
     implementation("org.apache.pdfbox:pdfbox:3.0.1")
     implementation("org.apache.poi:poi-ooxml:5.2.5")
+    implementation("kr.dogfoot:hwplib:1.1.1")
 
     // email
     implementation("org.springframework.boot:spring-boot-starter-mail")
