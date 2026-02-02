@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.infrastructure.listener.bmc
 
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.UserContextService
 import com.jininsadaecheonmyeong.starthubserver.application.usecase.analysis.AnalysisUseCase
 import com.jininsadaecheonmyeong.starthubserver.domain.event.bmc.BmcCreatedEvent
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.bmc.BusinessModelCanvasRepository
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component
 class BmcCreatedEventListener(
     private val analysisUseCase: AnalysisUseCase,
     private val domainBmcRepository: BusinessModelCanvasRepository,
+    private val userContextService: UserContextService,
 ) {
     private val logger = logger()
 
@@ -26,8 +28,11 @@ class BmcCreatedEventListener(
                 user = event.user,
                 businessModelCanvas = domainBmc,
             )
+
+            userContextService.embedUserContextAsync(event.user)
+            logger.info("BMC 생성으로 인한 사용자 컨텍스트 임베딩 트리거 - BMC ID: {}, User ID: {}", bmcId, event.user.id)
         } catch (e: Exception) {
-            logger.error("경쟁사 분석 비동기 실행 실패 - BMC ID: {}", event.businessModelCanvas.id, e)
+            logger.error("BMC 생성 이벤트 처리 실패 - BMC ID: {}", event.businessModelCanvas.id, e)
         }
     }
 }

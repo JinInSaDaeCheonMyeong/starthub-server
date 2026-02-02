@@ -11,6 +11,11 @@ spring:
   application:
     name: starthub-server
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
@@ -19,7 +24,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update #TODO Change to validate and add migration tool
+      ddl-auto: update
     show-sql: false
     open-in-view: false
 
@@ -35,6 +40,13 @@ spring:
       chat:
         options:
           model: gpt-4.1-mini
+          temperature: 0.7
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}
+      chat:
+        options:
+          model: claude-sonnet-4-20250514
+          max-tokens: 4096
           temperature: 0.7
 
   mail:
@@ -148,3 +160,6 @@ document:
   conversion:
     temp-dir: /tmp/document-conversion
     timeout: 120
+
+chatbot:
+  rag-api-url: ${CHATBOT_RAG_API_URL:http://localhost:8000}

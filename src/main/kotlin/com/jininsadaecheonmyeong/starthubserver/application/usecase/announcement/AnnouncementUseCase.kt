@@ -632,6 +632,8 @@ class AnnouncementUseCase(
 
         announcement.likeCount++
         repository.save(announcement)
+
+        userContextService.embedUserContextAsync(user)
     }
 
     @Transactional
@@ -648,6 +650,8 @@ class AnnouncementUseCase(
 
         announcement.likeCount--
         repository.save(announcement)
+
+        userContextService.embedUserContextAsync(user)
     }
 
     fun searchAnnouncement(request: NaturalLanguageSearchRequest): Mono<NaturalLanguageSearchResponse> {
