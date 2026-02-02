@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.application.usecase.announcement
 
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.UserContextService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.announcement.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.announcement.AnnouncementLike
@@ -53,6 +54,7 @@ class AnnouncementUseCase(
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val webClient: WebClient,
     private val userAuthenticationHolder: UserAuthenticationHolder,
+    private val userContextService: UserContextService,
     private val documentConversionService: DocumentConversionService,
     private val gcsStorageService: GcsStorageService,
     private val objectMapper: ObjectMapper,
