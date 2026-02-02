@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.domain.entity.announcement
 
+import com.jininsadaecheonmyeong.starthubserver.domain.enums.announcement.AnnouncementSource
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.announcement.AnnouncementStatus
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.Column
@@ -46,4 +47,11 @@ class Announcement(
     var departmentInCharge: String,
     @Column(columnDefinition = "TEXT")
     var content: String,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", nullable = false)
+    var source: AnnouncementSource = AnnouncementSource.K_STARTUP,
+    @Column(name = "original_file_urls", columnDefinition = "TEXT")
+    var originalFileUrls: String? = null,
+    @Column(name = "pdf_file_urls", columnDefinition = "TEXT")
+    var pdfFileUrls: String? = null,
 ) : BaseEntity()

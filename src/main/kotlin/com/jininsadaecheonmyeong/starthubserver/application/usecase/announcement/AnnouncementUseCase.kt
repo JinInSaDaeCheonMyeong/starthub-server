@@ -1,8 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.application.usecase.announcement
 
-import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.UserContextService
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.announcement.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.announcement.AnnouncementLike
+import com.jininsadaecheonmyeong.starthubserver.domain.enums.announcement.AnnouncementSource
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.announcement.AnnouncementStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.exception.announcement.AnnouncementNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.exception.announcement.LikeAlreadyExistsException
@@ -12,7 +13,9 @@ import com.jininsadaecheonmyeong.starthubserver.domain.repository.announcement.A
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.announcement.AnnouncementRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.bmc.BusinessModelCanvasRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.user.UserStartupFieldRepository
+import com.jininsadaecheonmyeong.starthubserver.global.infra.storage.GcsStorageService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import com.jininsadaecheonmyeong.starthubserver.infrastructure.conversion.DocumentConversionService
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.announcement.BmcInfo
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.announcement.LikedAnnouncementUrl
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.announcement.LikedAnnouncementsContent
@@ -24,6 +27,8 @@ import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.announ
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.announcement.RecommendationResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.announcement.RecommendedAnnouncementResponse
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -48,16 +53,27 @@ class AnnouncementUseCase(
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val webClient: WebClient,
     private val userAuthenticationHolder: UserAuthenticationHolder,
-    private val userContextService: UserContextService,
+    private val documentConversionService: DocumentConversionService,
+    private val gcsStorageService: GcsStorageService,
+    private val objectMapper: ObjectMapper,
     @param:Value("\${recommendation.fastapi-url}") private val fastapiUrl: String,
     @param:Value("\${SEARCH_SERVER_URL}") private val searchServerUrl: String,
 ) {
     companion object {
         private const val K_STARTUP_URL = "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do"
+        private const val BIZINFO_BASE_URL = "https://www.bizinfo.go.kr"
+        private const val BIZINFO_LIST_URL = "$BIZINFO_BASE_URL/web/lay1/bbs/S1T122C128/AS/74/list.do"
+        private const val BIZINFO_VIEW_URL = "$BIZINFO_BASE_URL/web/lay1/bbs/S1T122C128/AS/74/view.do"
+        private const val TIMEOUT_MS = 30000
     }
 
     @Transactional
     fun scrapeAndSaveAnnouncements() {
+        scrapeKStartup()
+        scrapeBizInfo()
+    }
+
+    private fun scrapeKStartup() {
         var page = 1
         var consecutivePagesWithNoNewSaves = 0
         val consecutivePageLimit = 1
@@ -120,6 +136,7 @@ class AnnouncementUseCase(
                                         startupHistory = startupHistory,
                                         departmentInCharge = departmentInCharge,
                                         content = content,
+                                        source = AnnouncementSource.K_STARTUP,
                                     )
                                 repository.save(announcement)
                                 newAnnouncementsOnPage++
@@ -138,6 +155,253 @@ class AnnouncementUseCase(
             } catch (_: Exception) {
                 break
             }
+        }
+    }
+
+    private fun scrapeBizInfo() {
+        var page = 1
+        var consecutiveEmptyPages = 0
+        val maxEmptyPages = 2
+
+        while (consecutiveEmptyPages < maxEmptyPages) {
+            try {
+                val newCount = scrapeBizInfoPage(page)
+                if (newCount == 0) {
+                    consecutiveEmptyPages++
+                } else {
+                    consecutiveEmptyPages = 0
+                }
+                page++
+            } catch (_: Exception) {
+                break
+            }
+        }
+    }
+
+    private fun scrapeBizInfoPage(page: Int): Int {
+        val listUrl = "$BIZINFO_LIST_URL?rows=15&cpage=$page"
+        val doc =
+            Jsoup
+                .connect(listUrl)
+                .timeout(TIMEOUT_MS)
+                .get()
+
+        val announceLinks = doc.select("a[href*=pblancId]")
+        var newCount = 0
+
+        for (link in announceLinks) {
+            val href = link.attr("href")
+            val pblancId = extractPblancId(href) ?: continue
+            val detailUrl = "$BIZINFO_VIEW_URL?pblancId=$pblancId"
+
+            if (repository.existsByUrl(detailUrl)) {
+                continue
+            }
+
+            try {
+                val announcement = scrapeBizInfoDetail(detailUrl)
+                if (announcement != null) {
+                    repository.save(announcement)
+                    newCount++
+                }
+            } catch (_: Exception) {
+                continue
+            }
+        }
+
+        return newCount
+    }
+
+    private fun scrapeBizInfoDetail(detailUrl: String): Announcement? {
+        val doc =
+            Jsoup
+                .connect(detailUrl)
+                .timeout(TIMEOUT_MS)
+                .get()
+
+        val title =
+            doc.selectFirst("h2.tit, .view_tit h2, .board_view h2, .tit_area h2, h2")?.text()?.trim()
+        if (title.isNullOrBlank()) {
+            return null
+        }
+        val organization = extractBizInfoField(doc, "소관부처", "주관기관") ?: ""
+        val receptionPeriod = extractBizInfoField(doc, "신청기간", "접수기간", "모집기간") ?: ""
+        val supportField = extractBizInfoField(doc, "지원분야", "사업분야") ?: ""
+        val region = extractBizInfoField(doc, "지역", "사업지역") ?: ""
+        val content = doc.selectFirst("div.view_cont, .board_view_cont, .cont_box")?.html() ?: ""
+
+        val (originalFileUrls, pdfFileUrls) = processBizInfoAttachments(doc)
+
+        return Announcement(
+            title = title,
+            url = detailUrl,
+            organization = organization,
+            receptionPeriod = receptionPeriod,
+            supportField = supportField,
+            targetAge = "",
+            contactNumber = "",
+            region = region,
+            organizationType = "",
+            startupHistory = "",
+            departmentInCharge = "",
+            content = content,
+            source = AnnouncementSource.BIZINFO,
+            originalFileUrls =
+                if (originalFileUrls.isNotEmpty()) {
+                    objectMapper.writeValueAsString(originalFileUrls)
+                } else {
+                    null
+                },
+            pdfFileUrls =
+                if (pdfFileUrls.isNotEmpty()) {
+                    objectMapper.writeValueAsString(pdfFileUrls)
+                } else {
+                    null
+                },
+        )
+    }
+
+    private fun extractBizInfoField(
+        doc: Document,
+        vararg labels: String,
+    ): String? {
+        for (label in labels) {
+            val spanValue =
+                doc
+                    .select("span.s_title:contains($label)")
+                    .firstOrNull()
+                    ?.parent()
+                    ?.selectFirst("div.txt")
+                    ?.text()
+                    ?.trim()
+            if (!spanValue.isNullOrBlank()) {
+                return spanValue
+            }
+
+            val thValue =
+                doc
+                    .select("th:contains($label), dt:contains($label), strong:contains($label)")
+                    .firstOrNull()
+                    ?.parent()
+                    ?.selectFirst("td, dd, span, p")
+                    ?.text()
+                    ?.trim()
+            if (!thValue.isNullOrBlank()) {
+                return thValue
+            }
+        }
+        return null
+    }
+
+    private fun extractPblancId(href: String): String? {
+        val regex = "pblancId=([A-Za-z_0-9]+)".toRegex()
+        return regex.find(href)?.groupValues?.get(1)
+    }
+
+    private fun processBizInfoAttachments(doc: Document): Pair<List<String>, List<String>> {
+        val originalUrls = mutableListOf<String>()
+        val pdfUrls = mutableListOf<String>()
+
+        val attachmentLinks =
+            doc.select(
+                "a[href*=FileDown], a[href*=fileDown], a[href*=getImageFile], a[onclick*=download]",
+            )
+
+        for (link in attachmentLinks) {
+            val href = link.attr("href")
+            val onclick = link.attr("onclick")
+            val fileName = extractFileName(link)
+
+            if (fileName.isBlank()) continue
+            if (!documentConversionService.isConvertible(fileName)) continue
+
+            try {
+                val downloadUrl = resolveBizInfoDownloadUrl(href, onclick)
+                if (downloadUrl.isNullOrBlank()) continue
+
+                val fileBytes = downloadBizInfoFile(downloadUrl)
+                if (fileBytes == null || fileBytes.isEmpty()) continue
+
+                val originalGcsUrl =
+                    gcsStorageService.uploadBytes(
+                        bytes = fileBytes,
+                        fileName = fileName,
+                        directory = "announcement-files",
+                        contentType = getBizInfoContentType(fileName),
+                    )
+                originalUrls.add(originalGcsUrl)
+
+                val pdfBytes = documentConversionService.convertToPdf(fileBytes, fileName)
+                if (pdfBytes != null) {
+                    val pdfFileName = fileName.substringBeforeLast(".") + ".pdf"
+                    val pdfGcsUrl =
+                        gcsStorageService.uploadBytes(
+                            bytes = pdfBytes,
+                            fileName = pdfFileName,
+                            directory = "announcement-pdfs",
+                            contentType = "application/pdf",
+                        )
+                    pdfUrls.add(pdfGcsUrl)
+                } else if (fileName.lowercase().endsWith(".pdf")) {
+                    pdfUrls.add(originalGcsUrl)
+                }
+            } catch (_: Exception) {
+                continue
+            }
+        }
+
+        return originalUrls to pdfUrls
+    }
+
+    private fun resolveBizInfoDownloadUrl(
+        href: String,
+        onclick: String,
+    ): String? {
+        return when {
+            href.isNotBlank() && href != "#" -> {
+                if (href.startsWith("http")) href else "$BIZINFO_BASE_URL$href"
+            }
+            onclick.isNotBlank() -> {
+                val urlMatch = "['\"](https?://[^'\"]+)['\"]".toRegex().find(onclick)
+                urlMatch?.groupValues?.get(1)
+            }
+            else -> null
+        }
+    }
+
+    private fun extractFileName(link: Element): String {
+        val title = link.attr("title")
+        if (title.isNotBlank()) {
+            val cleaned =
+                title
+                    .removePrefix("첨부파일 ")
+                    .removeSuffix(" 다운로드")
+                    .trim()
+            if (cleaned.contains(".")) {
+                return cleaned
+            }
+        }
+        return link.text().trim()
+    }
+
+    private fun downloadBizInfoFile(url: String): ByteArray? {
+        return try {
+            java.net.URI(url).toURL().openStream().use { it.readBytes() }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun getBizInfoContentType(fileName: String): String {
+        return when (fileName.substringAfterLast(".").lowercase()) {
+            "pdf" -> "application/pdf"
+            "hwp" -> "application/x-hwp"
+            "hwpx" -> "application/vnd.hancom.hwpx"
+            "doc" -> "application/msword"
+            "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "xls" -> "application/vnd.ms-excel"
+            "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            else -> "application/octet-stream"
         }
     }
 
@@ -160,15 +424,38 @@ class AnnouncementUseCase(
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
         announcements.forEach { announcement ->
-            var endDateString = announcement.receptionPeriod.split("~")[1].trim()
-            if (endDateString.contains(" ")) {
-                endDateString = endDateString.split(" ")[0]
+            when (announcement.source) {
+                AnnouncementSource.K_STARTUP -> {
+                    try {
+                        var endDateString = announcement.receptionPeriod.split("~")[1].trim()
+                        if (endDateString.contains(" ")) {
+                            endDateString = endDateString.split(" ")[0]
+                        }
+                        val endDate = LocalDate.parse(endDateString, formatter)
+                        if (endDate.isBefore(today)) {
+                            announcement.status = AnnouncementStatus.INACTIVE
+                            repository.save(announcement)
+                        }
+                    } catch (_: Exception) {
+                    }
+                }
+                AnnouncementSource.BIZINFO -> {
+                    if (!isBizInfoAnnouncementExists(announcement.url)) {
+                        announcement.status = AnnouncementStatus.INACTIVE
+                        repository.save(announcement)
+                    }
+                }
             }
-            val endDate = LocalDate.parse(endDateString, formatter)
-            if (endDate.isBefore(today)) {
-                announcement.status = AnnouncementStatus.INACTIVE
-                repository.save(announcement)
-            }
+        }
+    }
+
+    private fun isBizInfoAnnouncementExists(url: String): Boolean {
+        return try {
+            val doc = Jsoup.connect(url).timeout(TIMEOUT_MS).get()
+            val title = doc.selectFirst("h2.tit, .view_tit h2, .board_view h2, .tit_area h2, h2")?.text()?.trim()
+            !title.isNullOrBlank()
+        } catch (_: Exception) {
+            false
         }
     }
 

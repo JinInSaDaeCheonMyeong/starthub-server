@@ -156,5 +156,10 @@ swagger:
 
 SEARCH_SERVER_URL: ${SEARCH_SERVER_URL}
 
+document:
+  conversion:
+    temp-dir: /tmp/document-conversion
+    timeout: 120
+
 chatbot:
   rag-api-url: ${CHATBOT_RAG_API_URL:http://localhost:8000}
