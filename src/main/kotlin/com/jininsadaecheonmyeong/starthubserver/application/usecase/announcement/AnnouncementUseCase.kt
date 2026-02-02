@@ -28,6 +28,7 @@ import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.announ
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.announcement.RecommendedAnnouncementResponse
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -64,7 +65,6 @@ class AnnouncementUseCase(
         private const val BIZINFO_LIST_URL = "$BIZINFO_BASE_URL/web/lay1/bbs/S1T122C128/AS/74/list.do"
         private const val BIZINFO_VIEW_URL = "$BIZINFO_BASE_URL/web/lay1/bbs/S1T122C128/AS/74/view.do"
         private const val TIMEOUT_MS = 30000
-        private const val GCS_DIRECTORY = "announcements/bizinfo"
     }
 
     @Transactional
@@ -266,7 +266,6 @@ class AnnouncementUseCase(
         vararg labels: String,
     ): String? {
         for (label in labels) {
-            // 구조 1: span.s_title + div.txt (bizinfo 메인 구조)
             val spanValue =
                 doc
                     .select("span.s_title:contains($label)")
@@ -279,7 +278,6 @@ class AnnouncementUseCase(
                 return spanValue
             }
 
-            // 구조 2: th/dt/strong + td/dd (기존 구조)
             val thValue =
                 doc
                     .select("th:contains($label), dt:contains($label), strong:contains($label)")
@@ -312,7 +310,7 @@ class AnnouncementUseCase(
         for (link in attachmentLinks) {
             val href = link.attr("href")
             val onclick = link.attr("onclick")
-            val fileName = link.text().trim()
+            val fileName = extractFileName(link)
 
             if (fileName.isBlank()) continue
             if (!documentConversionService.isConvertible(fileName)) continue
@@ -322,15 +320,13 @@ class AnnouncementUseCase(
                 if (downloadUrl.isNullOrBlank()) continue
 
                 val fileBytes = downloadBizInfoFile(downloadUrl)
-                if (fileBytes == null || fileBytes.isEmpty()) {
-                    continue
-                }
+                if (fileBytes == null || fileBytes.isEmpty()) continue
 
                 val originalGcsUrl =
                     gcsStorageService.uploadBytes(
                         bytes = fileBytes,
                         fileName = fileName,
-                        directory = "$GCS_DIRECTORY/original",
+                        directory = "announcement-files",
                         contentType = getBizInfoContentType(fileName),
                     )
                 originalUrls.add(originalGcsUrl)
@@ -342,7 +338,7 @@ class AnnouncementUseCase(
                         gcsStorageService.uploadBytes(
                             bytes = pdfBytes,
                             fileName = pdfFileName,
-                            directory = "$GCS_DIRECTORY/pdf",
+                            directory = "announcement-pdfs",
                             contentType = "application/pdf",
                         )
                     pdfUrls.add(pdfGcsUrl)
@@ -371,6 +367,21 @@ class AnnouncementUseCase(
             }
             else -> null
         }
+    }
+
+    private fun extractFileName(link: Element): String {
+        val title = link.attr("title")
+        if (title.isNotBlank()) {
+            val cleaned =
+                title
+                    .removePrefix("첨부파일 ")
+                    .removeSuffix(" 다운로드")
+                    .trim()
+            if (cleaned.contains(".")) {
+                return cleaned
+            }
+        }
+        return link.text().trim()
     }
 
     private fun downloadBizInfoFile(url: String): ByteArray? {
@@ -426,7 +437,6 @@ class AnnouncementUseCase(
                             repository.save(announcement)
                         }
                     } catch (_: Exception) {
-                        // 날짜 파싱 실패시 무시
                     }
                 }
                 AnnouncementSource.BIZINFO -> {
