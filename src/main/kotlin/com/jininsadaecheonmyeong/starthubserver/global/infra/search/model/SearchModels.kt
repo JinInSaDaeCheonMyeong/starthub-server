@@ -39,7 +39,7 @@ data class CompetitorSearchResult(
         get() =
             try {
                 url.substringAfter("://").substringBefore("/").removePrefix("www.")
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 ""
             }
 

@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.De
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.UpdateUserProfileRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.UserRequest
+import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.user.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.user.UserProfileResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.user.UserResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -31,7 +32,7 @@ interface UserDocs {
         @RequestBody request: UserRequest,
         @Parameter(hidden = true) httpRequest: HttpServletRequest,
         @Parameter(hidden = true) httpResponse: HttpServletResponse,
-    ): ResponseEntity<BaseResponse<Any>>
+    ): ResponseEntity<BaseResponse<TokenResponse>>
 
     @Operation(
         summary = "토큰 재발급",
@@ -41,7 +42,7 @@ interface UserDocs {
         @RequestBody request: RefreshRequest,
         @Parameter(hidden = true) httpRequest: HttpServletRequest,
         @Parameter(hidden = true) httpResponse: HttpServletResponse,
-    ): ResponseEntity<BaseResponse<Any>>
+    ): ResponseEntity<BaseResponse<TokenResponse>>
 
     @Operation(summary = "유저 프로필 업데이트", description = "최초 로그인 시 또는 마이페이지에서 사용자 프로필 정보를 업데이트합니다.")
     fun updateUserProfile(

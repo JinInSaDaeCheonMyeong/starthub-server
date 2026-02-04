@@ -35,7 +35,7 @@ import org.springframework.web.multipart.MultipartFile
 @Component
 @Transactional
 class BmcUseCase(
-    @Qualifier("openAiChatModel") private val chatModel: ChatModel,
+    @param:Qualifier("openAiChatModel") private val chatModel: ChatModel,
     private val businessModelCanvasRepository: BusinessModelCanvasRepository,
     private val bmcQuestionRepository: BmcQuestionRepository,
     private val bmcModificationRequestRepository: BmcModificationRequestRepository,
@@ -149,7 +149,7 @@ class BmcUseCase(
     }
 
     private fun isSessionCompleted(bmcQuestion: BmcQuestion): Boolean {
-        return bmcQuestion.getAllAnswers().all { it != null && it.isNotBlank() }
+        return bmcQuestion.getAllAnswers().all { !it.isNullOrBlank() }
     }
 
     private fun getBmcQuestionEntity(sessionId: Long): BmcQuestion {

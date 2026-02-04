@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull
 )
 data class CompetitorAnalysisRequest(
     @field:NotNull(message = "BMC ID는 필수입니다.")
-    @Schema(
+    @field:Schema(
         description = "분석할 BMC의 고유 ID",
         example = "1",
         required = true,

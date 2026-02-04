@@ -15,7 +15,7 @@ import java.time.Duration
 
 @Service
 class CompanyInfoService(
-    @Qualifier("companyInfoWebClient")
+    @param:Qualifier("companyInfoWebClient")
     private val webClient: WebClient,
 ) {
     private val logger = LoggerFactory.getLogger(CompanyInfoService::class.java)

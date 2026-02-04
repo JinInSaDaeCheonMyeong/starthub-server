@@ -10,9 +10,9 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class DocumentConversionService(
-    @Value("\${document.conversion.temp-dir:/tmp/document-conversion}")
+    @param:Value("\${document.conversion.temp-dir:/tmp/document-conversion}")
     private val tempDir: String,
-    @Value("\${document.conversion.timeout:120}")
+    @param:Value("\${document.conversion.timeout:120}")
     private val timeoutSeconds: Long,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -32,7 +32,7 @@ class DocumentConversionService(
         }
 
         if (extension !in CONVERTIBLE_EXTENSIONS) {
-            logger.warn("Unsupported file format for conversion: $extension")
+            logger.warn("지원하지 않는 파일 형식: {}", extension)
             return null
         }
 
@@ -60,13 +60,13 @@ class DocumentConversionService(
 
             if (!completed) {
                 process.destroyForcibly()
-                logger.error("Document conversion timeout: $originalFileName")
+                logger.error("문서 변환 시간 초과: {}", originalFileName)
                 return null
             }
 
             if (process.exitValue() != 0) {
                 val errorOutput = process.inputStream.bufferedReader().readText()
-                logger.error("Document conversion failed: $originalFileName, error: $errorOutput")
+                logger.error("문서 변환 실패: {}, 오류: {}", originalFileName, errorOutput)
                 return null
             }
 
@@ -74,7 +74,7 @@ class DocumentConversionService(
             val pdfFile = workDir.resolve(pdfFileName).toFile()
 
             if (!pdfFile.exists()) {
-                logger.error("Converted PDF file not found: $pdfFileName")
+                logger.error("변환된 PDF 파일을 찾을 수 없음: {}", pdfFileName)
                 return null
             }
 

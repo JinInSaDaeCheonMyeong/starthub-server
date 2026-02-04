@@ -38,22 +38,14 @@ class UserController(
         @RequestBody request: UserRequest,
         httpRequest: HttpServletRequest,
         httpResponse: HttpServletResponse,
-    ): ResponseEntity<BaseResponse<Any>> {
-        val tokenResponse = userUseCase.signIn(request)
-
-        return BaseResponse.of(tokenResponse, "로그인 성공")
-    }
+    ) = BaseResponse.of(userUseCase.signIn(request), "로그인 성공")
 
     @PostMapping("/reissue")
     override fun reissue(
         @RequestBody request: RefreshRequest,
         httpRequest: HttpServletRequest,
         httpResponse: HttpServletResponse,
-    ): ResponseEntity<BaseResponse<Any>> {
-        val tokenResponse = userUseCase.reissue(request)
-
-        return BaseResponse.of(tokenResponse, "토큰 재발급 성공")
-    }
+    ) = BaseResponse.of(userUseCase.reissue(request), "토큰 재발급 성공")
 
     @PatchMapping("/profile")
     override fun updateUserProfile(

@@ -33,6 +33,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.bodyToMono
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -413,7 +414,7 @@ class NotificationUseCase(
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(RecommendationResponse::class.java)
+                    .bodyToMono<RecommendationResponse>()
                     .block()
 
             if (recommendationResponse == null || recommendationResponse.recommendations.isEmpty()) {

@@ -10,7 +10,7 @@ import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
 class ChatbotRAGClient(
-    @Value("\${chatbot.rag-api-url}")
+    @param:Value("\${chatbot.rag-api-url}")
     private val ragApiUrl: String,
 ) {
     private val log = logger()

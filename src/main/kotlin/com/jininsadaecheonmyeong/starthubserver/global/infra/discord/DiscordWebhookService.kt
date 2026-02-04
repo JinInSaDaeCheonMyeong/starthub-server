@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter
 
 @Service
 class DiscordWebhookService(
-    @Value("\${discord.webhook.url}") private val webhookUrl: String,
+    @param:Value("\${discord.webhook.url}") private val webhookUrl: String,
     private val webClient: WebClient,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)

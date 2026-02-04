@@ -5,10 +5,10 @@ import org.springframework.stereotype.Component
 @Component
 class ReferenceParser {
     companion object {
-        private val BMC_PATTERN = Regex("""\[\[BMC:(\d+):([^\]]+)\]\]""")
-        private val ANALYSIS_PATTERN = Regex("""\[\[ANALYSIS:(\d+):([^\]]+)\]\]""")
-        private val ANNOUNCEMENT_PATTERN = Regex("""\[\[ANNOUNCEMENT:(\d+):([^:]+):([^\]]+)\]\]""")
-        private val SCHEDULE_PATTERN = Regex("""\[\[SCHEDULE:(\d+):([^:]+):([^\]]+)\]\]""")
+        private val BMC_PATTERN = Regex("""\[\[BMC:(\d+):([^]]+)]]""")
+        private val ANALYSIS_PATTERN = Regex("""\[\[ANALYSIS:(\d+):([^]]+)]]""")
+        private val ANNOUNCEMENT_PATTERN = Regex("""\[\[ANNOUNCEMENT:(\d+):([^:]+):([^]]+)]]""")
+        private val SCHEDULE_PATTERN = Regex("""\[\[SCHEDULE:(\d+):([^:]+):([^]]+)]]""")
     }
 
     fun parseAndClean(content: String): ParseResult {

@@ -25,9 +25,11 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.search.PerplexitySe
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchRequest
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.withContext
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -126,13 +128,18 @@ class AIChatbotUseCase(
             try {
                 val title = claudeAIService.generateTitle(message)
                 session.updateTitle(title)
-                sessionRepository.save(session)
-            } catch (e: Exception) {
+                withContext(Dispatchers.IO) {
+                    sessionRepository.save(session)
+                }
+            } catch (_: Exception) {
             }
         }
 
         val history = getRecentMessagesForHistory(sessionId, 20)
-        val userContextString = userContextService.buildContextStringWithAnalysis(user)
+        val userContextString =
+            withContext(Dispatchers.IO) {
+                userContextService.buildContextStringWithAnalysis(user)
+            }
         val retrievedContext = buildRetrievedContext(session, user, message)
         val systemPrompt = ClaudePromptTemplates.buildStartupAssistantPrompt(userContextString)
 
@@ -193,7 +200,9 @@ class AIChatbotUseCase(
                 fileType = fileType,
                 extractedText = extractedText,
             )
-        val savedDocument = documentRepository.save(document)
+        val savedDocument = withContext(Dispatchers.IO) {
+            documentRepository.save(document)
+        }
 
         if (!extractedText.isNullOrBlank()) {
             try {
@@ -208,7 +217,7 @@ class AIChatbotUseCase(
                             },
                     ),
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
             }
         }
 
@@ -226,10 +235,12 @@ class AIChatbotUseCase(
 
         try {
             chatbotRAGClient.deleteDocument(documentId.toString())
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
 
-        documentRepository.deleteById(documentId)
+        withContext(Dispatchers.IO) {
+            documentRepository.deleteById(documentId)
+        }
     }
 
     private fun findSessionOrThrow(sessionId: Long): AIChatSession {
@@ -293,7 +304,10 @@ class AIChatbotUseCase(
     ): String? {
         val contextParts = mutableListOf<String>()
 
-        val documents = documentRepository.findBySessionIdOrderByCreatedAtAsc(session.id!!)
+        val documents =
+            withContext(Dispatchers.IO) {
+                documentRepository.findBySessionIdOrderByCreatedAtAsc(session.id!!)
+            }
         if (documents.isNotEmpty()) {
             val documentContext = buildDocumentContext(documents, session.id!!, message)
             documentContext?.let { contextParts.add(it) }
@@ -359,7 +373,7 @@ class AIChatbotUseCase(
                     }
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             buildFallbackDocumentContext(textDocuments)
         }
     }
@@ -405,7 +419,7 @@ class AIChatbotUseCase(
                     appendLine()
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -453,7 +467,7 @@ class AIChatbotUseCase(
                     appendLine()
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -484,7 +498,7 @@ class AIChatbotUseCase(
                     appendLine()
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

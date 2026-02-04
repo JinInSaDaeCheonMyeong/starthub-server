@@ -5,11 +5,14 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest
 import org.springframework.stereotype.Component
-import org.springframework.util.SerializationUtils
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.util.Base64
 
 @Component
-class CookieOAuth2AuthorizationRequestRepository() : AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
+class CookieOAuth2AuthorizationRequestRepository : AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
     private val cookieName = "oauth2_auth_request"
     private val cookieExpireSeconds = 180
 
@@ -60,13 +63,17 @@ class CookieOAuth2AuthorizationRequestRepository() : AuthorizationRequestReposit
     }
 
     private fun serialize(obj: Any): String {
-        return Base64.getUrlEncoder().encodeToString(SerializationUtils.serialize(obj))
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        ObjectOutputStream(byteArrayOutputStream).use { it.writeObject(obj) }
+        return Base64.getUrlEncoder().encodeToString(byteArrayOutputStream.toByteArray())
     }
 
     private fun deserialize(serialized: String): OAuth2AuthorizationRequest? {
         return try {
             val decoded = Base64.getUrlDecoder().decode(serialized)
-            SerializationUtils.deserialize(decoded) as? OAuth2AuthorizationRequest
+            ObjectInputStream(ByteArrayInputStream(decoded)).use {
+                it.readObject() as? OAuth2AuthorizationRequest
+            }
         } catch (_: Exception) {
             null
         }

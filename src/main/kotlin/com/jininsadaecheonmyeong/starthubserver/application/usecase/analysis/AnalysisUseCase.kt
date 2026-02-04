@@ -44,7 +44,7 @@ class AnalysisUseCase(
     private val competitorAnalysisRepository: CompetitorAnalysisRepository,
     private val perplexitySearchService: PerplexitySearchService,
     private val userContextService: UserContextService,
-    @Qualifier("openAiChatModel") private val chatModel: ChatModel,
+    @param:Qualifier("openAiChatModel") private val chatModel: ChatModel,
     private val objectMapper: ObjectMapper,
 ) {
     private val logger = LoggerFactory.getLogger(AnalysisUseCase::class.java)
@@ -466,7 +466,7 @@ class AnalysisUseCase(
         fieldName: String,
         maxItems: Int,
     ): List<String> {
-        val pattern = Regex("\\[$fieldName\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
+        val pattern = Regex("\\[$fieldName]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
         val text =
             pattern.find(block)?.groupValues?.get(1)
                 ?.replace("\n", " ")
@@ -638,7 +638,7 @@ class AnalysisUseCase(
         key: String,
         fallback: String,
     ): String {
-        val pattern = Regex("\\[$key\\]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
+        val pattern = Regex("\\[$key]\\s*(.+?)(?=\\[|$)", RegexOption.DOT_MATCHES_ALL)
         val match = pattern.find(section)
 
         if (match != null) {

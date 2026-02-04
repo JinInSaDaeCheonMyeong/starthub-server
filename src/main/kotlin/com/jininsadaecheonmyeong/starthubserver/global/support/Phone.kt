@@ -26,6 +26,6 @@ class PhoneValidator : ConstraintValidator<Phone, String?> {
     }
 
     companion object {
-        private const val PHONE_PATTERN = "^(01[0-9]-\\d{3,4}-\\d{4}|0[2-9][0-9]{0,1}-\\d{3,4}-\\d{4})$"
+        private const val PHONE_PATTERN = "^(01[0-9]-\\d{3,4}-\\d{4}|0[2-9][0-9]?-\\d{3,4}-\\d{4})$"
     }
 }
