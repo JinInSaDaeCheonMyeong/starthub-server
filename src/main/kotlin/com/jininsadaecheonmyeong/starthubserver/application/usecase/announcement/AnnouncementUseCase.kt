@@ -117,11 +117,9 @@ class AnnouncementUseCase(
                                 val receptionPeriod = extractText("li.dot_list:has(p.tit:contains(접수기간)) p.txt") ?: ""
                                 val supportField = extractText("li.dot_list:has(p.tit:contains(지원분야)) p.txt") ?: ""
                                 val targetAge = extractText("li.dot_list:has(p.tit:contains(대상연령)) p.txt") ?: ""
-                                val contactNumber = extractText("li.dot_list:has(p.tit:contains(연락처)) p.txt") ?: ""
                                 val region = extractText("li.dot_list:has(p.tit:contains(지역)) p.txt") ?: ""
                                 val organizationType = extractText("li.dot_list:has(p.tit:contains(기관구분)) p.txt") ?: ""
                                 val startupHistory = extractText("li.dot_list:has(p.tit:contains(창업업력)) p.txt") ?: ""
-                                val departmentInCharge = extractText("li.dot_list:has(p.tit:contains(담당부서)) p.txt") ?: ""
                                 val content = detailDoc.selectFirst("div.information_list-wrap")?.html() ?: ""
 
                                 val announcement =
@@ -132,11 +130,9 @@ class AnnouncementUseCase(
                                         receptionPeriod = receptionPeriod,
                                         supportField = supportField,
                                         targetAge = targetAge,
-                                        contactNumber = contactNumber,
                                         region = region,
                                         organizationType = organizationType,
                                         startupHistory = startupHistory,
-                                        departmentInCharge = departmentInCharge,
                                         content = content,
                                         source = AnnouncementSource.K_STARTUP,
                                     )
@@ -241,11 +237,9 @@ class AnnouncementUseCase(
             receptionPeriod = receptionPeriod,
             supportField = supportField,
             targetAge = "",
-            contactNumber = "",
             region = region,
             organizationType = "",
             startupHistory = "",
-            departmentInCharge = "",
             content = content,
             source = AnnouncementSource.BIZINFO,
             originalFileUrls =

@@ -200,9 +200,10 @@ class AIChatbotUseCase(
                 fileType = fileType,
                 extractedText = extractedText,
             )
-        val savedDocument = withContext(Dispatchers.IO) {
-            documentRepository.save(document)
-        }
+        val savedDocument =
+            withContext(Dispatchers.IO) {
+                documentRepository.save(document)
+            }
 
         if (!extractedText.isNullOrBlank()) {
             try {
@@ -451,11 +452,12 @@ class AIChatbotUseCase(
                     ),
                 )
 
-            if (response?.userContext.isNullOrEmpty()) return null
+            val userContext = response?.userContext
+            if (userContext.isNullOrEmpty()) return null
 
             buildString {
                 appendLine("## 사용자 관련 정보 (RAG 검색 결과)")
-                response!!.userContext!!.forEach { result ->
+                userContext.forEach { result ->
                     when (result.type) {
                         "bmc" -> appendLine("### BMC 관련 (관련도: ${String.format("%.2f", result.score)})")
                         "interests" -> appendLine("### 관심분야 (관련도: ${String.format("%.2f", result.score)})")
@@ -487,11 +489,12 @@ class AIChatbotUseCase(
                     ),
                 )
 
-            if (response?.announcements.isNullOrEmpty()) return null
+            val announcements = response?.announcements
+            if (announcements.isNullOrEmpty()) return null
 
             buildString {
                 appendLine("## 관련 지원 공고")
-                response!!.announcements!!.take(5).forEach { announcement ->
+                announcements.take(5).forEach { announcement ->
                     appendLine("### ${announcement.title}")
                     appendLine("- 기관: ${announcement.organization ?: "정보 없음"}")
                     appendLine("- 링크: ${announcement.url}")
