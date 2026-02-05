@@ -237,7 +237,7 @@ class ClaudeAIService(
 
     data class ClaudeRequest(
         val model: String,
-        @JsonProperty("max_tokens")
+        @param:JsonProperty("max_tokens")
         val maxTokens: Int,
         val system: String,
         val messages: List<ClaudeMessage>,
@@ -255,7 +255,7 @@ class ClaudeAIService(
         val role: String,
         val content: List<ContentBlock>,
         val model: String,
-        @JsonProperty("stop_reason")
+        @param:JsonProperty("stop_reason")
         val stopReason: String?,
     )
 

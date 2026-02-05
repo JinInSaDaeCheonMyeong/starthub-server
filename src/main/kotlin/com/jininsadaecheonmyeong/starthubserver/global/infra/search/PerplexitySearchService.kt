@@ -14,6 +14,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.util.retry.Retry
 import java.time.Duration
 import java.util.concurrent.TimeoutException
@@ -171,7 +172,7 @@ class PerplexitySearchService(
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(requestBody)
             .retrieve()
-            .bodyToMono(PerplexityResponse::class.java)
+            .bodyToMono<PerplexityResponse>()
             .timeout(Duration.ofMillis(properties.timeout))
             .retryWhen(
                 Retry.backoff(2, Duration.ofSeconds(1))
@@ -327,12 +328,12 @@ class PerplexitySearchService(
     data class PerplexityRequest(
         val model: String,
         val messages: List<PerplexityMessage>,
-        @JsonProperty("max_tokens")
+        @field:JsonProperty("max_tokens")
         val maxTokens: Int,
         val temperature: Double,
-        @JsonProperty("search_domain_filter")
+        @field:JsonProperty("search_domain_filter")
         val searchDomainFilter: List<String>? = null,
-        @JsonProperty("return_citations")
+        @field:JsonProperty("return_citations")
         val returnCitations: Boolean = true,
     )
 
@@ -351,7 +352,7 @@ class PerplexitySearchService(
     data class PerplexityChoice(
         val index: Int,
         val message: PerplexityMessage,
-        @JsonProperty("finish_reason")
+        @field:JsonProperty("finish_reason")
         val finishReason: String,
     )
 }

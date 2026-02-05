@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.parser
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.client.ApplePublicKeyClient
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.data.ApplePublicKey
@@ -26,7 +27,7 @@ class AppleTokenParser(
     private fun parseHeader(idToken: String): Map<String, String> {
         val header = idToken.substringBefore(".")
         val decodedHeader = String(Base64.getUrlDecoder().decode(header))
-        return objectMapper.readValue(decodedHeader, Map::class.java) as Map<String, String>
+        return objectMapper.readValue(decodedHeader, object : TypeReference<Map<String, String>>() {})
     }
 
     private fun getPublicKey(header: Map<String, String>): PublicKey {

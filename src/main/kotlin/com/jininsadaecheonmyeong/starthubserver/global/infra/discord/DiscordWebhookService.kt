@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -29,7 +30,7 @@ class DiscordWebhookService(
                 .uri(webhookUrl)
                 .bodyValue(mapOf("embeds" to listOf(embed)))
                 .retrieve()
-                .bodyToMono(String::class.java)
+                .bodyToMono<String>()
                 .doOnSuccess { logger.info("Discord 알림 전송 성공") }
                 .doOnError { logger.error("Discord 알림 전송 실패", it) }
                 .onErrorResume { Mono.empty() }
