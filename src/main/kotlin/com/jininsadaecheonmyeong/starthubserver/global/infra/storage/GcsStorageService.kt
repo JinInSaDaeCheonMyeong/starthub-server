@@ -12,7 +12,7 @@ import java.util.UUID
 class GcsStorageService(
     private val storage: Storage,
 ) {
-    @Value("\${gcs.bucket-name}")
+    @field:Value("\${gcs.bucket-name}")
     private lateinit var bucketName: String
 
     fun uploadFile(

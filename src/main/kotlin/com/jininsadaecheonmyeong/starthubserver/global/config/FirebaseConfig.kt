@@ -12,7 +12,7 @@ import org.springframework.core.io.ResourceLoader
 class FirebaseConfig(
     private val resourceLoader: ResourceLoader,
 ) {
-    @Value("\${firebase.credentials-path:}")
+    @field:Value("\${firebase.credentials-path:}")
     private val credentialsPath: String? = null
 
     @PostConstruct

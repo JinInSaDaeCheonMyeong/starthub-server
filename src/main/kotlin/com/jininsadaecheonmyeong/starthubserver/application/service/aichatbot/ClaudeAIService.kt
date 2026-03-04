@@ -11,6 +11,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToFlux
+import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
 class ClaudeAIService(
@@ -71,7 +72,7 @@ class ClaudeAIService(
                     if (result != null) {
                         sink.next(result)
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                 }
             }
             .takeWhile { it.type != StreamEventType.MESSAGE_STOP }
@@ -100,7 +101,7 @@ class ClaudeAIService(
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(request)
             .retrieve()
-            .bodyToMono(ClaudeResponse::class.java)
+            .bodyToMono<ClaudeResponse>()
             .map { response ->
                 response.content.firstOrNull()?.text ?: ""
             }
@@ -141,7 +142,7 @@ class ClaudeAIService(
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(ClaudeResponse::class.java)
+                    .bodyToMono<ClaudeResponse>()
                     .block()
 
             val title = response?.content?.firstOrNull()?.text?.trim() ?: ""
@@ -151,7 +152,7 @@ class ClaudeAIService(
             } else {
                 title.replace("\"", "").replace(".", "").trim()
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             fallbackTitle(userMessage)
         }
     }
@@ -229,14 +230,14 @@ class ClaudeAIService(
                 }
                 else -> null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
 
     data class ClaudeRequest(
         val model: String,
-        @JsonProperty("max_tokens")
+        @param:JsonProperty("max_tokens")
         val maxTokens: Int,
         val system: String,
         val messages: List<ClaudeMessage>,
@@ -254,7 +255,7 @@ class ClaudeAIService(
         val role: String,
         val content: List<ContentBlock>,
         val model: String,
-        @JsonProperty("stop_reason")
+        @param:JsonProperty("stop_reason")
         val stopReason: String?,
     )
 

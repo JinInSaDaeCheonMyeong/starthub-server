@@ -117,11 +117,9 @@ class AnnouncementUseCase(
                                 val receptionPeriod = extractText("li.dot_list:has(p.tit:contains(접수기간)) p.txt") ?: ""
                                 val supportField = extractText("li.dot_list:has(p.tit:contains(지원분야)) p.txt") ?: ""
                                 val targetAge = extractText("li.dot_list:has(p.tit:contains(대상연령)) p.txt") ?: ""
-                                val contactNumber = extractText("li.dot_list:has(p.tit:contains(연락처)) p.txt") ?: ""
                                 val region = extractText("li.dot_list:has(p.tit:contains(지역)) p.txt") ?: ""
                                 val organizationType = extractText("li.dot_list:has(p.tit:contains(기관구분)) p.txt") ?: ""
                                 val startupHistory = extractText("li.dot_list:has(p.tit:contains(창업업력)) p.txt") ?: ""
-                                val departmentInCharge = extractText("li.dot_list:has(p.tit:contains(담당부서)) p.txt") ?: ""
                                 val content = detailDoc.selectFirst("div.information_list-wrap")?.html() ?: ""
 
                                 val announcement =
@@ -132,11 +130,9 @@ class AnnouncementUseCase(
                                         receptionPeriod = receptionPeriod,
                                         supportField = supportField,
                                         targetAge = targetAge,
-                                        contactNumber = contactNumber,
                                         region = region,
                                         organizationType = organizationType,
                                         startupHistory = startupHistory,
-                                        departmentInCharge = departmentInCharge,
                                         content = content,
                                         source = AnnouncementSource.K_STARTUP,
                                     )
@@ -232,7 +228,7 @@ class AnnouncementUseCase(
         val region = extractBizInfoField(doc, "지역", "사업지역") ?: ""
         val content = doc.selectFirst("div.view_cont, .board_view_cont, .cont_box")?.html() ?: ""
 
-        val (originalFileUrls, pdfFileUrls) = processBizInfoAttachments(doc)
+        val (originalFiles, pdfFiles) = processBizInfoAttachments(doc)
 
         return Announcement(
             title = title,
@@ -241,22 +237,20 @@ class AnnouncementUseCase(
             receptionPeriod = receptionPeriod,
             supportField = supportField,
             targetAge = "",
-            contactNumber = "",
             region = region,
             organizationType = "",
             startupHistory = "",
-            departmentInCharge = "",
             content = content,
             source = AnnouncementSource.BIZINFO,
             originalFileUrls =
-                if (originalFileUrls.isNotEmpty()) {
-                    objectMapper.writeValueAsString(originalFileUrls)
+                if (originalFiles.isNotEmpty()) {
+                    objectMapper.writeValueAsString(originalFiles)
                 } else {
                     null
                 },
             pdfFileUrls =
-                if (pdfFileUrls.isNotEmpty()) {
-                    objectMapper.writeValueAsString(pdfFileUrls)
+                if (pdfFiles.isNotEmpty()) {
+                    objectMapper.writeValueAsString(pdfFiles)
                 } else {
                     null
                 },
@@ -300,9 +294,14 @@ class AnnouncementUseCase(
         return regex.find(href)?.groupValues?.get(1)
     }
 
-    private fun processBizInfoAttachments(doc: Document): Pair<List<String>, List<String>> {
-        val originalUrls = mutableListOf<String>()
-        val pdfUrls = mutableListOf<String>()
+    private data class FileInfoData(
+        val url: String,
+        val name: String,
+    )
+
+    private fun processBizInfoAttachments(doc: Document): Pair<List<FileInfoData>, List<FileInfoData>> {
+        val originalFiles = mutableListOf<FileInfoData>()
+        val pdfFiles = mutableListOf<FileInfoData>()
 
         val attachmentLinks =
             doc.select(
@@ -331,7 +330,7 @@ class AnnouncementUseCase(
                         directory = "announcement-files",
                         contentType = getBizInfoContentType(fileName),
                     )
-                originalUrls.add(originalGcsUrl)
+                originalFiles.add(FileInfoData(url = originalGcsUrl, name = fileName))
 
                 val pdfBytes = documentConversionService.convertToPdf(fileBytes, fileName)
                 if (pdfBytes != null) {
@@ -343,16 +342,16 @@ class AnnouncementUseCase(
                             directory = "announcement-pdfs",
                             contentType = "application/pdf",
                         )
-                    pdfUrls.add(pdfGcsUrl)
+                    pdfFiles.add(FileInfoData(url = pdfGcsUrl, name = pdfFileName))
                 } else if (fileName.lowercase().endsWith(".pdf")) {
-                    pdfUrls.add(originalGcsUrl)
+                    pdfFiles.add(FileInfoData(url = originalGcsUrl, name = fileName))
                 }
             } catch (_: Exception) {
                 continue
             }
         }
 
-        return originalUrls to pdfUrls
+        return originalFiles to pdfFiles
     }
 
     private fun resolveBizInfoDownloadUrl(

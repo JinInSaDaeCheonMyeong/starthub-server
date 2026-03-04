@@ -16,7 +16,7 @@ data class SearchItem(
     val link: String = "",
     val snippet: String = "",
     val displayLink: String = "",
-    @JsonProperty("formattedUrl")
+    @param:JsonProperty("formattedUrl")
     val formattedUrl: String = "",
     val pagemap: PageMap? = null,
 )
@@ -58,15 +58,15 @@ data class ThumbnailInfo(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MetaTag(
-    @JsonProperty("og:title")
+    @param:JsonProperty("og:title")
     val ogTitle: String? = null,
-    @JsonProperty("og:description")
+    @param:JsonProperty("og:description")
     val ogDescription: String? = null,
-    @JsonProperty("og:image")
+    @param:JsonProperty("og:image")
     val ogImage: String? = null,
-    @JsonProperty("og:url")
+    @param:JsonProperty("og:url")
     val ogUrl: String? = null,
-    @JsonProperty("og:site_name")
+    @param:JsonProperty("og:site_name")
     val ogSiteName: String? = null,
     val description: String? = null,
     val keywords: String? = null,

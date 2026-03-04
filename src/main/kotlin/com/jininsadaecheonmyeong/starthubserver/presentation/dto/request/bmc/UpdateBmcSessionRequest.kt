@@ -13,11 +13,11 @@ import jakarta.validation.constraints.NotNull
 data class UpdateBmcSessionRequest(
     @field:NotEmpty(message = "수정할 답변이 최소 1개 이상 필요합니다.")
     @field:Valid
-    @ArraySchema(
+    @field:ArraySchema(
         schema = Schema(implementation = AnswerUpdate::class),
         minItems = 1,
     )
-    @Schema(
+    @field:Schema(
         example = """[
             {
                 "questionNumber": 1,

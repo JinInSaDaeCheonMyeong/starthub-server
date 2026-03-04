@@ -9,11 +9,9 @@ data class DailyScheduleResponse(
     val likeCount: Int,
     val supportField: String,
     val targetAge: String,
-    val contactNumber: String,
     val region: String,
     val organizationType: String,
     val startupHistory: String,
-    val departmentInCharge: String,
     val content: String,
     val isLiked: Boolean,
 )

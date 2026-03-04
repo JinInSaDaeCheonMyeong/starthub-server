@@ -10,12 +10,13 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.util.retry.Retry
 import java.time.Duration
 
 @Service
 class CompanyInfoService(
-    @Qualifier("companyInfoWebClient")
+    @param:Qualifier("companyInfoWebClient")
     private val webClient: WebClient,
 ) {
     private val logger = LoggerFactory.getLogger(CompanyInfoService::class.java)
@@ -57,7 +58,7 @@ class CompanyInfoService(
             .header("DNT", "1")
             .header("Connection", "keep-alive")
             .retrieve()
-            .bodyToMono(String::class.java)
+            .bodyToMono<String>()
             .timeout(Duration.ofSeconds(10))
             .retryWhen(
                 Retry.backoff(2, Duration.ofSeconds(1))

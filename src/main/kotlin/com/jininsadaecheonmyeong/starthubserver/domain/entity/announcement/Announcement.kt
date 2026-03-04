@@ -35,16 +35,12 @@ class Announcement(
     var supportField: String,
     @Column(name = "target_age")
     var targetAge: String,
-    @Column(name = "contact_number")
-    var contactNumber: String,
     @Column(name = "region")
     var region: String,
     @Column(name = "organization_type")
     var organizationType: String,
     @Column(name = "startup_history")
     var startupHistory: String,
-    @Column(name = "department_in_charge")
-    var departmentInCharge: String,
     @Column(columnDefinition = "TEXT")
     var content: String,
     @Enumerated(EnumType.STRING)

@@ -12,10 +12,10 @@ import org.springframework.core.io.ResourceLoader
 class GcsConfig(
     private val resourceLoader: ResourceLoader,
 ) {
-    @Value("\${gcs.project-id}")
+    @field:Value("\${gcs.project-id}")
     private lateinit var projectId: String
 
-    @Value("\${gcs.credentials-path:}")
+    @field:Value("\${gcs.credentials-path:}")
     private val credentialsPath: String? = null
 
     @Bean
