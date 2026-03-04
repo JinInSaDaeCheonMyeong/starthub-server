@@ -6,6 +6,11 @@ import com.jininsadaecheonmyeong.starthubserver.domain.entity.announcement.Annou
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.announcement.AnnouncementSource
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.announcement.AnnouncementStatus
 
+data class FileInfo(
+    val url: String,
+    val name: String,
+)
+
 data class AnnouncementDetailResponse(
     val id: Long,
     val title: String,
@@ -22,8 +27,8 @@ data class AnnouncementDetailResponse(
     val content: String,
     val isLiked: Boolean? = null,
     val source: AnnouncementSource? = null,
-    val originalFileUrls: List<String>? = null,
-    val pdfFileUrls: List<String>? = null,
+    val originalFiles: List<FileInfo>? = null,
+    val pdfFiles: List<FileInfo>? = null,
 ) {
     companion object {
         private val objectMapper = ObjectMapper()
@@ -47,15 +52,23 @@ data class AnnouncementDetailResponse(
             content = announcement.content,
             isLiked = isLiked,
             source = announcement.source,
-            originalFileUrls = announcement.originalFileUrls?.let { parseJsonArray(it) },
-            pdfFileUrls = announcement.pdfFileUrls?.let { parseJsonArray(it) },
+            originalFiles = announcement.originalFileUrls?.let { parseFileInfoArray(it) },
+            pdfFiles = announcement.pdfFileUrls?.let { parseFileInfoArray(it) },
         )
 
-        private fun parseJsonArray(json: String): List<String>? {
+        private fun parseFileInfoArray(json: String): List<FileInfo>? {
             return try {
-                objectMapper.readValue(json, object : TypeReference<List<String>>() {})
+                objectMapper.readValue(json, object : TypeReference<List<FileInfo>>() {})
             } catch (_: Exception) {
-                null
+                try {
+                    val urls = objectMapper.readValue(json, object : TypeReference<List<String>>() {})
+                    urls.map { url ->
+                        val name = url.substringAfterLast("/").substringBefore("?")
+                        FileInfo(url = url, name = name)
+                    }
+                } catch (_: Exception) {
+                    null
+                }
             }
         }
     }
