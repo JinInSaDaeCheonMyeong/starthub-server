@@ -2,6 +2,7 @@ package com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.annou
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.announcement.Announcement
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.announcement.AnnouncementSource
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.announcement.AnnouncementStatus
@@ -31,7 +32,7 @@ data class AnnouncementDetailResponse(
     val pdfFiles: List<FileInfo>? = null,
 ) {
     companion object {
-        private val objectMapper = ObjectMapper()
+        private val objectMapper = ObjectMapper().registerKotlinModule()
 
         fun from(
             announcement: Announcement,
