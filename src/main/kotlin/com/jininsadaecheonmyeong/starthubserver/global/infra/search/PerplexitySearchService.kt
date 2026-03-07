@@ -3,10 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.global.infra.search
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.jininsadaecheonmyeong.starthubserver.global.config.PerplexityProperties
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.exception.SearchException
-import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.CompetitorSearchResult
-import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.EnhancedSearchResult
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchRequest
-import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchResultType
 import kotlinx.coroutines.reactive.awaitSingle
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -23,11 +20,10 @@ class PerplexitySearchService(
     @Qualifier("perplexityWebClient")
     private val webClient: WebClient,
     private val properties: PerplexityProperties,
-    private val companyInfoService: CompanyInfoService,
 ) {
     private val logger = LoggerFactory.getLogger(PerplexitySearchService::class.java)
 
-    suspend fun searchCompetitors(request: SearchRequest): List<CompetitorSearchResult> {
+    suspend fun searchCompetitors(request: SearchRequest): List<String> {
         if (properties.apiKey.isBlank() || properties.apiKey.startsWith("\${")) {
             logger.error("Perplexity API 키가 설정되지 않음")
             throw SearchException("Perplexity API Key를 찾을 수 없음")
@@ -36,7 +32,7 @@ class PerplexitySearchService(
         return try {
             val searchQuery = buildCompetitorSearchQuery(request)
             val response = performSearchSuspend(searchQuery)
-            parseCompetitorResults(response, request.maxResults)
+            parseCompanyNames(response)
         } catch (e: Exception) {
             logger.error("경쟁사 검색 실패: {}", e.message)
             when {
@@ -50,87 +46,33 @@ class PerplexitySearchService(
         }
     }
 
-    suspend fun searchWithEnhancedResults(request: SearchRequest): List<EnhancedSearchResult> {
-        val basicResults = searchCompetitors(request)
-
-        return basicResults.map { result ->
-            EnhancedSearchResult(
-                basicResult = result,
-                type = determineResultType(result),
-                businessRelevance = calculateBusinessRelevance(result),
-                companyInfo = null,
-            )
-        }
-    }
-
     private fun buildCompetitorSearchQuery(request: SearchRequest): String {
         val bmcContext = request.bmcContext
 
         return if (bmcContext != null) {
             """
-            다음 스타트업/비즈니스의 직접적인 경쟁사를 정확히 4개 찾아주세요 (국내 기업 2개, 해외 기업 2개):
+            다음 스타트업/비즈니스의 직접적인 경쟁사 회사명을 정확히 4개만 알려주세요 (국내 2개, 해외 2개):
 
-            ## 우리 비즈니스 정보:
             - 이름: ${bmcContext.title}
             - 가치 제안: ${bmcContext.valueProposition ?: "정보 없음"}
             - 목표 고객: ${bmcContext.customerSegments ?: "정보 없음"}
             - 채널: ${bmcContext.channels ?: "정보 없음"}
             - 수익 모델: ${bmcContext.revenueStreams ?: "정보 없음"}
 
-            ## 검색 조건:
-            - **국내 기업 2개, 해외 기업 2개**를 찾아주세요
-            - **중소기업, 스타트업, 또는 중견기업**을 우선적으로 찾아주세요
-            - **대기업(삼성, LG, 네이버, 카카오 등)은 제외**해주세요
-            - 같은 산업/분야에서 **비슷한 규모의 회사**를 찾아주세요
-            - 우리와 **비슷한 고객층**을 타겟으로 하는 회사를 찾아주세요
-            - 실제 웹사이트가 있는 회사만 포함해주세요
-            - 우리의 가치 제안과 **직접적으로 경쟁**하는 서비스/제품을 제공하는 회사를 찾아주세요
+            조건:
+            - 중소기업, 스타트업, 중견기업 우선 (대기업 제외)
+            - 비슷한 고객층과 서비스를 가진 직접 경쟁사
+            - 실제로 존재하는 회사만
 
-            ## 응답 형식:
-            [회사 1]
-            회사명: [정확한 공식 회사명]
-            웹사이트: [공식 웹사이트 URL - https:// 포함]
-            설명: [100-200자 이내로 핵심 서비스/제품 설명. 우리와 어떤 점에서 경쟁하는지 명시]
-            로고: [로고 이미지 URL 또는 "정보 없음"]
-
-            [회사 2]
-            회사명:
-            웹사이트:
-            설명:
-            로고:
-
-            [회사 3]
-            회사명:
-            웹사이트:
-            설명:
-            로고:
-
-            [회사 4]
-            회사명:
-            웹사이트:
-            설명:
-            로고:
-
-            **중요**: 반드시 국내 기업 2개, 해외 기업 2개로 구성하고, 실제로 존재하는 회사만 포함하며, 정확한 웹사이트 URL을 제공해주세요.
+            응답 형식: 회사명만 쉼표로 구분하여 한 줄로 작성 (예: 회사A, 회사B, 회사C, 회사D)
             """.trimIndent()
         } else {
             """
-            다음 키워드와 관련된 중소/중견 규모의 실제 경쟁 회사를 정확히 4개 찾아주세요 (국내 기업 2개, 해외 기업 2개): "${request.query}"
+            다음 키워드와 관련된 경쟁 회사명을 정확히 4개만 알려주세요 (국내 2개, 해외 2개): "${request.query}"
 
-            ## 검색 조건:
-            - **국내 기업 2개, 해외 기업 2개**를 찾아주세요
-            - **중소기업, 스타트업, 또는 중견기업** 우선
-            - **대기업은 제외**
-            - 실제 웹사이트가 있는 회사만 포함
+            조건: 중소기업/스타트업 우선, 대기업 제외, 실제 존재하는 회사만
 
-            ## 응답 형식:
-            [회사 1]
-            회사명: [정확한 공식 회사명]
-            웹사이트: [공식 웹사이트 URL - https:// 포함]
-            설명: [100-200자 이내로 핵심 서비스/제품 설명]
-            로고: [로고 이미지 URL 또는 "정보 없음"]
-
-            **중요**: 반드시 국내 기업 2개, 해외 기업 2개로 구성하고, 실제로 존재하는 회사만 포함하며, 정확한 웹사이트 URL을 제공해주세요.
+            응답 형식: 회사명만 쉼표로 구분하여 한 줄로 작성 (예: 회사A, 회사B, 회사C, 회사D)
             """.trimIndent()
         }
     }
@@ -146,13 +88,9 @@ class PerplexitySearchService(
                             content =
                                 """
                                 당신은 스타트업과 중소기업 시장 분석 전문가입니다.
-
-                                규칙:
-                                1. 반드시 실제로 존재하는 회사만 추천하세요
-                                2. 대기업(삼성, LG, 네이버, 카카오 등)은 제외하세요
-                                3. 중소기업, 스타트업, 중견기업을 우선적으로 찾으세요
-                                4. 정확한 웹사이트 URL을 제공하세요
-                                5. 비슷한 규모와 타겟 고객을 가진 직접 경쟁사를 찾으세요
+                                반드시 실제로 존재하는 회사만 추천하세요.
+                                대기업은 제외하고 중소기업, 스타트업, 중견기업을 찾으세요.
+                                회사명만 쉼표로 구분하여 응답하세요. 부가 설명 없이 회사명만 작성하세요.
                                 """.trimIndent(),
                         ),
                         PerplexityMessage(
@@ -162,7 +100,7 @@ class PerplexitySearchService(
                     ),
                 maxTokens = properties.maxTokens,
                 temperature = 0.2,
-                searchDomainFilter = null,
+                searchRecencyFilter = "month",
                 returnCitations = true,
             )
 
@@ -189,139 +127,66 @@ class PerplexitySearchService(
             .awaitSingle()
     }
 
-    private fun parseCompetitorResults(
-        response: PerplexityResponse,
-        maxResults: Int,
-    ): List<CompetitorSearchResult> {
+    suspend fun searchWeb(query: String): List<WebSearchResult> {
+        if (properties.apiKey.isBlank() || properties.apiKey.startsWith("\${")) {
+            return emptyList()
+        }
+
+        return try {
+            val requestBody =
+                PerplexityRequest(
+                    model = properties.model,
+                    messages =
+                        listOf(
+                            PerplexityMessage(role = "system", content = "웹 검색 결과를 요약하여 제공하세요."),
+                            PerplexityMessage(role = "user", content = query),
+                        ),
+                    maxTokens = properties.maxTokens,
+                    temperature = 0.3,
+                    returnCitations = true,
+                )
+
+            val response =
+                webClient.post()
+                    .uri("/chat/completions")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(PerplexityResponse::class.java)
+                    .timeout(Duration.ofMillis(properties.timeout))
+                    .awaitSingle()
+
+            val content = response.choices.firstOrNull()?.message?.content ?: return emptyList()
+            val citations = response.citations ?: emptyList()
+
+            listOf(
+                WebSearchResult(
+                    title = "검색 결과",
+                    url = citations.firstOrNull() ?: "",
+                    snippet = content.take(1000),
+                ),
+            )
+        } catch (e: Exception) {
+            logger.warn("웹 검색 실패: {}", e.message)
+            emptyList()
+        }
+    }
+
+    data class WebSearchResult(
+        val title: String,
+        val url: String,
+        val snippet: String,
+    )
+
+    private fun parseCompanyNames(response: PerplexityResponse): List<String> {
         val content = response.choices.firstOrNull()?.message?.content ?: return emptyList()
 
-        val competitors = mutableListOf<CompetitorSearchResult>()
-        val companyBlocks = content.split(Regex("\\[회사 \\d+\\]")).filter { it.isNotBlank() }
-
-        for (block in companyBlocks.take(maxResults)) {
-            try {
-                val name = extractField(block, "회사명").replace("**", "").trim()
-                val website = extractField(block, "웹사이트").replace("**", "").trim()
-                val description = extractField(block, "설명").replace("**", "").trim()
-                val logo = extractField(block, "로고").replace("**", "").trim()
-
-                val cleanWebsite =
-                    website
-                        .replace("##", "")
-                        .split("\n").firstOrNull()?.trim() ?: ""
-
-                if (name.isNotBlank() && cleanWebsite.isNotBlank() &&
-                    !cleanWebsite.contains("정보 없음") &&
-                    (cleanWebsite.startsWith("http://") || cleanWebsite.startsWith("https://"))
-                ) {
-                    competitors.add(
-                        CompetitorSearchResult(
-                            title = name,
-                            url = normalizeUrl(cleanWebsite),
-                            snippet = description.take(300),
-                            displayUrl = extractDomain(cleanWebsite),
-                            thumbnailUrl = if (logo.isNotBlank() && !logo.contains("없음")) logo else null,
-                            relevanceScore = 0.8,
-                        ),
-                    )
-                }
-            } catch (e: Exception) {
-                logger.warn("경쟁사 정보 파싱 실패", e)
-            }
-        }
-
-        val enhancedCompetitors =
-            competitors.map { competitor ->
-                if (competitor.thumbnailUrl == null || !isValidImageUrl(competitor.thumbnailUrl)) {
-                    try {
-                        val extractedLogo = companyInfoService.extractCompanyLogo(competitor.url)
-                        if (extractedLogo != null) {
-                            competitor.copy(thumbnailUrl = extractedLogo)
-                        } else {
-                            competitor
-                        }
-                    } catch (e: Exception) {
-                        logger.warn("로고 추출 실패: {}", competitor.title)
-                        competitor
-                    }
-                } else {
-                    competitor
-                }
-            }
-
-        return enhancedCompetitors
-    }
-
-    private fun extractField(
-        text: String,
-        fieldName: String,
-    ): String {
-        val pattern = Regex("$fieldName\\s*:\\s*(.+?)(?=\\n[가-힣]+:|$)", RegexOption.DOT_MATCHES_ALL)
-        return pattern.find(text)?.groupValues?.get(1)?.trim() ?: ""
-    }
-
-    private fun normalizeUrl(url: String): String {
-        return when {
-            url.startsWith("http://") || url.startsWith("https://") -> url
-            else -> "https://$url"
-        }
-    }
-
-    private fun extractDomain(url: String): String {
-        return try {
-            val normalized = normalizeUrl(url)
-            val domain = normalized.substringAfter("://").substringBefore("/")
-            domain
-        } catch (e: Exception) {
-            url
-        }
-    }
-
-    private fun extractBaseUrl(url: String): String {
-        return try {
-            val normalized = normalizeUrl(url)
-            val domain = normalized.substringAfter("://").substringBefore("/")
-            "https://$domain"
-        } catch (e: Exception) {
-            url
-        }
-    }
-
-    private fun determineResultType(result: CompetitorSearchResult): SearchResultType {
-        val domain = result.domain.lowercase()
-        val title = result.title.lowercase()
-        val snippet = result.snippet.lowercase()
-
-        return when {
-            domain.contains("linkedin") || domain.contains("facebook") -> SearchResultType.SOCIAL_MEDIA
-            title.contains("news") || snippet.contains("뉴스") -> SearchResultType.NEWS_ARTICLE
-            snippet.contains("제품") || snippet.contains("product") -> SearchResultType.PRODUCT_PAGE
-            snippet.contains("회사") || snippet.contains("company") -> SearchResultType.COMPANY_PROFILE
-            else -> SearchResultType.BUSINESS_WEBSITE
-        }
-    }
-
-    private fun calculateBusinessRelevance(result: CompetitorSearchResult): Double {
-        var relevance = result.relevanceScore
-
-        when (determineResultType(result)) {
-            SearchResultType.BUSINESS_WEBSITE -> relevance += 0.3
-            SearchResultType.COMPANY_PROFILE -> relevance += 0.25
-            SearchResultType.PRODUCT_PAGE -> relevance += 0.2
-            SearchResultType.SOCIAL_MEDIA -> relevance -= 0.1
-            SearchResultType.NEWS_ARTICLE -> relevance -= 0.05
-            SearchResultType.OTHER -> relevance += 0.0
-        }
-
-        return relevance.coerceIn(0.0, 1.0)
-    }
-
-    private fun isValidImageUrl(url: String?): Boolean {
-        if (url.isNullOrBlank()) return false
-        val lowercaseUrl = url.lowercase()
-        val validExtensions = listOf(".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico")
-        return validExtensions.any { lowercaseUrl.contains(it) } &&
-            (url.startsWith("http://") || url.startsWith("https://"))
+        return content
+            .replace("**", "")
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() && it.length > 1 }
+            .take(4)
     }
 
     data class PerplexityRequest(
@@ -330,8 +195,8 @@ class PerplexitySearchService(
         @JsonProperty("max_tokens")
         val maxTokens: Int,
         val temperature: Double,
-        @JsonProperty("search_domain_filter")
-        val searchDomainFilter: List<String>? = null,
+        @JsonProperty("search_recency_filter")
+        val searchRecencyFilter: String? = null,
         @JsonProperty("return_citations")
         val returnCitations: Boolean = true,
     )

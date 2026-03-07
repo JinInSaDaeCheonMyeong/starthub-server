@@ -53,38 +53,3 @@ data class CompetitorSearchResult(
                 !domain.contains("linkedin.") &&
                 !domain.contains("wikipedia.")
 }
-
-data class CompanyInfo(
-    val name: String,
-    val description: String,
-    val logoUrl: String? = null,
-    val websiteUrl: String,
-    val domain: String = "",
-    val industry: String? = null,
-    val foundedYear: String? = null,
-    val headquarters: String? = null,
-    val socialLinks: SocialLinks = SocialLinks(),
-) {
-    data class SocialLinks(
-        val linkedin: String? = null,
-        val twitter: String? = null,
-        val facebook: String? = null,
-        val instagram: String? = null,
-    )
-}
-
-enum class SearchResultType {
-    BUSINESS_WEBSITE,
-    COMPANY_PROFILE,
-    PRODUCT_PAGE,
-    NEWS_ARTICLE,
-    SOCIAL_MEDIA,
-    OTHER,
-}
-
-data class EnhancedSearchResult(
-    val basicResult: CompetitorSearchResult,
-    val type: SearchResultType,
-    val businessRelevance: Double,
-    val companyInfo: CompanyInfo? = null,
-)

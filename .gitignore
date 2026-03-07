@@ -47,3 +47,5 @@ firebase-service-account.json
 
 .DS_Store
 .env
+application-prd.yml
+CLAUDE.md

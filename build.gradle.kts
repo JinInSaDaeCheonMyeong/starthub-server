@@ -7,7 +7,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
 
-val springAiVersion by extra("1.0.0")
+val springAiVersion by extra("1.1.2")
 
 group = "com.JinInSaDaeCheonMyeong"
 version = "0.0.1-SNAPSHOT"

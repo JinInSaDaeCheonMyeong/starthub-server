@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
-@EnableConfigurationProperties(PerplexityProperties::class)
+@EnableConfigurationProperties(PerplexityProperties::class, GoogleSearchProperties::class)
 class SearchConfiguration {
     @Bean("perplexityWebClient")
     fun perplexityWebClient(properties: PerplexityProperties): WebClient {
@@ -15,6 +15,16 @@ class SearchConfiguration {
             .defaultHeader("Authorization", "Bearer ${properties.apiKey}")
             .defaultHeader("Content-Type", "application/json")
             .defaultHeader("User-Agent", "StartHub-Server/1.0")
+            .codecs { configurer ->
+                configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024) // 2MB
+            }
+            .build()
+    }
+
+    @Bean("googleSearchWebClient")
+    fun googleSearchWebClient(properties: GoogleSearchProperties): WebClient {
+        return WebClient.builder()
+            .baseUrl(properties.baseUrl)
             .codecs { configurer ->
                 configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024) // 2MB
             }

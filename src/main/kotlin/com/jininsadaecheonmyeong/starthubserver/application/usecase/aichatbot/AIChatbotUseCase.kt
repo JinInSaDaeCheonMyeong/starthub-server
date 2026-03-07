@@ -22,7 +22,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.repository.aichatbot.AICh
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.aichatbot.AIChatSessionRepository
 import com.jininsadaecheonmyeong.starthubserver.global.infra.ai.ClaudePromptTemplates
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.PerplexitySearchService
-import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchRequest
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import kotlinx.coroutines.flow.Flow
@@ -389,10 +388,7 @@ class AIChatbotUseCase(
 
     private suspend fun performWebSearch(message: String): String? {
         return try {
-            val results =
-                perplexitySearchService.searchCompetitors(
-                    SearchRequest(query = message, maxResults = 3),
-                )
+            val results = perplexitySearchService.searchWeb(message)
 
             if (results.isEmpty()) return null
 
