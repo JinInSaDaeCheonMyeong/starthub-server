@@ -43,6 +43,21 @@ class SecurityConfig(
 
     @Bean
     @Order(1)
+    fun fileProxyFilterChain(http: HttpSecurity): SecurityFilterChain {
+        return http
+            .securityMatcher("/api/files/**")
+            .csrf { it.disable() }
+            .headers { headers ->
+                headers.frameOptions { it.sameOrigin() }
+            }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .cors { it.configurationSource(corsConfigurationSource()) }
+            .authorizeHttpRequests { it.anyRequest().permitAll() }
+            .build()
+    }
+
+    @Bean
+    @Order(2)
     fun oauth2FilterChain(http: HttpSecurity): SecurityFilterChain {
         return http
             .securityMatcher("/login/oauth2/**", "/oauth2/**")
@@ -64,14 +79,15 @@ class SecurityConfig(
     }
 
     @Bean
-    @Order(2)
+    @Order(3)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         return http
             .securityMatcher { request ->
                 !request.requestURI.startsWith("/swagger-ui") &&
                     !request.requestURI.startsWith("/v3/api-docs") &&
                     !request.requestURI.startsWith("/login/oauth2") &&
-                    !request.requestURI.startsWith("/oauth2")
+                    !request.requestURI.startsWith("/oauth2") &&
+                    !request.requestURI.startsWith("/api/files")
             }
             .csrf { it.disable() }
             .formLogin { it.disable() }
