@@ -77,8 +77,8 @@ class AnnouncementUseCase(
         private val SUPPORT_FIELD_MAPPING =
             mapOf(
                 "사업화" to "사업화",
-                "R&D" to "R&D",
-                "기술" to "R&D",
+                "R&D" to "기술개발(R&D)",
+                "기술" to "기술개발(R&D)",
                 "수출" to "해외진출",
                 "해외" to "해외진출",
                 "글로벌" to "글로벌",
@@ -89,7 +89,7 @@ class AnnouncementUseCase(
                 "창업" to "창업교육",
                 "멘토링" to "멘토링",
                 "시설" to "시설",
-                "행사" to "행사",
+                "행사" to "행사ㆍ네트워크",
                 "내수" to "사업화",
                 "경영" to "사업화",
             )
@@ -321,20 +321,24 @@ class AnnouncementUseCase(
     }
 
     private fun extractBizInfoHashtags(doc: Document): List<String> {
-        return doc.select("ul.tag_ul_list li span")
-            .map { it.text().removePrefix("#").trim() }
+        val html = doc.html()
+        val pattern = "<span>#([^<]+)</span>".toRegex()
+        return pattern.findAll(html)
+            .map { it.groupValues[1].trim() }
             .filter { it.isNotBlank() }
+            .distinct()
+            .toList()
     }
 
     private fun extractRegionFromHashtags(hashtags: List<String>): String {
-        val matchedRegions =
-            hashtags.filter { tag ->
-                REGION_KEYWORDS.any { keyword -> tag.contains(keyword) }
-            }
+        val matchedKeywords =
+            hashtags.mapNotNull { tag ->
+                REGION_KEYWORDS.find { keyword -> tag.contains(keyword) }
+            }.distinct()
 
         return when {
-            matchedRegions.size >= 10 -> "전국"
-            matchedRegions.isNotEmpty() -> matchedRegions.joinToString(", ")
+            matchedKeywords.size >= 10 -> "전국"
+            matchedKeywords.isNotEmpty() -> matchedKeywords.first()
             else -> ""
         }
     }
@@ -348,14 +352,11 @@ class AnnouncementUseCase(
     }
 
     private fun extractSupportFieldFromHashtags(hashtags: List<String>): String {
-        val matchedFields =
-            hashtags.mapNotNull { tag ->
-                SUPPORT_FIELD_MAPPING.entries.find { (keyword, _) ->
-                    tag.contains(keyword)
-                }?.value
-            }.distinct()
-
-        return matchedFields.joinToString(", ").ifBlank { "사업화" }
+        return hashtags.firstNotNullOfOrNull { tag ->
+            SUPPORT_FIELD_MAPPING.entries.find { (keyword, _) ->
+                tag.contains(keyword)
+            }?.value
+        } ?: "사업화"
     }
 
     private fun extractPblancId(href: String): String? {

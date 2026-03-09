@@ -6,6 +6,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.UserGender
 import java.time.LocalDate
 
 data class UserProfileResponse(
+    val email: String,
     val username: String?,
     val profileImage: String?,
     val companyIds: List<Long>,

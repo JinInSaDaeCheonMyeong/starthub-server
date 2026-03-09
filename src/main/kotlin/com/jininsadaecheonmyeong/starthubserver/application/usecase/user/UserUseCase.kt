@@ -211,6 +211,7 @@ class UserUseCase(
                 )
             }
         return UserProfileResponse(
+            email = user.email,
             username = user.username,
             profileImage = user.profileImage,
             companyIds = companies.mapNotNull { it.id },
