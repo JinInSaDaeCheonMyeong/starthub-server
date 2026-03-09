@@ -67,6 +67,30 @@ class AnnouncementUseCase(
         private const val BIZINFO_LIST_URL = "$BIZINFO_BASE_URL/web/lay1/bbs/S1T122C128/AS/74/list.do"
         private const val BIZINFO_VIEW_URL = "$BIZINFO_BASE_URL/web/lay1/bbs/S1T122C128/AS/74/view.do"
         private const val TIMEOUT_MS = 30000
+
+        private val REGION_KEYWORDS = setOf(
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
+            "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+        )
+
+        private val SUPPORT_FIELD_MAPPING = mapOf(
+            "사업화" to "사업화",
+            "R&D" to "R&D",
+            "기술" to "R&D",
+            "수출" to "해외진출",
+            "해외" to "해외진출",
+            "글로벌" to "글로벌",
+            "인력" to "인력",
+            "금융" to "융자",
+            "융자" to "융자",
+            "정책자금" to "정책자금",
+            "창업" to "창업교육",
+            "멘토링" to "멘토링",
+            "시설" to "시설",
+            "행사" to "행사",
+            "내수" to "사업화",
+            "경영" to "사업화",
+        )
     }
 
     @Transactional
@@ -224,9 +248,13 @@ class AnnouncementUseCase(
         }
         val organization = extractBizInfoField(doc, "소관부처", "주관기관") ?: ""
         val receptionPeriod = extractBizInfoField(doc, "신청기간", "접수기간", "모집기간") ?: ""
-        val supportField = extractBizInfoField(doc, "지원분야", "사업분야") ?: ""
-        val region = extractBizInfoField(doc, "지역", "사업지역") ?: ""
         val content = doc.selectFirst("div.view_cont, .board_view_cont, .cont_box")?.html() ?: ""
+
+        val hashtags = extractBizInfoHashtags(doc)
+        val region = extractRegionFromHashtags(hashtags).ifBlank {
+            extractRegionFromTitle(title) ?: extractBizInfoField(doc, "지역", "사업지역") ?: ""
+        }
+        val supportField = extractSupportFieldFromHashtags(hashtags)
 
         val (originalFiles, pdfFiles) = processBizInfoAttachments(doc)
 
@@ -236,10 +264,10 @@ class AnnouncementUseCase(
             organization = organization,
             receptionPeriod = receptionPeriod,
             supportField = supportField,
-            targetAge = "",
+            targetAge = "전체",
             region = region,
             organizationType = "",
-            startupHistory = "",
+            startupHistory = "전체",
             content = content,
             source = AnnouncementSource.BIZINFO,
             originalFileUrls =
@@ -287,6 +315,42 @@ class AnnouncementUseCase(
             }
         }
         return null
+    }
+
+    private fun extractBizInfoHashtags(doc: Document): List<String> {
+        return doc.select("ul.tag_ul_list li span")
+            .map { it.text().removePrefix("#").trim() }
+            .filter { it.isNotBlank() }
+    }
+
+    private fun extractRegionFromHashtags(hashtags: List<String>): String {
+        val matchedRegions = hashtags.filter { tag ->
+            REGION_KEYWORDS.any { keyword -> tag.contains(keyword) }
+        }
+
+        return when {
+            matchedRegions.size >= 10 -> "전국"
+            matchedRegions.isNotEmpty() -> matchedRegions.joinToString(", ")
+            else -> ""
+        }
+    }
+
+    private fun extractRegionFromTitle(title: String): String? {
+        val regex = "\\[([^]]+)]".toRegex()
+        val match = regex.find(title)
+        return match?.groupValues?.get(1)?.takeIf { region ->
+            REGION_KEYWORDS.any { keyword -> region.contains(keyword) }
+        }
+    }
+
+    private fun extractSupportFieldFromHashtags(hashtags: List<String>): String {
+        val matchedFields = hashtags.mapNotNull { tag ->
+            SUPPORT_FIELD_MAPPING.entries.find { (keyword, _) ->
+                tag.contains(keyword)
+            }?.value
+        }.distinct()
+
+        return matchedFields.joinToString(", ").ifBlank { "사업화" }
     }
 
     private fun extractPblancId(href: String): String? {
