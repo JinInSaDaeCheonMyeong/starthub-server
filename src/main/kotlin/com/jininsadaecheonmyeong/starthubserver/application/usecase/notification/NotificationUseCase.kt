@@ -78,16 +78,23 @@ class NotificationUseCase(
         token: String,
         deviceType: DeviceType = DeviceType.UNKNOWN,
     ) {
-        val existingToken = fcmTokenRepository.findByUserAndDeviceType(user, deviceType)
-        if (existingToken.isPresent) {
-            val fcmToken = existingToken.get()
-            if (fcmToken.token != token) {
-                fcmToken.updateToken(token)
-                fcmTokenRepository.save(fcmToken)
-                logger.info("FCM token updated for user: ${user.id}, deviceType: $deviceType")
-            } else {
+        val existingByToken = fcmTokenRepository.findByToken(token)
+        if (existingByToken.isPresent) {
+            val fcmToken = existingByToken.get()
+            if (fcmToken.user.id == user.id && fcmToken.deviceType == deviceType) {
                 logger.info("FCM token already exists for user: ${user.id}, deviceType: $deviceType")
+                return
             }
+            fcmTokenRepository.delete(fcmToken)
+            fcmTokenRepository.flush()
+        }
+
+        val existingByUserDevice = fcmTokenRepository.findByUserAndDeviceType(user, deviceType)
+        if (existingByUserDevice.isPresent) {
+            val fcmToken = existingByUserDevice.get()
+            fcmToken.updateToken(token)
+            fcmTokenRepository.save(fcmToken)
+            logger.info("FCM token updated for user: ${user.id}, deviceType: $deviceType")
             return
         }
 
