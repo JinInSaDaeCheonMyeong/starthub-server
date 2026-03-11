@@ -56,9 +56,7 @@ class GcsStorageService(
             BlobInfo
                 .newBuilder(blobId)
                 .setContentType(contentType)
-                .setContentDisposition(
-                    "attachment; filename=\"$displayName\"; filename*=UTF-8''${java.net.URLEncoder.encode(displayName, "UTF-8")}",
-                )
+                .setContentDisposition(buildContentDisposition(displayName))
                 .build()
 
         storage.create(blobInfo, bytes)
@@ -74,5 +72,10 @@ class GcsStorageService(
 
     private fun extractObjectNameFromUrl(fileUrl: String): String {
         return fileUrl.substringAfter("$bucketName/")
+    }
+
+    private fun buildContentDisposition(fileName: String): String {
+        val encoded = java.net.URLEncoder.encode(fileName, "UTF-8").replace("+", "%20")
+        return "attachment; filename=\"$fileName\"; filename*=UTF-8''$encoded"
     }
 }
