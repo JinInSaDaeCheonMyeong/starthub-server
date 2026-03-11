@@ -56,7 +56,9 @@ class GcsStorageService(
             BlobInfo
                 .newBuilder(blobId)
                 .setContentType(contentType)
-                .setContentDisposition("attachment; filename=\"$displayName\"; filename*=UTF-8''${java.net.URLEncoder.encode(displayName, "UTF-8")}")
+                .setContentDisposition(
+                    "attachment; filename=\"$displayName\"; filename*=UTF-8''${java.net.URLEncoder.encode(displayName, "UTF-8")}",
+                )
                 .build()
 
         storage.create(blobInfo, bytes)
