@@ -45,15 +45,18 @@ class GcsStorageService(
         fileName: String,
         directory: String,
         contentType: String,
+        originalFileName: String? = null,
     ): String {
         val generatedFileName = generateFileName(fileName)
         val objectName = "$directory/$generatedFileName"
 
         val blobId = BlobId.of(bucketName, objectName)
+        val displayName = originalFileName ?: fileName
         val blobInfo =
             BlobInfo
                 .newBuilder(blobId)
                 .setContentType(contentType)
+                .setContentDisposition("attachment; filename=\"$displayName\"; filename*=UTF-8''${java.net.URLEncoder.encode(displayName, "UTF-8")}")
                 .build()
 
         storage.create(blobInfo, bytes)

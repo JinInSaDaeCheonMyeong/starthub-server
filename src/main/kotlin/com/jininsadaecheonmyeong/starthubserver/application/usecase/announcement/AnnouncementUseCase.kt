@@ -399,6 +399,7 @@ class AnnouncementUseCase(
                         fileName = fileName,
                         directory = "announcement-files",
                         contentType = getBizInfoContentType(fileName),
+                        originalFileName = fileName,
                     )
                 originalFiles.add(FileInfoData(url = originalGcsUrl, name = fileName))
 
@@ -411,6 +412,7 @@ class AnnouncementUseCase(
                             fileName = pdfFileName,
                             directory = "announcement-pdfs",
                             contentType = "application/pdf",
+                            originalFileName = pdfFileName,
                         )
                     pdfFiles.add(FileInfoData(url = pdfGcsUrl, name = pdfFileName))
                 } else if (fileName.lowercase().endsWith(".pdf")) {
