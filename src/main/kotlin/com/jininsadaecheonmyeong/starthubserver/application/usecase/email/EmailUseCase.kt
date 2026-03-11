@@ -5,6 +5,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.exception.email.EmailAlre
 import com.jininsadaecheonmyeong.starthubserver.domain.exception.email.EmailNotFoundException
 import com.jininsadaecheonmyeong.starthubserver.domain.exception.email.ExpiredEmailException
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.email.EmailRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.repository.user.UserRepository
 import com.jininsadaecheonmyeong.starthubserver.logger
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.MimeMessage
@@ -26,6 +27,7 @@ import java.time.LocalDateTime
 @Component
 class EmailUseCase(
     private val emailRepository: EmailRepository,
+    private val userRepository: UserRepository,
     private val javaMailSender: JavaMailSender,
     private val mailProperties: MailProperties,
 ) {
@@ -36,7 +38,10 @@ class EmailUseCase(
         val existingEmail = emailRepository.findByEmail(email)
 
         if (existingEmail?.isVerified == true) {
-            throw EmailAlreadyVerifiedException("이미 인증된 이메일입니다.")
+            if (userRepository.existsByEmail(email)) {
+                throw EmailAlreadyVerifiedException("이미 인증된 이메일입니다.")
+            }
+            existingEmail.isVerified = false
         }
 
         val code = generateVerificationCode()
@@ -44,6 +49,7 @@ class EmailUseCase(
         val emailVerification =
             existingEmail?.apply {
                 verificationCode = code
+                expirationDate = LocalDateTime.now().plusMinutes(5)
             } ?: Email(
                 email = email,
                 verificationCode = code,
