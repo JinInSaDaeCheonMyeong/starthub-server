@@ -76,6 +76,6 @@ class GcsStorageService(
 
     private fun buildContentDisposition(fileName: String): String {
         val encoded = java.net.URLEncoder.encode(fileName, "UTF-8").replace("+", "%20")
-        return "attachment; filename=\"$fileName\"; filename*=UTF-8''$encoded"
+        return "inline; filename=\"$fileName\"; filename*=UTF-8''$encoded"
     }
 }
