@@ -27,6 +27,7 @@ class GcsStorageService(
             BlobInfo
                 .newBuilder(blobId)
                 .setContentType(file.contentType)
+                .setContentDisposition(buildContentDisposition(file.originalFilename ?: "file"))
                 .build()
 
         storage.create(blobInfo, file.bytes)
