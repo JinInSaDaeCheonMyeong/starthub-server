@@ -137,12 +137,21 @@ class UserContextService(
 
             if (context.likedAnnouncements.isNotEmpty()) {
                 appendLine()
+                val today = LocalDate.now()
                 appendLine("## 관심 있는 공고 (최근 ${context.likedAnnouncements.size}개)")
-                appendLine("오늘 날짜: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                appendLine("오늘 날짜: ${today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
                 context.likedAnnouncements.forEach { announcement ->
-                    appendLine("- ${announcement.title}")
+                    val expired = isAnnouncementExpired(announcement.receptionPeriod, today)
+                    if (expired) {
+                        appendLine("- ${announcement.title} ⚠️ (접수 마감)")
+                    } else {
+                        appendLine("- ${announcement.title}")
+                    }
                     appendLine("  기관: ${announcement.organization}, 접수기간: ${announcement.receptionPeriod}")
-                    appendLine("  [ID: ${announcement.id}, URL: ${announcement.url}]")
+                    appendLine("  [StartHub 공고 ID: ${announcement.id}, URL: ${announcement.url}]")
+                    if (expired) {
+                        appendLine("  ⚠️ 접수 마감된 공고입니다. [[ ]] 형식으로 추천하지 마세요.")
+                    }
                 }
             }
         }
@@ -183,7 +192,7 @@ class UserContextService(
                             daysLeft <= 7 -> "(${daysLeft}일 남음)"
                             else -> "(${daysLeft}일 남음)"
                         }
-                    appendLine("- ${schedule.title} $urgency [ID: ${schedule.announcementId}, URL: ${schedule.url}]")
+                    appendLine("- ${schedule.title} $urgency [StartHub 공고 ID: ${schedule.announcementId}, URL: ${schedule.url}]")
                     appendLine("  기관: ${schedule.organization}, 마감일: ${schedule.endDate}")
                 }
             }
@@ -224,6 +233,23 @@ class UserContextService(
         val startupFields = userStartupFieldRepository.findByUser(user)
         return startupFields.map { field ->
             field.customField ?: field.businessType.name
+        }
+    }
+
+    private fun isAnnouncementExpired(
+        receptionPeriod: String,
+        today: LocalDate,
+    ): Boolean {
+        return try {
+            val endDateStr = receptionPeriod.split("~").last().trim()
+            val endDate =
+                java.time.LocalDateTime.parse(
+                    endDateStr,
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
+                )
+            today.isAfter(endDate.toLocalDate())
+        } catch (_: Exception) {
+            false
         }
     }
 
