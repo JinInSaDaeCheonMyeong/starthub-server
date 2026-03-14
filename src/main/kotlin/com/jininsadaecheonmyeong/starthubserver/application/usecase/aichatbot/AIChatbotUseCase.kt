@@ -1,7 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.application.usecase.aichatbot
 
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.AnnouncementResult
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.ChatbotRAGClient
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.ClaudeAIService
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.ContextResult
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.DocumentChunk
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.EmbedDocumentRequest
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.QueryContextRequest
@@ -27,6 +29,8 @@ import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.Search
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
@@ -150,11 +154,15 @@ class AIChatbotUseCase(
         }
 
         val history = getRecentMessagesForHistory(sessionId, 20)
-        val userContextString =
-            withContext(Dispatchers.IO) {
+        val (userContextString, retrievedContext) = coroutineScope {
+            val userCtxDeferred = async(Dispatchers.IO) {
                 userContextService.buildContextStringWithAnalysis(user)
             }
-        val retrievedContext = buildRetrievedContext(session, user, message)
+            val retrievedCtxDeferred = async {
+                buildRetrievedContext(session, user, message)
+            }
+            userCtxDeferred.await() to retrievedCtxDeferred.await()
+        }
         val systemPrompt = ClaudePromptTemplates.buildStartupAssistantPrompt(userContextString)
 
         val imageAttachments = files?.filter { it.isImage() }?.mapNotNull { ImageAttachment.fromProcessedFile(it) }
@@ -319,34 +327,39 @@ class AIChatbotUseCase(
         session: AIChatSession,
         user: User,
         message: String,
-    ): String? {
-        val contextParts = mutableListOf<String>()
+    ): String? = coroutineScope {
+        val needAnnouncements = isAnnouncementRelated(message)
+        val needUserContext = isUserContextRelated(message)
 
-        val documents =
-            withContext(Dispatchers.IO) {
-                documentRepository.findBySessionIdOrderByCreatedAtAsc(session.id!!)
+        val documentDeferred = async {
+            val documents =
+                withContext(Dispatchers.IO) {
+                    documentRepository.findBySessionIdOrderByCreatedAtAsc(session.id!!)
+                }
+            if (documents.isNotEmpty()) buildDocumentContext(documents, session.id!!, message) else null
+        }
+
+        val webSearchDeferred = async {
+            if (shouldPerformWebSearch(message)) performWebSearch(message) else null
+        }
+
+        // 공고 + 사용자컨텍스트 RAG를 하나의 호출로 병합
+        val ragDeferred = async {
+            if (needAnnouncements || needUserContext) {
+                queryRAGContext(user.id!!, message, needAnnouncements, needUserContext)
+            } else {
+                null
             }
-        if (documents.isNotEmpty()) {
-            val documentContext = buildDocumentContext(documents, session.id!!, message)
-            documentContext?.let { contextParts.add(it) }
         }
 
-        if (shouldPerformWebSearch(message)) {
-            val webSearchResult = performWebSearch(message)
-            webSearchResult?.let { contextParts.add(it) }
-        }
+        val contextParts = mutableListOf<String>()
+        documentDeferred.await()?.let { contextParts.add(it) }
+        webSearchDeferred.await()?.let { contextParts.add(it) }
+        val ragResult = ragDeferred.await()
+        ragResult?.announcementContext?.let { contextParts.add(it) }
+        ragResult?.userContext?.let { contextParts.add(it) }
 
-        if (isAnnouncementRelated(message)) {
-            val announcementContext = queryAnnouncementContext(user.id!!, message)
-            announcementContext?.let { contextParts.add(it) }
-        }
-
-        if (isUserContextRelated(message)) {
-            val userRagContext = queryUserContext(user.id!!, message)
-            userRagContext?.let { contextParts.add(it) }
-        }
-
-        return if (contextParts.isNotEmpty()) {
+        if (contextParts.isNotEmpty()) {
             contextParts.joinToString("\n\n---\n\n")
         } else {
             null
@@ -454,10 +467,17 @@ class AIChatbotUseCase(
         }
     }
 
-    private suspend fun queryUserContext(
+    private data class RAGContextResult(
+        val announcementContext: String? = null,
+        val userContext: String? = null,
+    )
+
+    private suspend fun queryRAGContext(
         userId: Long,
         query: String,
-    ): String? {
+        needAnnouncements: Boolean,
+        needUserContext: Boolean,
+    ): RAGContextResult {
         return try {
             val response =
                 chatbotRAGClient.queryContext(
@@ -465,86 +485,80 @@ class AIChatbotUseCase(
                         query = query,
                         userId = userId,
                         topK = 5,
-                        includeAnnouncements = false,
+                        includeAnnouncements = needAnnouncements,
                     ),
-                )
+                ) ?: return RAGContextResult()
 
-            val userContext = response?.userContext
-            if (userContext.isNullOrEmpty()) return null
+            val announcementContext =
+                if (needAnnouncements) buildAnnouncementContextString(response.announcements) else null
+            val userCtx =
+                if (needUserContext) buildUserContextString(response.userContext) else null
 
-            buildString {
-                appendLine("## 사용자 관련 정보 (RAG 검색 결과)")
-                userContext.forEach { result ->
-                    when (result.type) {
-                        "bmc" -> appendLine("### BMC 관련 (관련도: ${String.format("%.2f", result.score)})")
-                        "interests" -> appendLine("### 관심분야 (관련도: ${String.format("%.2f", result.score)})")
-                        "competitor_analysis" -> appendLine("### 경쟁사분석 (관련도: ${String.format("%.2f", result.score)})")
-                        "liked_preference" -> appendLine("### 관심 공고 기반 (관련도: ${String.format("%.2f", result.score)})")
-                        else -> appendLine("### 기타 (관련도: ${String.format("%.2f", result.score)})")
-                    }
-                    appendLine(result.content)
-                    appendLine()
-                }
-            }
+            RAGContextResult(announcementContext = announcementContext, userContext = userCtx)
         } catch (_: Exception) {
-            null
+            RAGContextResult()
         }
     }
 
-    private suspend fun queryAnnouncementContext(
-        userId: Long,
-        query: String,
+    private suspend fun buildAnnouncementContextString(
+        announcements: List<AnnouncementResult>?,
     ): String? {
-        return try {
-            val response =
-                chatbotRAGClient.queryContext(
-                    QueryContextRequest(
-                        query = query,
-                        userId = userId,
-                        topK = 5,
-                        includeAnnouncements = true,
-                    ),
-                )
+        if (announcements.isNullOrEmpty()) return null
 
-            val announcements = response?.announcements
-            if (announcements.isNullOrEmpty()) return null
+        val urls = announcements.map { it.url }
+        val dbAnnouncements =
+            withContext(Dispatchers.IO) {
+                announcementRepository.findByUrlIn(urls)
+            }
+        val urlToDbAnnouncement = dbAnnouncements.associateBy { it.url }
 
-            val urls = announcements.map { it.url }
-            val dbAnnouncements =
-                withContext(Dispatchers.IO) {
-                    announcementRepository.findByUrlIn(urls)
+        val today = java.time.LocalDate.now()
+
+        return buildString {
+            appendLine("## 관련 지원 공고")
+            announcements.take(5).forEach { announcement ->
+                val dbAnnouncement = urlToDbAnnouncement[announcement.url]
+                val isExpired = dbAnnouncement?.let { isAnnouncementExpired(it.receptionPeriod, today) } ?: false
+
+                if (isExpired) {
+                    appendLine("### ${announcement.title} ⚠️ (접수 마감)")
+                } else {
+                    appendLine("### ${announcement.title}")
                 }
-            val urlToDbAnnouncement = dbAnnouncements.associateBy { it.url }
-
-            val today = java.time.LocalDate.now()
-
-            buildString {
-                appendLine("## 관련 지원 공고")
-                announcements.take(5).forEach { announcement ->
-                    val dbAnnouncement = urlToDbAnnouncement[announcement.url]
-                    val isExpired = dbAnnouncement?.let { isAnnouncementExpired(it.receptionPeriod, today) } ?: false
-
-                    if (isExpired) {
-                        appendLine("### ${announcement.title} ⚠️ (접수 마감)")
-                    } else {
-                        appendLine("### ${announcement.title}")
-                    }
-                    appendLine("- 기관: ${announcement.organization ?: "정보 없음"}")
-                    if (dbAnnouncement != null && !isExpired) {
-                        appendLine("- StartHub 공고 ID: ${dbAnnouncement.id}")
-                        appendLine("- 접수기간: ${dbAnnouncement.receptionPeriod}")
-                    }
-                    appendLine("- 링크: ${announcement.url}")
-                    if (isExpired) {
-                        appendLine("- ⚠️ 이 공고는 접수 기간이 마감되었습니다. 추천하지 마세요.")
-                    }
-                    appendLine()
+                appendLine("- 기관: ${announcement.organization ?: "정보 없음"}")
+                if (dbAnnouncement != null && !isExpired) {
+                    appendLine("- StartHub 공고 ID: ${dbAnnouncement.id}")
+                    appendLine("- 접수기간: ${dbAnnouncement.receptionPeriod}")
+                }
+                appendLine("- 링크: ${announcement.url}")
+                if (isExpired) {
+                    appendLine("- ⚠️ 이 공고는 접수 기간이 마감되었습니다. 추천하지 마세요.")
                 }
                 appendLine()
-                appendLine("중요: [[ ]] 참조 형식은 'StartHub 공고 ID'가 있는 공고에만 사용하세요.")
             }
-        } catch (_: Exception) {
-            null
+            appendLine()
+            appendLine("중요: [[ ]] 참조 형식은 'StartHub 공고 ID'가 있는 공고에만 사용하세요.")
+        }
+    }
+
+    private fun buildUserContextString(
+        userContext: List<ContextResult>?,
+    ): String? {
+        if (userContext.isNullOrEmpty()) return null
+
+        return buildString {
+            appendLine("## 사용자 관련 정보 (RAG 검색 결과)")
+            userContext.forEach { result ->
+                when (result.type) {
+                    "bmc" -> appendLine("### BMC 관련 (관련도: ${String.format("%.2f", result.score)})")
+                    "interests" -> appendLine("### 관심분야 (관련도: ${String.format("%.2f", result.score)})")
+                    "competitor_analysis" -> appendLine("### 경쟁사분석 (관련도: ${String.format("%.2f", result.score)})")
+                    "liked_preference" -> appendLine("### 관심 공고 기반 (관련도: ${String.format("%.2f", result.score)})")
+                    else -> appendLine("### 기타 (관련도: ${String.format("%.2f", result.score)})")
+                }
+                appendLine(result.content)
+                appendLine()
+            }
         }
     }
 
