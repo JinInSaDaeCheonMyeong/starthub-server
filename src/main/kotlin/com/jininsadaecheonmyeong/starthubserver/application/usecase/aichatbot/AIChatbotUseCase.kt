@@ -20,6 +20,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.exception.aichatbot.Unaut
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.aichatbot.AIChatDocumentRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.aichatbot.AIChatMessageRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.aichatbot.AIChatSessionRepository
+import com.jininsadaecheonmyeong.starthubserver.domain.repository.announcement.AnnouncementRepository
 import com.jininsadaecheonmyeong.starthubserver.global.infra.ai.ClaudePromptTemplates
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.PerplexitySearchService
 import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchRequest
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.withContext
+import java.time.LocalDateTime
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -46,6 +48,7 @@ class AIChatbotUseCase(
     private val perplexitySearchService: PerplexitySearchService,
     private val userAuthenticationHolder: UserAuthenticationHolder,
     private val referenceParser: ReferenceParser,
+    private val announcementRepository: AnnouncementRepository,
 ) {
     @Transactional
     fun createSession(title: String?): AIChatSession {
@@ -58,10 +61,21 @@ class AIChatbotUseCase(
         return sessionRepository.save(session)
     }
 
+    @Transactional
     fun getSessions(): List<ChatSessionResponse> {
         val user = userAuthenticationHolder.current()
         val sessions = sessionRepository.findByUserWithCollections(user)
-        return sessions.map { ChatSessionResponse.from(it) }
+
+        val cutoff = LocalDateTime.now().minusMinutes(5)
+        val (emptySessions, activeSessions) = sessions.partition { it.messages.isEmpty() }
+        val staleEmptySessions = emptySessions.filter { it.createdAt.isBefore(cutoff) }
+        if (staleEmptySessions.isNotEmpty()) {
+            staleEmptySessions.forEach { it.delete() }
+            sessionRepository.saveAll(staleEmptySessions)
+        }
+
+        val remainingSessions = activeSessions + emptySessions.filter { !it.createdAt.isBefore(cutoff) }
+        return remainingSessions.sortedByDescending { it.updatedAt }.map { ChatSessionResponse.from(it) }
     }
 
     fun getSession(sessionId: Long): AIChatSession {
@@ -143,6 +157,8 @@ class AIChatbotUseCase(
         val retrievedContext = buildRetrievedContext(session, user, message)
         val systemPrompt = ClaudePromptTemplates.buildStartupAssistantPrompt(userContextString)
 
+        val imageAttachments = files?.filter { it.isImage() }?.mapNotNull { ImageAttachment.fromProcessedFile(it) }
+
         val responseBuilder = StringBuilder()
 
         return claudeAIService.streamChat(
@@ -150,6 +166,7 @@ class AIChatbotUseCase(
             history = history.dropLast(1),
             userMessage = message,
             retrievedContext = retrievedContext,
+            imageAttachments = imageAttachments?.ifEmpty { null },
         ).map { chunk ->
             chunk.text?.let { responseBuilder.append(it) }
             chunk
@@ -157,9 +174,9 @@ class AIChatbotUseCase(
             if (error == null) {
                 val fullResponse = responseBuilder.toString()
                 if (fullResponse.isNotBlank()) {
-                    val parseResult = referenceParser.parseAndClean(fullResponse)
-                    saveAssistantMessage(session, parseResult.cleanedContent)
+                    saveAssistantMessage(session, fullResponse)
 
+                    val parseResult = referenceParser.parseAndClean(fullResponse)
                     if (parseResult.references.isNotEmpty()) {
                         emit(
                             StreamChunk(
@@ -492,17 +509,59 @@ class AIChatbotUseCase(
             val announcements = response?.announcements
             if (announcements.isNullOrEmpty()) return null
 
+            val urls = announcements.map { it.url }
+            val dbAnnouncements =
+                withContext(Dispatchers.IO) {
+                    announcementRepository.findByUrlIn(urls)
+                }
+            val urlToDbAnnouncement = dbAnnouncements.associateBy { it.url }
+
+            val today = java.time.LocalDate.now()
+
             buildString {
                 appendLine("## 관련 지원 공고")
                 announcements.take(5).forEach { announcement ->
-                    appendLine("### ${announcement.title}")
+                    val dbAnnouncement = urlToDbAnnouncement[announcement.url]
+                    val isExpired = dbAnnouncement?.let { isAnnouncementExpired(it.receptionPeriod, today) } ?: false
+
+                    if (isExpired) {
+                        appendLine("### ${announcement.title} ⚠️ (접수 마감)")
+                    } else {
+                        appendLine("### ${announcement.title}")
+                    }
                     appendLine("- 기관: ${announcement.organization ?: "정보 없음"}")
+                    if (dbAnnouncement != null && !isExpired) {
+                        appendLine("- StartHub 공고 ID: ${dbAnnouncement.id}")
+                        appendLine("- 접수기간: ${dbAnnouncement.receptionPeriod}")
+                    }
                     appendLine("- 링크: ${announcement.url}")
+                    if (isExpired) {
+                        appendLine("- ⚠️ 이 공고는 접수 기간이 마감되었습니다. 추천하지 마세요.")
+                    }
                     appendLine()
                 }
+                appendLine()
+                appendLine("중요: [[ ]] 참조 형식은 'StartHub 공고 ID'가 있는 공고에만 사용하세요.")
             }
         } catch (_: Exception) {
             null
+        }
+    }
+
+    private fun isAnnouncementExpired(
+        receptionPeriod: String,
+        today: java.time.LocalDate,
+    ): Boolean {
+        return try {
+            val endDateStr = receptionPeriod.split("~").last().trim()
+            val endDate =
+                java.time.LocalDateTime.parse(
+                    endDateStr,
+                    java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
+                )
+            today.isAfter(endDate.toLocalDate())
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -534,4 +593,32 @@ data class ProcessedFile(
     val fileUrl: String,
     val fileType: String,
     val extractedText: String?,
-)
+) {
+    fun isImage(): Boolean = fileType.lowercase() in listOf("png", "jpg", "jpeg", "gif", "webp")
+}
+
+data class ImageAttachment(
+    val fileName: String,
+    val fileUrl: String,
+    val mediaType: String,
+) {
+    companion object {
+        private val MEDIA_TYPE_MAP =
+            mapOf(
+                "png" to "image/png",
+                "jpg" to "image/jpeg",
+                "jpeg" to "image/jpeg",
+                "gif" to "image/gif",
+                "webp" to "image/webp",
+            )
+
+        fun fromProcessedFile(file: ProcessedFile): ImageAttachment? {
+            val mediaType = MEDIA_TYPE_MAP[file.fileType.lowercase()] ?: return null
+            return ImageAttachment(
+                fileName = file.fileName,
+                fileUrl = file.fileUrl,
+                mediaType = mediaType,
+            )
+        }
+    }
+}

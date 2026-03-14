@@ -1,7 +1,9 @@
 package com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.jininsadaecheonmyeong.starthubserver.application.usecase.aichatbot.ChatHistoryMessage
+import com.jininsadaecheonmyeong.starthubserver.application.usecase.aichatbot.ImageAttachment
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.aichatbot.MessageRole
 import com.jininsadaecheonmyeong.starthubserver.global.config.ClaudeAIConfig
 import com.jininsadaecheonmyeong.starthubserver.logger
@@ -34,8 +36,9 @@ class ClaudeAIService(
         history: List<ChatHistoryMessage>,
         userMessage: String,
         retrievedContext: String? = null,
+        imageAttachments: List<ImageAttachment>? = null,
     ): Flow<StreamChunk> {
-        val messages = buildMessages(history, userMessage, retrievedContext)
+        val messages = buildMessages(history, userMessage, retrievedContext, imageAttachments)
 
         val request =
             ClaudeRequest(
@@ -131,7 +134,7 @@ class ClaudeAIService(
                 model = "claude-sonnet-4-20250514",
                 maxTokens = 50,
                 system = systemPrompt,
-                messages = listOf(ClaudeMessage(role = "user", content = userMessage)),
+                messages = listOf(ClaudeMessage(role = "user", content = listOf(ContentBlock(type = "text", text = userMessage)))),
                 stream = false,
             )
 
@@ -171,6 +174,7 @@ class ClaudeAIService(
         history: List<ChatHistoryMessage>,
         userMessage: String,
         retrievedContext: String?,
+        imageAttachments: List<ImageAttachment>? = null,
     ): List<ClaudeMessage> {
         val messages = mutableListOf<ClaudeMessage>()
 
@@ -178,7 +182,7 @@ class ClaudeAIService(
             messages.add(
                 ClaudeMessage(
                     role = if (msg.role == MessageRole.USER) "user" else "assistant",
-                    content = msg.content,
+                    content = listOf(ContentBlock(type = "text", text = msg.content)),
                 ),
             )
         }
@@ -196,7 +200,23 @@ class ClaudeAIService(
                 userMessage
             }
 
-        messages.add(ClaudeMessage(role = "user", content = finalUserMessage))
+        val contentBlocks = mutableListOf<ContentBlock>()
+
+        imageAttachments?.forEach { image ->
+            contentBlocks.add(
+                ContentBlock(
+                    type = "image",
+                    source = ImageSource(
+                        type = "url",
+                        url = image.fileUrl,
+                    ),
+                ),
+            )
+        }
+
+        contentBlocks.add(ContentBlock(type = "text", text = finalUserMessage))
+
+        messages.add(ClaudeMessage(role = "user", content = contentBlocks))
 
         return messages
     }
@@ -246,22 +266,35 @@ class ClaudeAIService(
 
     data class ClaudeMessage(
         val role: String,
-        val content: String,
+        val content: List<ContentBlock>,
     )
 
     data class ClaudeResponse(
         val id: String,
         val type: String,
         val role: String,
-        val content: List<ContentBlock>,
+        val content: List<ResponseContentBlock>,
         val model: String,
         @param:JsonProperty("stop_reason")
         val stopReason: String?,
     )
 
-    data class ContentBlock(
+    data class ResponseContentBlock(
         val type: String,
         val text: String,
+    )
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    data class ContentBlock(
+        val type: String,
+        val text: String? = null,
+        val source: ImageSource? = null,
+    )
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    data class ImageSource(
+        val type: String,
+        val url: String,
     )
 }
 
