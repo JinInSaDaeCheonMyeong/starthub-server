@@ -206,10 +206,11 @@ class ClaudeAIService(
             contentBlocks.add(
                 ContentBlock(
                     type = "image",
-                    source = ImageSource(
-                        type = "url",
-                        url = image.fileUrl,
-                    ),
+                    source =
+                        ImageSource(
+                            type = "url",
+                            url = image.fileUrl,
+                        ),
                 ),
             )
         }
