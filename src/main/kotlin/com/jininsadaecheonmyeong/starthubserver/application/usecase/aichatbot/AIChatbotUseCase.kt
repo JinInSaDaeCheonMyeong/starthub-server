@@ -24,8 +24,6 @@ import com.jininsadaecheonmyeong.starthubserver.domain.repository.aichatbot.AICh
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.aichatbot.AIChatSessionRepository
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.announcement.AnnouncementRepository
 import com.jininsadaecheonmyeong.starthubserver.global.infra.ai.ClaudePromptTemplates
-import com.jininsadaecheonmyeong.starthubserver.global.infra.search.PerplexitySearchService
-import com.jininsadaecheonmyeong.starthubserver.global.infra.search.model.SearchRequest
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +32,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
@@ -49,7 +48,6 @@ class AIChatbotUseCase(
     private val claudeAIService: ClaudeAIService,
     private val chatbotRAGClient: ChatbotRAGClient,
     private val userContextService: UserContextService,
-    private val perplexitySearchService: PerplexitySearchService,
     private val userAuthenticationHolder: UserAuthenticationHolder,
     private val referenceParser: ReferenceParser,
     private val announcementRepository: AnnouncementRepository,
@@ -142,30 +140,35 @@ class AIChatbotUseCase(
 
         saveUserMessage(session, message)
 
-        if (getAllMessages(sessionId).size == 1) {
-            try {
-                val title = claudeAIService.generateTitle(message)
-                session.updateTitle(title)
-                withContext(Dispatchers.IO) {
+        val isFirstMessage = getAllMessages(sessionId).size == 1
+        if (isFirstMessage) {
+            kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val title = claudeAIService.generateTitle(message)
+                    session.updateTitle(title)
                     sessionRepository.save(session)
+                } catch (_: Exception) {
                 }
-            } catch (_: Exception) {
             }
         }
 
         val history = getRecentMessagesForHistory(sessionId, 20)
-        val (userContextString, retrievedContext) = coroutineScope {
-            val userCtxDeferred = async(Dispatchers.IO) {
-                userContextService.buildContextStringWithAnalysis(user)
+        val (userContextString, retrievedContext) =
+            coroutineScope {
+                val userCtxDeferred =
+                    async(Dispatchers.IO) {
+                        userContextService.buildContextStringWithAnalysis(user)
+                    }
+                val retrievedCtxDeferred =
+                    async {
+                        buildRetrievedContext(session, user, message)
+                    }
+                userCtxDeferred.await() to retrievedCtxDeferred.await()
             }
-            val retrievedCtxDeferred = async {
-                buildRetrievedContext(session, user, message)
-            }
-            userCtxDeferred.await() to retrievedCtxDeferred.await()
-        }
         val systemPrompt = ClaudePromptTemplates.buildStartupAssistantPrompt(userContextString)
 
         val imageAttachments = files?.filter { it.isImage() }?.mapNotNull { ImageAttachment.fromProcessedFile(it) }
+        val enableWebSearch = shouldPerformWebSearch(message)
 
         val responseBuilder = StringBuilder()
 
@@ -175,6 +178,7 @@ class AIChatbotUseCase(
             userMessage = message,
             retrievedContext = retrievedContext,
             imageAttachments = imageAttachments?.ifEmpty { null },
+            enableWebSearch = enableWebSearch,
         ).map { chunk ->
             chunk.text?.let { responseBuilder.append(it) }
             chunk
@@ -327,44 +331,41 @@ class AIChatbotUseCase(
         session: AIChatSession,
         user: User,
         message: String,
-    ): String? = coroutineScope {
-        val needAnnouncements = isAnnouncementRelated(message)
-        val needUserContext = isUserContextRelated(message)
+    ): String? =
+        coroutineScope {
+            val needAnnouncements = isAnnouncementRelated(message)
+            val needUserContext = isUserContextRelated(message)
 
-        val documentDeferred = async {
-            val documents =
-                withContext(Dispatchers.IO) {
-                    documentRepository.findBySessionIdOrderByCreatedAtAsc(session.id!!)
+            val documentDeferred =
+                async {
+                    val documents =
+                        withContext(Dispatchers.IO) {
+                            documentRepository.findBySessionIdOrderByCreatedAtAsc(session.id!!)
+                        }
+                    if (documents.isNotEmpty()) buildDocumentContext(documents, session.id!!, message) else null
                 }
-            if (documents.isNotEmpty()) buildDocumentContext(documents, session.id!!, message) else null
-        }
 
-        val webSearchDeferred = async {
-            if (shouldPerformWebSearch(message)) performWebSearch(message) else null
-        }
+            val ragDeferred =
+                async {
+                    if (needAnnouncements || needUserContext) {
+                        queryRAGContext(user.id!!, message, needAnnouncements, needUserContext)
+                    } else {
+                        null
+                    }
+                }
 
-        // 공고 + 사용자컨텍스트 RAG를 하나의 호출로 병합
-        val ragDeferred = async {
-            if (needAnnouncements || needUserContext) {
-                queryRAGContext(user.id!!, message, needAnnouncements, needUserContext)
+            val contextParts = mutableListOf<String>()
+            documentDeferred.await()?.let { contextParts.add(it) }
+            val ragResult = ragDeferred.await()
+            ragResult?.announcementContext?.let { contextParts.add(it) }
+            ragResult?.userContext?.let { contextParts.add(it) }
+
+            if (contextParts.isNotEmpty()) {
+                contextParts.joinToString("\n\n---\n\n")
             } else {
                 null
             }
         }
-
-        val contextParts = mutableListOf<String>()
-        documentDeferred.await()?.let { contextParts.add(it) }
-        webSearchDeferred.await()?.let { contextParts.add(it) }
-        val ragResult = ragDeferred.await()
-        ragResult?.announcementContext?.let { contextParts.add(it) }
-        ragResult?.userContext?.let { contextParts.add(it) }
-
-        if (contextParts.isNotEmpty()) {
-            contextParts.joinToString("\n\n---\n\n")
-        } else {
-            null
-        }
-    }
 
     private suspend fun buildDocumentContext(
         documents: List<AIChatDocument>,
@@ -432,29 +433,6 @@ class AIChatbotUseCase(
         }
     }
 
-    private suspend fun performWebSearch(message: String): String? {
-        return try {
-            val results =
-                perplexitySearchService.searchCompetitors(
-                    SearchRequest(query = message, maxResults = 3),
-                )
-
-            if (results.isEmpty()) return null
-
-            buildString {
-                appendLine("## 웹 검색 결과")
-                results.take(3).forEach { result ->
-                    appendLine("### ${result.title}")
-                    appendLine("URL: ${result.url}")
-                    appendLine(result.snippet)
-                    appendLine()
-                }
-            }
-        } catch (_: Exception) {
-            null
-        }
-    }
-
     private fun isAnnouncementRelated(message: String): Boolean {
         return ClaudePromptTemplates.ANNOUNCEMENT_KEYWORDS.any { keyword ->
             message.contains(keyword, ignoreCase = true)
@@ -500,9 +478,7 @@ class AIChatbotUseCase(
         }
     }
 
-    private suspend fun buildAnnouncementContextString(
-        announcements: List<AnnouncementResult>?,
-    ): String? {
+    private suspend fun buildAnnouncementContextString(announcements: List<AnnouncementResult>?): String? {
         if (announcements.isNullOrEmpty()) return null
 
         val urls = announcements.map { it.url }
@@ -541,9 +517,7 @@ class AIChatbotUseCase(
         }
     }
 
-    private fun buildUserContextString(
-        userContext: List<ContextResult>?,
-    ): String? {
+    private fun buildUserContextString(userContext: List<ContextResult>?): String? {
         if (userContext.isNullOrEmpty()) return null
 
         return buildString {
