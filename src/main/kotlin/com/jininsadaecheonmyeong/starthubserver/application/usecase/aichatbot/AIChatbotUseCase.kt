@@ -25,6 +25,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.repository.aichatbot.AICh
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.announcement.AnnouncementRepository
 import com.jininsadaecheonmyeong.starthubserver.global.infra.ai.ClaudePromptTemplates
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import com.jininsadaecheonmyeong.starthubserver.logger
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -52,6 +53,8 @@ class AIChatbotUseCase(
     private val referenceParser: ReferenceParser,
     private val announcementRepository: AnnouncementRepository,
 ) {
+    private val log = logger()
+
     @Transactional
     fun createSession(title: String?): AIChatSession {
         val user = userAuthenticationHolder.current()
@@ -124,6 +127,7 @@ class AIChatbotUseCase(
         user: User,
         files: List<ProcessedFile>? = null,
     ): Flow<StreamChunk> {
+        val totalStart = System.currentTimeMillis()
         val session = findSessionOrThrow(sessionId)
         verifyOwnership(session, user)
 
@@ -153,24 +157,43 @@ class AIChatbotUseCase(
         }
 
         val history = getRecentMessagesForHistory(sessionId, 20)
+        val contextStart = System.currentTimeMillis()
         val (userContextString, retrievedContext) =
             coroutineScope {
                 val userCtxDeferred =
                     async(Dispatchers.IO) {
-                        userContextService.buildContextStringWithAnalysis(user)
+                        val t = System.currentTimeMillis()
+                        val result = userContextService.buildContextStringWithAnalysis(user)
+                        log.info("[TIMING] buildContextStringWithAnalysis: {}ms ({}chars)", System.currentTimeMillis() - t, result.length)
+                        result
                     }
                 val retrievedCtxDeferred =
                     async {
-                        buildRetrievedContext(session, user, message)
+                        val t = System.currentTimeMillis()
+                        val result = buildRetrievedContext(session, user, message)
+                        log.info("[TIMING] buildRetrievedContext: {}ms ({}chars)", System.currentTimeMillis() - t, result?.length ?: 0)
+                        result
                     }
                 userCtxDeferred.await() to retrievedCtxDeferred.await()
             }
+        log.info("[TIMING] 컨텍스트 빌드 총: {}ms", System.currentTimeMillis() - contextStart)
+
         val systemPrompt = ClaudePromptTemplates.buildStartupAssistantPrompt(userContextString)
+        log.info(
+            "[TIMING] systemPrompt: {}chars, retrievedContext: {}chars, history: {}개",
+            systemPrompt.length,
+            retrievedContext?.length ?: 0,
+            history.size,
+        )
 
         val imageAttachments = files?.filter { it.isImage() }?.mapNotNull { ImageAttachment.fromProcessedFile(it) }
         val enableWebSearch = shouldPerformWebSearch(message)
 
         val responseBuilder = StringBuilder()
+        val streamStart = System.currentTimeMillis()
+        var firstChunkLogged = false
+
+        log.info("[TIMING] Claude 호출 전 준비 총: {}ms", System.currentTimeMillis() - totalStart)
 
         return claudeAIService.streamChat(
             systemPrompt = systemPrompt,
@@ -180,9 +203,14 @@ class AIChatbotUseCase(
             imageAttachments = imageAttachments?.ifEmpty { null },
             enableWebSearch = enableWebSearch,
         ).map { chunk ->
+            if (!firstChunkLogged && chunk.text != null) {
+                log.info("[TIMING] Claude TTFT (첫 토큰): {}ms", System.currentTimeMillis() - streamStart)
+                firstChunkLogged = true
+            }
             chunk.text?.let { responseBuilder.append(it) }
             chunk
         }.onCompletion { error ->
+            log.info("[TIMING] 전체 응답 완료: {}ms", System.currentTimeMillis() - totalStart)
             if (error == null) {
                 val fullResponse = responseBuilder.toString()
                 if (fullResponse.isNotBlank()) {
@@ -335,6 +363,10 @@ class AIChatbotUseCase(
         coroutineScope {
             val needAnnouncements = isAnnouncementRelated(message)
             val needUserContext = isUserContextRelated(message)
+            val isScheduleQuery = isScheduleRelated(message)
+
+            // 일정/마감 관련 질문이면 RAG 공고 검색 스킵 (이미 userContext에 일정+찜공고 정보 있음)
+            val needRAGAnnouncements = needAnnouncements && !isScheduleQuery
 
             val documentDeferred =
                 async {
@@ -347,8 +379,8 @@ class AIChatbotUseCase(
 
             val ragDeferred =
                 async {
-                    if (needAnnouncements || needUserContext) {
-                        queryRAGContext(user.id!!, message, needAnnouncements, needUserContext)
+                    if (needRAGAnnouncements || needUserContext) {
+                        queryRAGContext(user.id!!, message, needRAGAnnouncements, needUserContext)
                     } else {
                         null
                     }
@@ -445,6 +477,12 @@ class AIChatbotUseCase(
         }
     }
 
+    private fun isScheduleRelated(message: String): Boolean {
+        return ClaudePromptTemplates.SCHEDULE_KEYWORDS.any { keyword ->
+            message.contains(keyword, ignoreCase = true)
+        }
+    }
+
     private data class RAGContextResult(
         val announcementContext: String? = null,
         val userContext: String? = null,
@@ -461,7 +499,7 @@ class AIChatbotUseCase(
                 chatbotRAGClient.queryContext(
                     QueryContextRequest(
                         query = query,
-                        userId = userId,
+                        userId = if (needUserContext) userId else null,
                         topK = 5,
                         includeAnnouncements = needAnnouncements,
                     ),
