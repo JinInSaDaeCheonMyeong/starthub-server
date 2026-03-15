@@ -9,6 +9,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.config.ClaudeAIConfig
 import com.jininsadaecheonmyeong.starthubserver.logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -37,8 +38,22 @@ class ClaudeAIService(
         userMessage: String,
         retrievedContext: String? = null,
         imageAttachments: List<ImageAttachment>? = null,
+        enableWebSearch: Boolean = false,
     ): Flow<StreamChunk> {
         val messages = buildMessages(history, userMessage, retrievedContext, imageAttachments)
+
+        val tools =
+            if (enableWebSearch) {
+                listOf(
+                    WebSearchTool(
+                        type = "web_search_20250305",
+                        name = "web_search",
+                        maxUses = 3,
+                    ),
+                )
+            } else {
+                null
+            }
 
         val request =
             ClaudeRequest(
@@ -47,6 +62,7 @@ class ClaudeAIService(
                 system = systemPrompt,
                 messages = messages,
                 stream = true,
+                tools = tools,
             )
 
         return webClient.post()
@@ -146,7 +162,7 @@ class ClaudeAIService(
                     .bodyValue(request)
                     .retrieve()
                     .bodyToMono<ClaudeResponse>()
-                    .block()
+                    .awaitSingleOrNull()
 
             val title = response?.content?.firstOrNull()?.text?.trim() ?: ""
 
@@ -235,8 +251,13 @@ class ClaudeAIService(
             when (type) {
                 "content_block_delta" -> {
                     val delta = node.get("delta")
-                    val text = delta?.get("text")?.asText() ?: ""
-                    StreamChunk(type = StreamEventType.CONTENT_DELTA, text = text)
+                    val deltaType = delta?.get("type")?.asText()
+                    if (deltaType != null && deltaType != "text_delta") {
+                        null
+                    } else {
+                        val text = delta?.get("text")?.asText() ?: ""
+                        StreamChunk(type = StreamEventType.CONTENT_DELTA, text = text)
+                    }
                 }
                 "message_start" -> {
                     StreamChunk(type = StreamEventType.MESSAGE_START)
@@ -256,6 +277,7 @@ class ClaudeAIService(
         }
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     data class ClaudeRequest(
         val model: String,
         @param:JsonProperty("max_tokens")
@@ -263,6 +285,15 @@ class ClaudeAIService(
         val system: String,
         val messages: List<ClaudeMessage>,
         val stream: Boolean,
+        val tools: List<WebSearchTool>? = null,
+    )
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    data class WebSearchTool(
+        val type: String,
+        val name: String,
+        @param:JsonProperty("max_uses")
+        val maxUses: Int? = null,
     )
 
     data class ClaudeMessage(

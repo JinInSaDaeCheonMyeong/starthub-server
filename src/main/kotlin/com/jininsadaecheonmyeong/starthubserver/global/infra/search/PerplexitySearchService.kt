@@ -28,7 +28,10 @@ class PerplexitySearchService(
 ) {
     private val logger = LoggerFactory.getLogger(PerplexitySearchService::class.java)
 
-    suspend fun searchCompetitors(request: SearchRequest): List<CompetitorSearchResult> {
+    suspend fun searchCompetitors(
+        request: SearchRequest,
+        skipLogoExtraction: Boolean = false,
+    ): List<CompetitorSearchResult> {
         if (properties.apiKey.isBlank() || properties.apiKey.startsWith("\${")) {
             logger.error("Perplexity API 키가 설정되지 않음")
             throw SearchException("Perplexity API Key를 찾을 수 없음")
@@ -37,7 +40,7 @@ class PerplexitySearchService(
         return try {
             val searchQuery = buildCompetitorSearchQuery(request)
             val response = performSearchSuspend(searchQuery)
-            parseCompetitorResults(response, request.maxResults)
+            parseCompetitorResults(response, request.maxResults, skipLogoExtraction)
         } catch (e: Exception) {
             logger.error("경쟁사 검색 실패: {}", e.message)
             when {
@@ -193,6 +196,7 @@ class PerplexitySearchService(
     private fun parseCompetitorResults(
         response: PerplexityResponse,
         maxResults: Int,
+        skipLogoExtraction: Boolean = false,
     ): List<CompetitorSearchResult> {
         val content = response.choices.firstOrNull()?.message?.content ?: return emptyList()
 
@@ -230,6 +234,8 @@ class PerplexitySearchService(
                 logger.warn("경쟁사 정보 파싱 실패", e)
             }
         }
+
+        if (skipLogoExtraction) return competitors
 
         val enhancedCompetitors =
             competitors.map { competitor ->
