@@ -202,7 +202,7 @@ class UserContextService(
     private fun getUpcomingSchedules(user: User): List<ScheduleSummary> {
         val today = LocalDate.now()
         val schedules = scheduleRepository.findUpcomingSchedulesWithAnnouncement(user, today.minusDays(7))
-        return schedules.take(20).map { schedule ->
+        return schedules.take(10).map { schedule ->
             ScheduleSummary(
                 id = schedule.id!!,
                 announcementId = schedule.announcement.id!!,
