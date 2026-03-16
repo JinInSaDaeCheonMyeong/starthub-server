@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component
 class AnnouncementScrapingRunner(
     private val announcementUseCase: AnnouncementUseCase,
 ) : ApplicationRunner {
-
     override fun run(args: ApplicationArguments?) {
         announcementUseCase.scrapeAndSaveAnnouncements()
     }
