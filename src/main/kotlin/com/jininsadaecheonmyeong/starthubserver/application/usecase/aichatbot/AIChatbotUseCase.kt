@@ -484,7 +484,11 @@ class AIChatbotUseCase(
                 if (dbAnnouncement != null && !isExpired) {
                     appendLine("- [StartHub 내부 공고] ID: ${dbAnnouncement.id}, URL: ${dbAnnouncement.url}")
                     appendLine("- 접수기간: ${dbAnnouncement.receptionPeriod}")
-                    appendLine("- 반드시 [[ANNOUNCEMENT:${dbAnnouncement.id}:${announcement.title}:${dbAnnouncement.url}]] 형식으로 참조하십시오. 외부 링크를 직접 노출하지 마십시오.")
+                    val ref =
+                        "[[ANNOUNCEMENT:${dbAnnouncement.id}" +
+                            ":${announcement.title}:${dbAnnouncement.url}]]"
+                    appendLine("- 반드시 $ref 형식으로 참조하십시오.")
+                    appendLine("- 외부 링크를 직접 노출하지 마십시오.")
                 } else if (dbAnnouncement == null) {
                     appendLine("- [외부 공고] 링크: ${announcement.url}")
                     appendLine("- StartHub에 등록되지 않은 외부 공고입니다. 일반 마크다운 링크로 안내하십시오.")
