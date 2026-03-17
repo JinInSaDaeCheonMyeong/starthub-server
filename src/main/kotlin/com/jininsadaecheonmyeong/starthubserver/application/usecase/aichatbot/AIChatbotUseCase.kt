@@ -394,7 +394,7 @@ class AIChatbotUseCase(
                     val document = textDocuments.find { it.id.toString() == docId }
                     val fileName = document?.fileName ?: "문서 $docId"
 
-                    appendLine("### 📄 $fileName")
+                    appendLine("### [문서]$fileName")
                     chunks.sortedBy { it.chunkIndex }.forEach { chunk ->
                         appendLine("(관련도: ${String.format("%.2f", chunk.score)})")
                         appendLine(chunk.content)
@@ -413,7 +413,7 @@ class AIChatbotUseCase(
                 .filter { it.extractedText != null }
                 .take(3)
                 .joinToString("\n\n") { doc ->
-                    "📄 **${doc.fileName}**:\n${doc.extractedText!!.take(2000)}"
+                    "[문서]**${doc.fileName}**:\n${doc.extractedText!!.take(2000)}"
                 }
 
         if (localContext.isBlank()) return null
@@ -476,23 +476,28 @@ class AIChatbotUseCase(
                 val isExpired = dbAnnouncement?.let { isAnnouncementExpired(it.receptionPeriod, today) } ?: false
 
                 if (isExpired) {
-                    appendLine("### ${announcement.title} ⚠️ (접수 마감)")
+                    appendLine("### ${announcement.title} (접수 마감)")
                 } else {
                     appendLine("### ${announcement.title}")
                 }
                 appendLine("- 기관: ${announcement.organization ?: "정보 없음"}")
                 if (dbAnnouncement != null && !isExpired) {
-                    appendLine("- StartHub 공고 ID: ${dbAnnouncement.id}")
+                    appendLine("- [StartHub 내부 공고] ID: ${dbAnnouncement.id}, URL: ${dbAnnouncement.url}")
                     appendLine("- 접수기간: ${dbAnnouncement.receptionPeriod}")
+                    appendLine("- 반드시 [[ANNOUNCEMENT:${dbAnnouncement.id}:${announcement.title}:${dbAnnouncement.url}]] 형식으로 참조하십시오. 외부 링크를 직접 노출하지 마십시오.")
+                } else if (dbAnnouncement == null) {
+                    appendLine("- [외부 공고] 링크: ${announcement.url}")
+                    appendLine("- StartHub에 등록되지 않은 외부 공고입니다. 일반 마크다운 링크로 안내하십시오.")
                 }
-                appendLine("- 링크: ${announcement.url}")
                 if (isExpired) {
-                    appendLine("- ⚠️ 이 공고는 접수 기간이 마감되었습니다. 추천하지 마세요.")
+                    appendLine("- 접수 마감된 공고입니다. 추천하지 마십시오.")
                 }
                 appendLine()
             }
             appendLine()
-            appendLine("중요: [[ ]] 참조 형식은 'StartHub 공고 ID'가 있는 공고에만 사용하세요.")
+            appendLine("중요 규칙:")
+            appendLine("- StartHub 내부 공고는 반드시 [[ANNOUNCEMENT:ID:제목:URL]] 형식만 사용하십시오. 외부 링크(https://...)를 직접 텍스트로 노출하지 마십시오.")
+            appendLine("- 외부 공고만 일반 마크다운 링크 [제목](URL) 형식을 사용하십시오.")
         }
     }
 

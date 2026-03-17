@@ -143,14 +143,14 @@ class UserContextService(
                 context.likedAnnouncements.forEach { announcement ->
                     val expired = isAnnouncementExpired(announcement.receptionPeriod, today)
                     if (expired) {
-                        appendLine("- ${announcement.title} ⚠️ (접수 마감)")
+                        appendLine("- ${announcement.title} [마감] (접수 마감)")
                     } else {
                         appendLine("- ${announcement.title}")
                     }
                     appendLine("  기관: ${announcement.organization}, 접수기간: ${announcement.receptionPeriod}")
                     appendLine("  [StartHub 공고 ID: ${announcement.id}, URL: ${announcement.url}]")
                     if (expired) {
-                        appendLine("  ⚠️ 접수 마감된 공고입니다. [[ ]] 형식으로 추천하지 마세요.")
+                        appendLine("  [마감] 접수 마감된 공고입니다. [[ ]] 형식으로 추천하지 마세요.")
                     }
                 }
             }
