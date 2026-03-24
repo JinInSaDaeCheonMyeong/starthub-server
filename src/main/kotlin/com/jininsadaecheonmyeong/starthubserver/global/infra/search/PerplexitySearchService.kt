@@ -199,16 +199,33 @@ class PerplexitySearchService(
         skipLogoExtraction: Boolean = false,
     ): List<CompetitorSearchResult> {
         val content = response.choices.firstOrNull()?.message?.content ?: return emptyList()
+        logger.info("Perplexity 응답 내용 (앞 500자): {}", content.take(500))
 
         val competitors = mutableListOf<CompetitorSearchResult>()
-        val companyBlocks = content.split(Regex("\\[회사 \\d+]")).filter { it.isNotBlank() }
+        var companyBlocks = content.split(Regex("\\[회사 \\d+]")).filter { it.isNotBlank() }
+
+        if (companyBlocks.size <= 1) {
+            logger.warn("기본 파싱 실패, 대체 파싱 시도")
+            companyBlocks = parseAlternativeFormat(content)
+        }
+
+        logger.info("파싱된 회사 블록 수: {}", companyBlocks.size)
 
         for (block in companyBlocks.take(maxResults)) {
             try {
-                val name = extractField(block, "회사명").replace("**", "").trim()
-                val website = extractField(block, "웹사이트").replace("**", "").trim()
-                val description = extractField(block, "설명").replace("**", "").trim()
+                var name = extractField(block, "회사명").replace("**", "").trim()
+                var website = extractField(block, "웹사이트").replace("**", "").trim()
+                var description = extractField(block, "설명").replace("**", "").trim()
                 val logo = extractField(block, "로고").replace("**", "").trim()
+
+                if (name.isBlank() || website.isBlank()) {
+                    val extracted = extractFromAlternativeBlock(block)
+                    if (extracted != null) {
+                        name = extracted.first
+                        website = extracted.second
+                        if (description.isBlank()) description = extracted.third
+                    }
+                }
 
                 val cleanWebsite =
                     website
@@ -257,6 +274,67 @@ class PerplexitySearchService(
             }
 
         return enhancedCompetitors
+    }
+
+    private fun extractFromAlternativeBlock(block: String): Triple<String, String, String>? {
+        val urlPattern = Regex("(https?://[^\\s\\)\\]\"]+)")
+        val urlMatch = urlPattern.find(block)
+        val url = urlMatch?.value?.trimEnd('.', ',', ')', ']') ?: return null
+
+        if (url.contains("youtube.com") || url.contains("youtu.be")) return null
+
+        var name = ""
+        val boldPattern = Regex("\\*\\*([^*]+)\\*\\*")
+        val boldMatch = boldPattern.find(block)
+        if (boldMatch != null) {
+            name = boldMatch.groupValues[1].trim()
+        }
+
+        if (name.isBlank()) {
+            val domain = url.substringAfter("://").substringBefore("/").replace("www.", "")
+            name = domain.substringBefore(".").replaceFirstChar { it.uppercase() }
+        }
+
+        val description =
+            block
+                .replace(urlPattern, "")
+                .replace(boldPattern, "")
+                .replace(Regex("[\\[\\]()\\-•*#]"), " ")
+                .replace(Regex("\\s+"), " ")
+                .trim()
+                .take(300)
+
+        return Triple(name, url, description)
+    }
+
+    private fun parseAlternativeFormat(content: String): List<String> {
+        val blocks = mutableListOf<String>()
+
+        val numberedPattern = Regex("(?:^|\\n)\\s*(?:\\d+[.)]|[•\\-])\\s*\\*{0,2}([^\\n*]+?)\\*{0,2}\\s*(?::|\\(|\\[)")
+        val matches = numberedPattern.findAll(content)
+
+        for (match in matches) {
+            val startIndex = match.range.first
+            val nextMatch = matches.drop(blocks.size + 1).firstOrNull()
+            val endIndex = nextMatch?.range?.first ?: content.length
+            val block = content.substring(startIndex, endIndex)
+            blocks.add(block)
+        }
+
+        if (blocks.isEmpty()) {
+            val urlPattern = Regex("(https?://[^\\s\\)\\]]+)")
+            val urls = urlPattern.findAll(content).map { it.value }.toList()
+
+            urls.forEach { url ->
+                if (!url.contains("youtube.com") && !url.contains("youtu.be")) {
+                    val domain = url.substringAfter("://").substringBefore("/").replace("www.", "")
+                    val companyName = domain.substringBefore(".")
+                    blocks.add("회사명: $companyName\n웹사이트: $url\n설명: 관련 서비스 제공 기업")
+                }
+            }
+        }
+
+        return blocks
     }
 
     private fun extractField(
