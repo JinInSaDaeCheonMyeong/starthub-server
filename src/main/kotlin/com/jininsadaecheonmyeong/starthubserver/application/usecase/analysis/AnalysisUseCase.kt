@@ -176,7 +176,10 @@ class AnalysisUseCase(
                 val analysisPrompt = buildAnalysisPrompt(userBmc, competitors)
                 logger.debug("GPT 프롬프트 길이: {}자", analysisPrompt.length)
 
-                val gptResponse = chatModel.call(analysisPrompt)
+                val gptResponse =
+                    withContext(Dispatchers.IO) {
+                        chatModel.call(analysisPrompt)
+                    }
                 logger.info("GPT 응답 수신 - 길이: {}자", gptResponse.length)
                 logger.debug("GPT 응답 앞부분: {}", gptResponse.take(500))
 
@@ -294,19 +297,29 @@ class AnalysisUseCase(
         val title = userBmc.title
         val valueProposition = userBmc.valueProposition ?: ""
 
+        val stopWords =
+            setOf(
+                "및", "와", "과", "의", "를", "을", "이", "가", "은", "는", "에", "로", "으로", "에서", "부터", "까지",
+                "위한", "통한", "통해", "대한", "따른", "기반", "중심", "활용", "제공", "서비스", "플랫폼", "시스템",
+                "있는", "없는", "하는", "되는", "된", "한", "할", "함", "됨", "입력된", "생성된", "만들어진",
+            )
+
         val titleKeywords =
             title
                 .replace(Regex("[^가-힣a-zA-Z0-9\\s]"), " ")
                 .split(Regex("\\s+"))
                 .filter { it.length >= 2 }
+                .filter { !stopWords.contains(it) }
+                .filter { !it.endsWith("가") && !it.endsWith("를") && !it.endsWith("을") }
                 .take(3)
 
         val vpKeywords =
             valueProposition
                 .replace(Regex("[^가-힣a-zA-Z0-9\\s]"), " ")
                 .split(Regex("\\s+"))
-                .filter { it.length in 2..20 }
-                .filter { !it.matches(Regex("^(및|와|과|의|를|을|이|가|은|는|에|로|으로|에서|부터|까지)$")) }
+                .filter { it.length in 2..15 }
+                .filter { !stopWords.contains(it) }
+                .filter { !it.endsWith("가") && !it.endsWith("를") && !it.endsWith("을") && !it.endsWith("된") }
                 .take(3)
 
         val keywords =
@@ -315,7 +328,7 @@ class AnalysisUseCase(
                 .take(MAX_KEYWORDS)
 
         logger.info("생성된 검색 키워드: {}", keywords)
-        return keywords.ifEmpty { listOf(title) }
+        return keywords.ifEmpty { listOf(title.split(" ").first()) }
     }
 
     private fun parseGptResponse(
