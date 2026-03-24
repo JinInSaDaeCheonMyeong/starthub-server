@@ -17,6 +17,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.repository.user.UserStart
 import com.jininsadaecheonmyeong.starthubserver.global.infra.storage.GcsStorageService
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
 import com.jininsadaecheonmyeong.starthubserver.infrastructure.conversion.DocumentConversionService
+import com.jininsadaecheonmyeong.starthubserver.logger
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.announcement.BmcInfo
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.announcement.LikedAnnouncementUrl
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.announcement.LikedAnnouncementsContent
@@ -61,6 +62,8 @@ class AnnouncementUseCase(
     @param:Value("\${recommendation.fastapi-url}") private val fastapiUrl: String,
     @param:Value("\${SEARCH_SERVER_URL}") private val searchServerUrl: String,
 ) {
+    private val log = logger()
+
     companion object {
         private const val K_STARTUP_URL = "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do"
         private const val BIZINFO_BASE_URL = "https://www.bizinfo.go.kr"
@@ -183,27 +186,34 @@ class AnnouncementUseCase(
     }
 
     private fun scrapeBizInfo() {
+        log.info("========== Starting BizInfo scraping ==========")
         var page = 1
         var consecutiveEmptyPages = 0
         val maxEmptyPages = 2
+        var totalNewCount = 0
 
         while (consecutiveEmptyPages < maxEmptyPages) {
             try {
                 val newCount = scrapeBizInfoPage(page)
+                totalNewCount += newCount
+                log.info("BizInfo page $page: $newCount new announcements (consecutive empty: $consecutiveEmptyPages)")
                 if (newCount == 0) {
                     consecutiveEmptyPages++
                 } else {
                     consecutiveEmptyPages = 0
                 }
                 page++
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                log.error("BizInfo scraping error on page $page", e)
                 break
             }
         }
+        log.info("========== BizInfo scraping finished: $totalNewCount total new announcements ==========")
     }
 
     private fun scrapeBizInfoPage(page: Int): Int {
         val listUrl = "$BIZINFO_LIST_URL?rows=15&cpage=$page"
+        log.info("Fetching BizInfo list: $listUrl")
         val doc =
             Jsoup
                 .connect(listUrl)
@@ -211,7 +221,10 @@ class AnnouncementUseCase(
                 .get()
 
         val announceLinks = doc.select("a[href*=pblancId]")
+        log.info("Found ${announceLinks.size} links on page $page")
         var newCount = 0
+        var skippedCount = 0
+        var errorCount = 0
 
         for (link in announceLinks) {
             val href = link.attr("href")
@@ -219,6 +232,7 @@ class AnnouncementUseCase(
             val detailUrl = "$BIZINFO_VIEW_URL?pblancId=$pblancId"
 
             if (repository.existsByUrl(detailUrl)) {
+                skippedCount++
                 continue
             }
 
@@ -227,12 +241,19 @@ class AnnouncementUseCase(
                 if (announcement != null) {
                     repository.save(announcement)
                     newCount++
+                    log.info("Saved: ${announcement.title}")
+                } else {
+                    log.warn("Failed to parse: $detailUrl")
+                    errorCount++
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                log.error("Error scraping $detailUrl: ${e.message}")
+                errorCount++
                 continue
             }
         }
 
+        log.info("Page $page result - new: $newCount, skipped: $skippedCount, error: $errorCount")
         return newCount
     }
 
