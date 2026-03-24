@@ -27,6 +27,7 @@ class ClaudeAIService(
             .baseUrl("https://api.anthropic.com")
             .defaultHeader("x-api-key", config.apiKey)
             .defaultHeader("anthropic-version", "2023-06-01")
+            .defaultHeader("anthropic-beta", "web-search-2025-03-05")
             .defaultHeader("Content-Type", "application/json")
             .codecs { it.defaultCodecs().maxInMemorySize(10 * 1024 * 1024) }
             .build()
