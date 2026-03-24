@@ -147,12 +147,17 @@ class AnalysisUseCase(
     ): CompetitorAnalysisResponse {
         val searchKeywords = generateSearchKeywords(userBmc)
 
+        logger.info("경쟁사 분석 시작 - BMC ID: {}, 제목: {}", userBmc.id, userBmc.title)
+        logger.info("검색 키워드: {}", searchKeywords)
+
         val competitors =
             try {
                 val searchRequest = createSearchRequest(userBmc, searchKeywords)
                 val searchResults = perplexitySearchService.searchCompetitors(searchRequest)
+                logger.info("Perplexity 검색 성공 - 경쟁사 {}개 발견", searchResults.size)
 
                 searchResults.map { result ->
+                    logger.info("경쟁사 발견: {} - {}", result.title, result.url)
                     CompetitorInfo(
                         name = result.title,
                         description = result.snippet,
@@ -161,17 +166,29 @@ class AnalysisUseCase(
                     )
                 }
             } catch (e: Exception) {
-                logger.error("경쟁사 검색 실패: {}", e.message)
+                logger.error("경쟁사 검색 실패: {} - {}", e.javaClass.simpleName, e.message, e)
                 emptyList()
             }
 
         val analysisResponse =
             try {
+                logger.info("GPT 분석 시작 - 경쟁사 {}개", competitors.size)
                 val analysisPrompt = buildAnalysisPrompt(userBmc, competitors)
+                logger.debug("GPT 프롬프트 길이: {}자", analysisPrompt.length)
+
                 val gptResponse = chatModel.call(analysisPrompt)
-                parseGptResponse(gptResponse, userBmc, competitors)
+                logger.info("GPT 응답 수신 - 길이: {}자", gptResponse.length)
+                logger.debug("GPT 응답 앞부분: {}", gptResponse.take(500))
+
+                val parsed = parseGptResponse(gptResponse, userBmc, competitors)
+                logger.info("GPT 응답 파싱 완료 - 경쟁사 비교 {}개", parsed.userScale.competitorComparison.size)
+                parsed.userScale.competitorComparison.forEach { comp ->
+                    logger.info("파싱된 경쟁사: {} - 유사점: {}개, 차이점: {}개", comp.name, comp.similarities.size, comp.differences.size)
+                }
+                parsed
             } catch (e: Exception) {
-                logger.error("경쟁사 분석 실패: {}", e.message)
+                logger.error("경쟁사 분석 실패: {} - {}", e.javaClass.simpleName, e.message, e)
+                logger.warn("Fallback 응답 사용")
                 createFallbackResponse(userBmc, competitors)
             }
         saveAnalysis(user, userBmc, analysisResponse)
@@ -274,24 +291,28 @@ class AnalysisUseCase(
     }
 
     private fun generateSearchKeywords(userBmc: BusinessModelCanvas): List<String> {
-        val allText = listOfNotNull(userBmc.title, userBmc.valueProposition, userBmc.customerSegments).joinToString(" ")
+        val title = userBmc.title
+        val valueProposition = userBmc.valueProposition ?: ""
 
-        val keywords =
-            allText
-                .replace("\n", " ")
-                .replace("-", " ")
-                .split(Regex("[,.;]"))
-                .map { it.trim() }
-                .filter { keyword ->
-                    keyword.isNotBlank() &&
-                        keyword.length >= MIN_KEYWORD_LENGTH &&
-                        !keyword.startsWith("(") &&
-                        !keyword.startsWith("[")
-                }
-                .distinct()
-                .take(MAX_KEYWORDS)
+        val titleKeywords = title
+            .replace(Regex("[^가-힣a-zA-Z0-9\\s]"), " ")
+            .split(Regex("\\s+"))
+            .filter { it.length >= 2 }
+            .take(3)
 
-        return keywords.ifEmpty { listOf(userBmc.title) }
+        val vpKeywords = valueProposition
+            .replace(Regex("[^가-힣a-zA-Z0-9\\s]"), " ")
+            .split(Regex("\\s+"))
+            .filter { it.length in 2..20 }
+            .filter { !it.matches(Regex("^(및|와|과|의|를|을|이|가|은|는|에|로|으로|에서|부터|까지)$")) }
+            .take(3)
+
+        val keywords = (titleKeywords + vpKeywords)
+            .distinct()
+            .take(MAX_KEYWORDS)
+
+        logger.info("생성된 검색 키워드: {}", keywords)
+        return keywords.ifEmpty { listOf(title) }
     }
 
     private fun parseGptResponse(
@@ -798,15 +819,36 @@ class AnalysisUseCase(
     }
 
     private fun createFallbackCompetitorScales(competitors: List<CompetitorInfo>): List<CompetitorScale> {
-        return competitors.take(MAX_COMPETITORS).map { competitor ->
+        return competitors.take(MAX_COMPETITORS).mapIndexed { index, competitor ->
+            val (similarities, differences) = generateFallbackComparison(index)
             CompetitorScale(
                 name = competitor.name,
                 logoUrl = competitor.logoUrl,
                 websiteUrl = competitor.websiteUrl,
                 estimatedScale = FALLBACK_SCALE,
                 marketShare = FALLBACK_MARKET_SHARE,
+                similarities = similarities,
+                differences = differences,
             )
         }
+    }
+
+    private fun generateFallbackComparison(index: Int): Pair<List<String>, List<String>> {
+        val similaritiesPool =
+            listOf(
+                listOf("동일한 타겟 고객층을 대상으로 서비스를 제공합니다", "유사한 비즈니스 모델을 운영하고 있습니다", "같은 산업 분야에서 경쟁하고 있습니다"),
+                listOf("비슷한 가치 제안을 고객에게 전달합니다", "유사한 수익 구조를 가지고 있습니다", "동일한 시장 세그먼트를 공략합니다"),
+                listOf("공통된 고객 니즈를 해결하고 있습니다", "유사한 채널 전략을 활용합니다", "비슷한 가격대의 서비스를 제공합니다"),
+                listOf("동일한 문제를 해결하는 솔루션을 제공합니다", "유사한 기술 스택을 활용합니다", "같은 지역 시장을 타겟으로 합니다"),
+            )
+        val differencesPool =
+            listOf(
+                listOf("브랜드 인지도와 시장 점유율에서 차이가 있습니다", "보유 자원과 인프라 규모가 다릅니다", "서비스 제공 방식에서 차별점이 있습니다"),
+                listOf("핵심 기술력과 특허 보유 현황이 다릅니다", "고객 서비스 품질에서 차이를 보입니다", "가격 정책과 수익 모델이 상이합니다"),
+                listOf("시장 진출 시기와 경험에서 차이가 있습니다", "파트너십 네트워크 규모가 다릅니다", "마케팅 전략과 브랜딩 접근이 다릅니다"),
+                listOf("제품/서비스 라인업의 범위가 다릅니다", "타겟 고객의 세부 특성이 상이합니다", "성장 전략과 확장 계획이 다릅니다"),
+            )
+        return similaritiesPool[index % similaritiesPool.size] to differencesPool[index % differencesPool.size]
     }
 
     private fun createFallbackStrengths(): StrengthsAnalysis {

@@ -71,8 +71,16 @@ class ClaudeAIService(
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.TEXT_EVENT_STREAM)
             .bodyValue(request)
-            .retrieve()
-            .bodyToFlux<String>()
+            .exchangeToFlux { response ->
+                if (response.statusCode().isError) {
+                    response.bodyToMono<String>().flatMapMany { errorBody ->
+                        log.error("Anthropic API 에러 - 상태: ${response.statusCode()}, 응답: $errorBody")
+                        reactor.core.publisher.Flux.error(RuntimeException("Anthropic API error: $errorBody"))
+                    }
+                } else {
+                    response.bodyToFlux<String>()
+                }
+            }
             .doOnError { log.error("SSE 에러: ${it.message}", it) }
             .flatMapIterable { chunk ->
                 chunk.split("\n").filter { it.isNotBlank() }
