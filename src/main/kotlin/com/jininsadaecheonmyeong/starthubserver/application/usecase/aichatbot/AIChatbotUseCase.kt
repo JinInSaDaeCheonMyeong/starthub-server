@@ -24,6 +24,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.repository.aichatbot.AICh
 import com.jininsadaecheonmyeong.starthubserver.domain.repository.announcement.AnnouncementRepository
 import com.jininsadaecheonmyeong.starthubserver.global.infra.ai.ClaudePromptTemplates
 import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.UserAuthenticationHolder
+import com.jininsadaecheonmyeong.starthubserver.logger
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.aichatbot.ChatSessionResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -51,6 +52,8 @@ class AIChatbotUseCase(
     private val referenceParser: ReferenceParser,
     private val announcementRepository: AnnouncementRepository,
 ) {
+    private val log = logger()
+
     @Transactional
     fun createSession(title: String?): AIChatSession {
         val user = userAuthenticationHolder.current()
@@ -445,14 +448,15 @@ class AIChatbotUseCase(
                 chatbotRAGClient.queryContext(
                     QueryContextRequest(
                         query = query,
-                        userId = null,
+                        userId = userId,
                         topK = 5,
                         includeAnnouncements = true,
                     ),
                 ) ?: return null
 
             buildAnnouncementContextString(response.announcements)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            log.error("RAG 컨텍스트 조회 실패: userId=$userId, query=$query, error=${e.message}", e)
             null
         }
     }
