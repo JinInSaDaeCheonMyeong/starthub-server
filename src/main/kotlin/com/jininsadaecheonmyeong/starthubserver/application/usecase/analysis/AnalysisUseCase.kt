@@ -294,22 +294,25 @@ class AnalysisUseCase(
         val title = userBmc.title
         val valueProposition = userBmc.valueProposition ?: ""
 
-        val titleKeywords = title
-            .replace(Regex("[^가-힣a-zA-Z0-9\\s]"), " ")
-            .split(Regex("\\s+"))
-            .filter { it.length >= 2 }
-            .take(3)
+        val titleKeywords =
+            title
+                .replace(Regex("[^가-힣a-zA-Z0-9\\s]"), " ")
+                .split(Regex("\\s+"))
+                .filter { it.length >= 2 }
+                .take(3)
 
-        val vpKeywords = valueProposition
-            .replace(Regex("[^가-힣a-zA-Z0-9\\s]"), " ")
-            .split(Regex("\\s+"))
-            .filter { it.length in 2..20 }
-            .filter { !it.matches(Regex("^(및|와|과|의|를|을|이|가|은|는|에|로|으로|에서|부터|까지)$")) }
-            .take(3)
+        val vpKeywords =
+            valueProposition
+                .replace(Regex("[^가-힣a-zA-Z0-9\\s]"), " ")
+                .split(Regex("\\s+"))
+                .filter { it.length in 2..20 }
+                .filter { !it.matches(Regex("^(및|와|과|의|를|을|이|가|은|는|에|로|으로|에서|부터|까지)$")) }
+                .take(3)
 
-        val keywords = (titleKeywords + vpKeywords)
-            .distinct()
-            .take(MAX_KEYWORDS)
+        val keywords =
+            (titleKeywords + vpKeywords)
+                .distinct()
+                .take(MAX_KEYWORDS)
 
         logger.info("생성된 검색 키워드: {}", keywords)
         return keywords.ifEmpty { listOf(title) }
