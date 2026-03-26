@@ -3,6 +3,7 @@ package com.jininsadaecheonmyeong.starthubserver.application.usecase.user
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.user.User
 import com.jininsadaecheonmyeong.starthubserver.domain.entity.user.UserStartupField
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.AuthType
+import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.UserTier
 import com.jininsadaecheonmyeong.starthubserver.domain.exception.email.EmailNotVerifiedException
 import com.jininsadaecheonmyeong.starthubserver.domain.exception.user.EmailAlreadyExistsException
 import com.jininsadaecheonmyeong.starthubserver.domain.exception.user.InvalidPasswordException
@@ -197,6 +198,17 @@ class UserUseCase(
 
         tokenRedisService.deleteRefreshToken(user.email)
         user.id?.let { userCache.evict(it) }
+    }
+
+    fun updateUserTier(
+        targetUserId: Long,
+        tier: UserTier,
+    ) {
+        val targetUser =
+            userRepository.findByIdOrNull(targetUserId)
+                ?: throw UserNotFoundException("찾을 수 없는 유저")
+        targetUser.updateTier(tier)
+        userRepository.save(targetUser)
     }
 
     @Transactional(readOnly = true)

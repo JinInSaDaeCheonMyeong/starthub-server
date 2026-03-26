@@ -1,6 +1,7 @@
 
 package com.jininsadaecheonmyeong.starthubserver.global.exception
 
+import com.jininsadaecheonmyeong.starthubserver.domain.exception.aichatbot.QuotaExceededException
 import com.jininsadaecheonmyeong.starthubserver.global.infra.discord.DiscordWebhookService
 import com.jininsadaecheonmyeong.starthubserver.logger
 import jakarta.servlet.http.HttpServletRequest
@@ -25,6 +26,19 @@ class GlobalExceptionHandler(
             IllegalArgumentException::class.java,
             NoResourceFoundException::class.java,
         )
+
+    @ExceptionHandler(QuotaExceededException::class)
+    fun handleQuotaExceededException(ex: QuotaExceededException): ResponseEntity<QuotaErrorResponse> {
+        logger.warn("Quota 초과: {}", ex.message)
+
+        val response =
+            QuotaErrorResponse(
+                message = ex.message,
+                status = ex.status.value(),
+                resetAt = ex.resetAt,
+            )
+        return ResponseEntity.status(ex.status).body(response)
+    }
 
     @ExceptionHandler(CustomException::class)
     fun handleCustomException(ex: CustomException): ResponseEntity<CustomErrorResponse> {
@@ -181,4 +195,11 @@ data class ErrorResponse(
     val error: String,
     val message: String,
     val path: String,
+)
+
+data class QuotaErrorResponse(
+    val message: String,
+    val status: Int,
+    val resetAt: LocalDateTime? = null,
+    val timestamp: LocalDateTime = LocalDateTime.now(),
 )

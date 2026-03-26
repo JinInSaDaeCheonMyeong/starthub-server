@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.AuthType
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.StartupStatus
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.UserGender
 import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.UserRole
+import com.jininsadaecheonmyeong.starthubserver.domain.enums.user.UserTier
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -52,4 +53,28 @@ class User(
     var startupLocation: String? = null,
     var annualRevenue: Long? = null,
     var startupHistory: Int? = null,
-) : BaseEntity()
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    var tier: UserTier = UserTier.FREE,
+    @Column(nullable = false)
+    var banned: Boolean = false,
+    var bannedAt: LocalDateTime? = null,
+    @Column(columnDefinition = "TEXT")
+    var banReason: String? = null,
+) : BaseEntity() {
+    fun updateTier(newTier: UserTier) {
+        this.tier = newTier
+    }
+
+    fun ban(reason: String) {
+        this.banned = true
+        this.bannedAt = LocalDateTime.now()
+        this.banReason = reason
+    }
+
+    fun unban() {
+        this.banned = false
+        this.bannedAt = null
+        this.banReason = null
+    }
+}

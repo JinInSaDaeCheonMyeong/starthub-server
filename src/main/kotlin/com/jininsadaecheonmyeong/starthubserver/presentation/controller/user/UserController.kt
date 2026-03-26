@@ -7,6 +7,7 @@ import com.jininsadaecheonmyeong.starthubserver.presentation.docs.user.UserDocs
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.DeleteUserRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.UpdateUserProfileRequest
+import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.UpdateUserTierRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.user.UserResponse
 import jakarta.servlet.http.HttpServletRequest
@@ -78,6 +79,14 @@ class UserController(
     override fun getUserProfile(
         @PathVariable userId: Long,
     ) = BaseResponse.of(userUseCase.getUserProfile(userId), "유저 프로필 조회 성공")
+
+    @PatchMapping("/tier")
+    override fun updateUserTier(
+        @Valid @RequestBody request: UpdateUserTierRequest,
+    ): ResponseEntity<BaseResponse<Unit>> {
+        userUseCase.updateUserTier(request.userId, request.tier)
+        return BaseResponse.of("유저 등급이 변경되었습니다.")
+    }
 
     @DeleteMapping
     override fun deleteAccount(
