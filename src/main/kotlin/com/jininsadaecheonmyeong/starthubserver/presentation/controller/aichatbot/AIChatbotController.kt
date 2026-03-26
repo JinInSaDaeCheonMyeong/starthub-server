@@ -2,6 +2,8 @@ package com.jininsadaecheonmyeong.starthubserver.presentation.controller.aichatb
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.FileProcessingService
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.QuotaService
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.QuotaStatusResponse
 import com.jininsadaecheonmyeong.starthubserver.application.usecase.aichatbot.AIChatbotUseCase
 import com.jininsadaecheonmyeong.starthubserver.application.usecase.aichatbot.ProcessedFile
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
@@ -38,6 +40,7 @@ class AIChatbotController(
     private val gcsStorageService: GcsStorageService,
     private val objectMapper: ObjectMapper,
     private val userAuthenticationHolder: UserAuthenticationHolder,
+    private val quotaService: QuotaService,
 ) : AIChatbotDocs {
     @PostMapping("/sessions")
     override fun createSession(
@@ -130,5 +133,12 @@ class AIChatbotController(
                     )
                 }
         }
+    }
+
+    @GetMapping("/quota")
+    override fun getQuotaStatus(): ResponseEntity<BaseResponse<QuotaStatusResponse>> {
+        val user = userAuthenticationHolder.current()
+        val quotaStatus = quotaService.getQuotaStatus(user)
+        return BaseResponse.of(quotaStatus, "Quota 사용량을 조회했습니다.")
     }
 }

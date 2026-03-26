@@ -7,6 +7,7 @@ import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.Do
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.EmbedDocumentRequest
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.QueryContextRequest
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.QueryDocumentRequest
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.QuotaService
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.ReferenceParser
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.StreamChunk
 import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.StreamEventType
@@ -51,6 +52,7 @@ class AIChatbotUseCase(
     private val userAuthenticationHolder: UserAuthenticationHolder,
     private val referenceParser: ReferenceParser,
     private val announcementRepository: AnnouncementRepository,
+    private val quotaService: QuotaService,
 ) {
     private val log = logger()
 
@@ -126,6 +128,8 @@ class AIChatbotUseCase(
         user: User,
         files: List<ProcessedFile>? = null,
     ): Flow<StreamChunk> {
+        quotaService.checkQuota(user)
+
         val session = findSessionOrThrow(sessionId)
         verifyOwnership(session, user)
 
@@ -174,6 +178,8 @@ class AIChatbotUseCase(
         val enableWebSearch = shouldPerformWebSearch(message)
 
         val responseBuilder = StringBuilder()
+        var totalInputTokens = 0
+        var totalOutputTokens = 0
 
         return claudeAIService.streamChat(
             systemPrompt = systemPrompt,
@@ -184,6 +190,8 @@ class AIChatbotUseCase(
             enableWebSearch = enableWebSearch,
         ).map { chunk ->
             chunk.text?.let { responseBuilder.append(it) }
+            chunk.inputTokens?.let { totalInputTokens += it }
+            chunk.outputTokens?.let { totalOutputTokens += it }
             chunk
         }.onCompletion { error ->
             if (error == null) {
@@ -200,6 +208,14 @@ class AIChatbotUseCase(
                             ),
                         )
                     }
+                }
+            }
+
+            if (totalInputTokens > 0 || totalOutputTokens > 0) {
+                try {
+                    quotaService.recordUsage(user, totalInputTokens, totalOutputTokens)
+                } catch (e: Exception) {
+                    log.error("Quota 사용량 기록 실패: userId={}, error={}", user.id, e.message)
                 }
             }
         }

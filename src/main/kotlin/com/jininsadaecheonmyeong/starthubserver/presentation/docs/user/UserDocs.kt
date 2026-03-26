@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.DeleteUserRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.RefreshRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.UpdateUserProfileRequest
+import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.UpdateUserTierRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.user.UserRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.user.TokenResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.user.UserProfileResponse
@@ -62,6 +63,11 @@ interface UserDocs {
     fun getUserProfile(
         @Parameter(description = "유저 ID") @PathVariable userId: Long,
     ): ResponseEntity<BaseResponse<UserProfileResponse>>
+
+    @Operation(summary = "유저 등급 변경", description = "대상 유저의 등급을 변경합니다. (FREE, PRO, ADMIN)")
+    fun updateUserTier(
+        @RequestBody request: UpdateUserTierRequest,
+    ): ResponseEntity<BaseResponse<Unit>>
 
     @Operation(
         summary = "회원 탈퇴",

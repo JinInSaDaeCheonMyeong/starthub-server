@@ -1,5 +1,6 @@
 package com.jininsadaecheonmyeong.starthubserver.presentation.docs.aichatbot
 
+import com.jininsadaecheonmyeong.starthubserver.application.service.aichatbot.QuotaStatusResponse
 import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.CreateSessionRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.aichatbot.UpdateSessionTitleRequest
@@ -103,4 +104,15 @@ interface AIChatbotDocs {
         @Parameter(description = "전송할 메시지") message: String,
         @Parameter(description = "첨부 파일 목록 (선택)") files: List<MultipartFile>?,
     ): Flux<ServerSentEvent<String>>
+
+    @Operation(summary = "Quota 사용량 조회", description = "현재 사용자의 챗봇 Quota 사용량과 잔여량을 조회합니다.")
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Quota 조회 성공",
+            ),
+        ],
+    )
+    fun getQuotaStatus(): ResponseEntity<BaseResponse<QuotaStatusResponse>>
 }

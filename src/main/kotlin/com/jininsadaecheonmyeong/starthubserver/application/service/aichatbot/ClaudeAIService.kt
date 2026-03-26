@@ -269,12 +269,23 @@ class ClaudeAIService(
                     }
                 }
                 "message_start" -> {
-                    StreamChunk(type = StreamEventType.MESSAGE_START)
+                    val usage = node.get("message")?.get("usage")
+                    val inputTokens = usage?.get("input_tokens")?.asInt()
+                    StreamChunk(
+                        type = StreamEventType.MESSAGE_START,
+                        inputTokens = inputTokens,
+                    )
                 }
                 "message_delta" -> {
                     val delta = node.get("delta")
                     val stopReason = delta?.get("stop_reason")?.asText()
-                    StreamChunk(type = StreamEventType.MESSAGE_DELTA, stopReason = stopReason)
+                    val usage = node.get("usage")
+                    val outputTokens = usage?.get("output_tokens")?.asInt()
+                    StreamChunk(
+                        type = StreamEventType.MESSAGE_DELTA,
+                        stopReason = stopReason,
+                        outputTokens = outputTokens,
+                    )
                 }
                 "message_stop" -> {
                     StreamChunk(type = StreamEventType.MESSAGE_STOP)
@@ -344,6 +355,8 @@ data class StreamChunk(
     val text: String? = null,
     val stopReason: String? = null,
     val references: List<Reference>? = null,
+    val inputTokens: Int? = null,
+    val outputTokens: Int? = null,
 )
 
 enum class StreamEventType {
