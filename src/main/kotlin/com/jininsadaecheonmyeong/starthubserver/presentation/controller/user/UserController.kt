@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -80,6 +81,7 @@ class UserController(
         @PathVariable userId: Long,
     ) = BaseResponse.of(userUseCase.getUserProfile(userId), "유저 프로필 조회 성공")
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/tier")
     override fun updateUserTier(
         @Valid @RequestBody request: UpdateUserTierRequest,
