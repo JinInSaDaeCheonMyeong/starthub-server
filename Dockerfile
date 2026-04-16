@@ -1,7 +1,6 @@
 FROM eclipse-temurin:21-jdk
 
-RUN apt-get update && apt-get install -y \
-    libreoffice \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-writer \
     fonts-nanum \
     fonts-nanum-extra \
