@@ -20,6 +20,7 @@ class ServerLifecycleDiscordNotifier(
 ) {
     private val log = logger()
     private val startedAt: Instant = Instant.now()
+
     @Volatile
     private var serverPort: Int? = null
 
