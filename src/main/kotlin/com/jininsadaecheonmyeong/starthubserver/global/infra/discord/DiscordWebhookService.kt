@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
+import java.time.Duration
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -13,6 +14,7 @@ import java.time.format.DateTimeFormatter
 @Service
 class DiscordWebhookService(
     @param:Value("\${discord.webhook.url}") private val webhookUrl: String,
+    @param:Value("\${discord.webhook.status-url:\${discord.webhook.url}}") private val statusWebhookUrl: String,
     private val webClient: WebClient,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -25,18 +27,22 @@ class DiscordWebhookService(
     ) {
         try {
             val embed = createErrorEmbed(error, requestUri, userId, additionalInfo)
-
-            webClient.post()
-                .uri(webhookUrl)
-                .bodyValue(mapOf("embeds" to listOf(embed)))
-                .retrieve()
-                .bodyToMono<String>()
-                .doOnSuccess { logger.info("Discord 알림 전송 성공") }
-                .doOnError { logger.error("Discord 알림 전송 실패", it) }
-                .onErrorResume { Mono.empty() }
-                .subscribe()
+            sendWebhookAsync(webhookUrl, embed)
         } catch (e: Exception) {
             logger.error("Discord 웹훅 전송 중 오류 발생", e)
+        }
+    }
+
+    fun sendServerStatusNotification(
+        title: String,
+        color: Int,
+        fields: Map<String, String>,
+    ) {
+        try {
+            val embed = createStatusEmbed(title, color, fields)
+            sendWebhookSync(statusWebhookUrl, embed)
+        } catch (e: Exception) {
+            logger.error("서버 상태 Discord 웹훅 전송 중 오류 발생", e)
         }
     }
 
@@ -121,5 +127,61 @@ class DiscordWebhookService(
             "footer" to mapOf("text" to "발생 시간: $koreaTimeString (KST)"),
             "timestamp" to isoTimestamp,
         )
+    }
+
+    private fun createStatusEmbed(
+        title: String,
+        color: Int,
+        fields: Map<String, String>,
+    ): Map<String, Any> {
+        val koreaTime = ZonedDateTime.now(ZoneId.of("Asia/Seoul"))
+        val koreaTimeString = koreaTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        val isoTimestamp = koreaTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
+        return mapOf(
+            "title" to title,
+            "color" to color,
+            "fields" to
+                fields.map { (name, value) ->
+                    mapOf(
+                        "name" to name,
+                        "value" to value.ifBlank { "-" },
+                        "inline" to true,
+                    )
+                },
+            "footer" to mapOf("text" to "발생 시간: $koreaTimeString (KST)"),
+            "timestamp" to isoTimestamp,
+        )
+    }
+
+    private fun sendWebhookAsync(
+        url: String,
+        embed: Map<String, Any>,
+    ) {
+        webClient.post()
+            .uri(url)
+            .bodyValue(mapOf("embeds" to listOf(embed)))
+            .retrieve()
+            .bodyToMono<String>()
+            .doOnSuccess { logger.info("Discord 알림 전송 성공") }
+            .doOnError { logger.error("Discord 알림 전송 실패", it) }
+            .onErrorResume { Mono.empty() }
+            .subscribe()
+    }
+
+    private fun sendWebhookSync(
+        url: String,
+        embed: Map<String, Any>,
+    ) {
+        webClient.post()
+            .uri(url)
+            .bodyValue(mapOf("embeds" to listOf(embed)))
+            .retrieve()
+            .bodyToMono<String>()
+            .timeout(Duration.ofSeconds(5))
+            .doOnSuccess { logger.info("Discord 알림 전송 성공") }
+            .doOnError { logger.error("Discord 알림 전송 실패", it) }
+            .onErrorResume { Mono.empty() }
+            .block()
     }
 }

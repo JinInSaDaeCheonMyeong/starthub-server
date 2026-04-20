@@ -130,6 +130,7 @@ oauth:
 discord:
   webhook:
     url: ${DISCORD_WEBHOOK_URL}
+    status-url: ${DISCORD_STATUS_WEBHOOK_URL}
 
 recommendation:
   fastapi-url: ${RECOMMENDATION_API_URL}
