@@ -29,24 +29,27 @@ class DocumentAIService(
         systemPrompt: String,
         userMessage: String,
     ): String {
-        val request = OpenAIRequest(
-            model = model,
-            messages = listOf(
-                OpenAIMessage(role = "system", content = systemPrompt),
-                OpenAIMessage(role = "user", content = userMessage),
-            ),
-            maxTokens = 4096,
-            temperature = 0.7,
-        )
+        val request =
+            OpenAIRequest(
+                model = model,
+                messages =
+                    listOf(
+                        OpenAIMessage(role = "system", content = systemPrompt),
+                        OpenAIMessage(role = "user", content = userMessage),
+                    ),
+                maxTokens = 4096,
+                temperature = 0.7,
+            )
 
         return try {
-            val response = webClient.post()
-                .uri("/v1/chat/completions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono<OpenAIResponse>()
-                .block()
+            val response =
+                webClient.post()
+                    .uri("/v1/chat/completions")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono<OpenAIResponse>()
+                    .block()
 
             response?.choices?.firstOrNull()?.message?.content ?: ""
         } catch (e: Exception) {

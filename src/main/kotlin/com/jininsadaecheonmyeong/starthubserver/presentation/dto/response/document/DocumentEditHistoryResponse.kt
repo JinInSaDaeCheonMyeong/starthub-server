@@ -9,10 +9,11 @@ data class DocumentEditHistoryResponse(
     val createdAt: LocalDateTime,
 ) {
     companion object {
-        fun from(history: DocumentEditHistory) = DocumentEditHistoryResponse(
-            id = history.id!!,
-            description = history.description,
-            createdAt = history.createdAt,
-        )
+        fun from(history: DocumentEditHistory) =
+            DocumentEditHistoryResponse(
+                id = history.id!!,
+                description = history.description,
+                createdAt = history.createdAt,
+            )
     }
 }

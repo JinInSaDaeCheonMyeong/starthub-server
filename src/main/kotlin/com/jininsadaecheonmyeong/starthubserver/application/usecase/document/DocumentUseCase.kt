@@ -41,16 +41,16 @@ class DocumentUseCase(
     private val fileProcessingService: FileProcessingService,
     private val gcsStorageService: GcsStorageService,
 ) {
-
     @Transactional
     fun createDocument(request: CreateDocumentRequest): DocumentResponse {
         val user = userAuthenticationHolder.current()
 
-        val document = GeneratedDocument(
-            user = user,
-            title = request.title,
-            documentType = request.documentType,
-        )
+        val document =
+            GeneratedDocument(
+                user = user,
+                title = request.title,
+                documentType = request.documentType,
+            )
         val savedDocument = documentRepository.save(document)
 
         val questions = generateDefaultQuestions(savedDocument)
@@ -95,13 +95,14 @@ class DocumentUseCase(
 
         val extractedText = fileProcessingService.extractTextFromFile(file, fileType)
 
-        val template = DocumentTemplate(
-            document = document,
-            fileName = fileName,
-            fileUrl = fileUrl,
-            fileType = fileType,
-            extractedText = extractedText,
-        )
+        val template =
+            DocumentTemplate(
+                document = document,
+                fileName = fileName,
+                fileUrl = fileUrl,
+                fileType = fileType,
+                extractedText = extractedText,
+            )
         templateRepository.save(template)
 
         questionRepository.deleteAll(
@@ -204,32 +205,40 @@ class DocumentUseCase(
         }
     }
 
-    private fun addHistory(document: GeneratedDocument, description: String) {
+    private fun addHistory(
+        document: GeneratedDocument,
+        description: String,
+    ) {
         editHistoryRepository.save(
             DocumentEditHistory(document = document, description = description),
         )
     }
 
     private fun generateDefaultQuestions(document: GeneratedDocument): List<DocumentQuestion> {
-        val baseQuestions = listOf(
-            "해당 문제는 누구(타겟 사용자)에게 발생하나요?" to true,
-            "사용자가 겪는 가장 큰 불편은 무엇인가요?" to true,
-            "이 문제를 어떻게 해결하려고 하나요?" to true,
-        )
+        val baseQuestions =
+            listOf(
+                "해당 문제는 누구(타겟 사용자)에게 발생하나요?" to true,
+                "사용자가 겪는 가장 큰 불편은 무엇인가요?" to true,
+                "이 문제를 어떻게 해결하려고 하나요?" to true,
+            )
 
-        val typeSpecificQuestions = when (document.documentType) {
-            DocumentType.PLAN -> listOf(
-                "예상되는 수익 모델은 무엇인가요?" to true,
-                "경쟁사 대비 차별점은 무엇인가요?" to false,
-            )
-            DocumentType.PROPOSAL -> listOf(
-                "제안의 핵심 가치는 무엇인가요?" to true,
-                "기대되는 성과 지표는 무엇인가요?" to false,
-            )
-            DocumentType.OTHER -> listOf(
-                "문서의 주요 목적은 무엇인가요?" to true,
-            )
-        }
+        val typeSpecificQuestions =
+            when (document.documentType) {
+                DocumentType.PLAN ->
+                    listOf(
+                        "예상되는 수익 모델은 무엇인가요?" to true,
+                        "경쟁사 대비 차별점은 무엇인가요?" to false,
+                    )
+                DocumentType.PROPOSAL ->
+                    listOf(
+                        "제안의 핵심 가치는 무엇인가요?" to true,
+                        "기대되는 성과 지표는 무엇인가요?" to false,
+                    )
+                DocumentType.OTHER ->
+                    listOf(
+                        "문서의 주요 목적은 무엇인가요?" to true,
+                    )
+            }
 
         return (baseQuestions + typeSpecificQuestions).mapIndexed { index, (text, required) ->
             DocumentQuestion(
@@ -249,29 +258,32 @@ class DocumentUseCase(
             return generateDefaultQuestions(document)
         }
 
-        val prompt = buildString {
-            appendLine("다음은 사업 계획서/제안서 템플릿에서 추출한 텍스트입니다.")
-            appendLine("이 템플릿의 각 섹션을 채우기 위해 사용자에게 물어봐야 할 질문을 생성해주세요.")
-            appendLine()
-            appendLine("템플릿 내용:")
-            appendLine(extractedText.take(3000))
-            appendLine()
-            appendLine("규칙:")
-            appendLine("- 3~7개의 질문을 생성하세요")
-            appendLine("- 각 질문은 한 줄로, 번호를 붙여주세요 (1. 2. 3. ...)")
-            appendLine("- 질문만 출력하고 다른 설명은 제외하세요")
-            appendLine("- 한국어로 작성하세요")
-        }
+        val prompt =
+            buildString {
+                appendLine("다음은 사업 계획서/제안서 템플릿에서 추출한 텍스트입니다.")
+                appendLine("이 템플릿의 각 섹션을 채우기 위해 사용자에게 물어봐야 할 질문을 생성해주세요.")
+                appendLine()
+                appendLine("템플릿 내용:")
+                appendLine(extractedText.take(3000))
+                appendLine()
+                appendLine("규칙:")
+                appendLine("- 3~7개의 질문을 생성하세요")
+                appendLine("- 각 질문은 한 줄로, 번호를 붙여주세요 (1. 2. 3. ...)")
+                appendLine("- 질문만 출력하고 다른 설명은 제외하세요")
+                appendLine("- 한국어로 작성하세요")
+            }
 
-        val aiResponse = documentAIService.chat(
-            systemPrompt = "당신은 사업 문서 작성을 돕는 전문 컨설턴트입니다.",
-            userMessage = prompt,
-        )
+        val aiResponse =
+            documentAIService.chat(
+                systemPrompt = "당신은 사업 문서 작성을 돕는 전문 컨설턴트입니다.",
+                userMessage = prompt,
+            )
 
-        val questions = aiResponse.lines()
-            .filter { it.isNotBlank() && it.matches(Regex("^\\d+\\..*")) }
-            .map { it.replace(Regex("^\\d+\\.\\s*"), "").trim() }
-            .filter { it.isNotBlank() }
+        val questions =
+            aiResponse.lines()
+                .filter { it.isNotBlank() && it.matches(Regex("^\\d+\\..*")) }
+                .map { it.replace(Regex("^\\d+\\.\\s*"), "").trim() }
+                .filter { it.isNotBlank() }
 
         if (questions.isEmpty()) {
             return generateDefaultQuestions(document)
@@ -296,48 +308,49 @@ class DocumentUseCase(
 
         val template = templateRepository.findByDocument(document)
 
-        val prompt = buildString {
-            appendLine("다음 정보를 바탕으로 ${document.documentType.toKorean()}을(를) 작성해주세요.")
-            appendLine()
+        val prompt =
+            buildString {
+                appendLine("다음 정보를 바탕으로 ${document.documentType.toKorean()}을(를) 작성해주세요.")
+                appendLine()
 
-            appendLine("## 질문 및 답변")
-            questions.forEach { q ->
-                if (!q.answerText.isNullOrBlank()) {
-                    appendLine("Q: ${q.questionText}")
-                    appendLine("A: ${q.answerText}")
+                appendLine("## 질문 및 답변")
+                questions.forEach { q ->
+                    if (!q.answerText.isNullOrBlank()) {
+                        appendLine("Q: ${q.questionText}")
+                        appendLine("A: ${q.answerText}")
+                        appendLine()
+                    }
+                }
+
+                if (bmcs.isNotEmpty()) {
+                    appendLine("## 사용자의 BMC 정보")
+                    bmcs.first().let { bmc ->
+                        bmc.customerSegments?.let { appendLine("- 고객 세그먼트: $it") }
+                        bmc.valueProposition?.let { appendLine("- 가치 제안: $it") }
+                        bmc.channels?.let { appendLine("- 채널: $it") }
+                        bmc.customerRelationships?.let { appendLine("- 고객 관계: $it") }
+                        bmc.revenueStreams?.let { appendLine("- 수익원: $it") }
+                        bmc.keyResources?.let { appendLine("- 핵심 자원: $it") }
+                        bmc.keyActivities?.let { appendLine("- 핵심 활동: $it") }
+                        bmc.keyPartners?.let { appendLine("- 핵심 파트너: $it") }
+                        bmc.costStructure?.let { appendLine("- 비용 구조: $it") }
+                    }
                     appendLine()
                 }
-            }
 
-            if (bmcs.isNotEmpty()) {
-                appendLine("## 사용자의 BMC 정보")
-                bmcs.first().let { bmc ->
-                    bmc.customerSegments?.let { appendLine("- 고객 세그먼트: $it") }
-                    bmc.valueProposition?.let { appendLine("- 가치 제안: $it") }
-                    bmc.channels?.let { appendLine("- 채널: $it") }
-                    bmc.customerRelationships?.let { appendLine("- 고객 관계: $it") }
-                    bmc.revenueStreams?.let { appendLine("- 수익원: $it") }
-                    bmc.keyResources?.let { appendLine("- 핵심 자원: $it") }
-                    bmc.keyActivities?.let { appendLine("- 핵심 활동: $it") }
-                    bmc.keyPartners?.let { appendLine("- 핵심 파트너: $it") }
-                    bmc.costStructure?.let { appendLine("- 비용 구조: $it") }
+                val templateText = template?.extractedText
+                if (templateText != null) {
+                    appendLine("## 참고 템플릿")
+                    appendLine(templateText.take(3000))
+                    appendLine()
                 }
-                appendLine()
-            }
 
-            val templateText = template?.extractedText
-            if (templateText != null) {
-                appendLine("## 참고 템플릿")
-                appendLine(templateText.take(3000))
-                appendLine()
+                appendLine("## 작성 요구사항")
+                appendLine("- 톤앤매너: ${document.toneType?.toKorean() ?: "전문적인 & 신뢰감 있는"}")
+                appendLine("- 한국어로 작성")
+                appendLine("- HTML 형식으로 작성 (h1, h2, p, ul, li, blockquote 태그 사용)")
+                appendLine("- 구체적이고 실질적인 내용으로 작성")
             }
-
-            appendLine("## 작성 요구사항")
-            appendLine("- 톤앤매너: ${document.toneType?.toKorean() ?: "전문적인 & 신뢰감 있는"}")
-            appendLine("- 한국어로 작성")
-            appendLine("- HTML 형식으로 작성 (h1, h2, p, ul, li, blockquote 태그 사용)")
-            appendLine("- 구체적이고 실질적인 내용으로 작성")
-        }
 
         return documentAIService.chat(
             systemPrompt = "당신은 스타트업 사업 문서 작성 전문가입니다. 주어진 정보를 바탕으로 체계적이고 설득력 있는 문서를 작성합니다.",
@@ -349,20 +362,21 @@ class DocumentUseCase(
         document: GeneratedDocument,
         editPrompt: String,
     ): String {
-        val prompt = buildString {
-            appendLine("다음 문서를 수정 요청에 따라 수정해주세요.")
-            appendLine()
-            appendLine("## 현재 문서 내용")
-            appendLine(document.content)
-            appendLine()
-            appendLine("## 수정 요청")
-            appendLine(editPrompt)
-            appendLine()
-            appendLine("## 규칙")
-            appendLine("- 수정 요청에 해당하는 부분만 수정하고, 나머지는 그대로 유지하세요")
-            appendLine("- HTML 형식을 유지하세요")
-            appendLine("- 수정된 전체 문서를 반환하세요")
-        }
+        val prompt =
+            buildString {
+                appendLine("다음 문서를 수정 요청에 따라 수정해주세요.")
+                appendLine()
+                appendLine("## 현재 문서 내용")
+                appendLine(document.content)
+                appendLine()
+                appendLine("## 수정 요청")
+                appendLine(editPrompt)
+                appendLine()
+                appendLine("## 규칙")
+                appendLine("- 수정 요청에 해당하는 부분만 수정하고, 나머지는 그대로 유지하세요")
+                appendLine("- HTML 형식을 유지하세요")
+                appendLine("- 수정된 전체 문서를 반환하세요")
+            }
 
         return documentAIService.chat(
             systemPrompt = "당신은 문서 편집 전문가입니다. 요청에 따라 문서의 특정 부분을 수정합니다.",
@@ -370,15 +384,17 @@ class DocumentUseCase(
         )
     }
 
-    private fun DocumentType.toKorean(): String = when (this) {
-        DocumentType.PLAN -> "사업 계획서"
-        DocumentType.PROPOSAL -> "사업 제안서"
-        DocumentType.OTHER -> "문서"
-    }
+    private fun DocumentType.toKorean(): String =
+        when (this) {
+            DocumentType.PLAN -> "사업 계획서"
+            DocumentType.PROPOSAL -> "사업 제안서"
+            DocumentType.OTHER -> "문서"
+        }
 
-    private fun com.jininsadaecheonmyeong.starthubserver.domain.enums.document.ToneType.toKorean(): String = when (this) {
-        com.jininsadaecheonmyeong.starthubserver.domain.enums.document.ToneType.PROFESSIONAL -> "전문적인 & 신뢰감 있는"
-        com.jininsadaecheonmyeong.starthubserver.domain.enums.document.ToneType.PERSUASIVE -> "강렬한 & 설득력 있는"
-        com.jininsadaecheonmyeong.starthubserver.domain.enums.document.ToneType.SIMPLE -> "쉬운 설명"
-    }
+    private fun com.jininsadaecheonmyeong.starthubserver.domain.enums.document.ToneType.toKorean(): String =
+        when (this) {
+            com.jininsadaecheonmyeong.starthubserver.domain.enums.document.ToneType.PROFESSIONAL -> "전문적인 & 신뢰감 있는"
+            com.jininsadaecheonmyeong.starthubserver.domain.enums.document.ToneType.PERSUASIVE -> "강렬한 & 설득력 있는"
+            com.jininsadaecheonmyeong.starthubserver.domain.enums.document.ToneType.SIMPLE -> "쉬운 설명"
+        }
 }

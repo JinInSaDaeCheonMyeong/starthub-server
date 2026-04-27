@@ -18,16 +18,17 @@ data class DocumentResponse(
     val updatedAt: LocalDateTime,
 ) {
     companion object {
-        fun from(document: GeneratedDocument) = DocumentResponse(
-            id = document.id!!,
-            title = document.title,
-            documentType = document.documentType,
-            toneType = document.toneType,
-            content = document.content,
-            wordCount = document.wordCount,
-            status = document.status,
-            createdAt = document.createdAt,
-            updatedAt = document.updatedAt,
-        )
+        fun from(document: GeneratedDocument) =
+            DocumentResponse(
+                id = document.id!!,
+                title = document.title,
+                documentType = document.documentType,
+                toneType = document.toneType,
+                content = document.content,
+                wordCount = document.wordCount,
+                status = document.status,
+                createdAt = document.createdAt,
+                updatedAt = document.updatedAt,
+            )
     }
 }

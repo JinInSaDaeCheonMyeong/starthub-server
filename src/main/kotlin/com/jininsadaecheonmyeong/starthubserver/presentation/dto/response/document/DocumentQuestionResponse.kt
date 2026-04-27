@@ -10,12 +10,13 @@ data class DocumentQuestionResponse(
     val required: Boolean,
 ) {
     companion object {
-        fun from(question: DocumentQuestion) = DocumentQuestionResponse(
-            id = question.id!!,
-            questionText = question.questionText,
-            answerText = question.answerText,
-            orderIndex = question.orderIndex,
-            required = question.required,
-        )
+        fun from(question: DocumentQuestion) =
+            DocumentQuestionResponse(
+                id = question.id!!,
+                questionText = question.questionText,
+                answerText = question.answerText,
+                orderIndex = question.orderIndex,
+                required = question.required,
+            )
     }
 }
