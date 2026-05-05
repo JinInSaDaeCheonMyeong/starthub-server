@@ -2,7 +2,6 @@ package com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.servic
 
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.data.AppleUserInfo
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.parser.AppleTokenParser
-import io.jsonwebtoken.Claims
 import org.springframework.stereotype.Service
 
 @Service
@@ -10,15 +9,9 @@ class AppleService(
     private val appleTokenParser: AppleTokenParser,
 ) {
     fun exchangeCodeForUserInfoApp(idToken: String): AppleUserInfo {
-        val claims = appleTokenParser.parseIdToken(idToken)
-
-        return createAppleUserInfoFromClaims(claims)
-    }
-
-    private fun createAppleUserInfoFromClaims(claims: Claims): AppleUserInfo {
-        val map: Map<String, Any> = HashMap(claims)
+        val map = appleTokenParser.parseIdToken(idToken)
         return AppleUserInfo(
-            sub = claims.subject,
+            sub = map["sub"] as? String ?: "",
             name = map["name"] as? String ?: "",
             email = map["email"] as? String ?: "",
             email_verified = map["email_verified"] as? Boolean ?: false,

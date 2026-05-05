@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.client.ApplePublicKeyClient
 import com.jininsadaecheonmyeong.starthubserver.global.infra.oauth.apple.data.ApplePublicKey
-import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Component
 import java.math.BigInteger
@@ -18,10 +17,14 @@ class AppleTokenParser(
     private val applePublicKeyClient: ApplePublicKeyClient,
     private val objectMapper: ObjectMapper,
 ) {
-    fun parseIdToken(idToken: String): Claims {
+    fun parseIdToken(idToken: String): Map<String, Any> {
         val header = parseHeader(idToken)
         val publicKey = getPublicKey(header)
-        return Jwts.parser().verifyWith(publicKey).build().parseSignedClaims(idToken).payload
+        Jwts.parser().verifyWith(publicKey).build().parseSignedClaims(idToken)
+
+        val payload = idToken.split(".")[1]
+        val decoded = String(Base64.getUrlDecoder().decode(payload))
+        return objectMapper.readValue(decoded, object : TypeReference<Map<String, Any>>() {})
     }
 
     private fun parseHeader(idToken: String): Map<String, String> {
