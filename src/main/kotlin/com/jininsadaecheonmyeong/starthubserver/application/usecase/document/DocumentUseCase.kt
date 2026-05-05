@@ -19,6 +19,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.security.token.support.Us
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.AIEditRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.AnswerQuestionsRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.CreateDocumentRequest
+import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.SaveAnswersRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.UpdateDocumentRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.document.DocumentEditHistoryResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.document.DocumentListResponse
@@ -81,6 +82,23 @@ class DocumentUseCase(
     }
 
     @Transactional
+    fun saveAnswers(
+        documentId: Long,
+        request: SaveAnswersRequest,
+    ): List<DocumentQuestionResponse> {
+        val document = findDocumentOrThrow(documentId)
+        validateOwner(document)
+
+        val questions = questionRepository.findAllByDocumentOrderByOrderIndexAsc(document)
+        request.answers.forEach { answer ->
+            questions.find { it.id == answer.questionId }?.updateAnswer(answer.answer)
+        }
+        questionRepository.saveAll(questions)
+
+        return questions.map { DocumentQuestionResponse.from(it) }
+    }
+
+    @Transactional
     fun uploadTemplate(
         documentId: Long,
         file: MultipartFile,
@@ -136,6 +154,10 @@ class DocumentUseCase(
 
         val content = callAIForGeneration(document, questions)
 
+        if (content.isBlank()) {
+            throw DocumentNotFoundException("AI 문서 생성에 실패했습니다. 다시 시도해주세요.")
+        }
+
         document.updateContent(content)
         document.markAsCompleted()
         documentRepository.save(document)
@@ -168,12 +190,17 @@ class DocumentUseCase(
         val document = findDocumentOrThrow(documentId)
         validateOwner(document)
 
+        if (document.content.isNullOrBlank()) {
+            throw DocumentNotFoundException("수정할 문서 내용이 없습니다. 먼저 문서를 생성해주세요.")
+        }
+
         val editedContent = callAIForEdit(document, request.prompt)
 
-        document.updateContent(editedContent)
-        documentRepository.save(document)
-
-        addHistory(document, "AI가 문서를 수정했습니다: ${request.prompt.take(50)}")
+        if (editedContent.isNotBlank()) {
+            document.updateContent(editedContent)
+            documentRepository.save(document)
+            addHistory(document, "AI가 문서를 수정했습니다: ${request.prompt.take(50)}")
+        }
 
         return DocumentResponse.from(document)
     }
@@ -281,8 +308,9 @@ class DocumentUseCase(
 
         val questions =
             aiResponse.lines()
-                .filter { it.isNotBlank() && it.matches(Regex("^\\d+\\..*")) }
-                .map { it.replace(Regex("^\\d+\\.\\s*"), "").trim() }
+                .map { it.trim() }
+                .filter { it.isNotBlank() && it.matches(Regex("^\\d+[.\\)\\]:]\\s*.*")) }
+                .map { it.replace(Regex("^\\d+[.\\)\\]:]\\s*"), "").trim() }
                 .filter { it.isNotBlank() }
 
         if (questions.isEmpty()) {

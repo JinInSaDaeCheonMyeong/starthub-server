@@ -6,6 +6,7 @@ import com.jininsadaecheonmyeong.starthubserver.presentation.docs.document.Docum
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.AIEditRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.AnswerQuestionsRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.CreateDocumentRequest
+import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.SaveAnswersRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.UpdateDocumentRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.document.DocumentEditHistoryResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.document.DocumentListResponse
@@ -57,6 +58,15 @@ class DocumentController(
     ): ResponseEntity<BaseResponse<List<DocumentQuestionResponse>>> {
         val response = documentUseCase.getQuestions(documentId)
         return BaseResponse.of(response, "질문 목록 조회 성공")
+    }
+
+    @PostMapping("/{documentId}/questions")
+    override fun saveAnswers(
+        @PathVariable documentId: Long,
+        @Valid @RequestBody request: SaveAnswersRequest,
+    ): ResponseEntity<BaseResponse<List<DocumentQuestionResponse>>> {
+        val response = documentUseCase.saveAnswers(documentId, request)
+        return BaseResponse.of(response, "답변 저장 성공")
     }
 
     @PostMapping("/{documentId}/upload-template")

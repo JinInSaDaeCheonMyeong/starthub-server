@@ -84,6 +84,7 @@ class FileProcessingService {
             "pdf" -> extractTextFromPdf(file)
             "docx", "doc" -> extractTextFromDocx(file)
             "hwp" -> extractTextFromHwp(file)
+            "txt" -> String(file.bytes, Charsets.UTF_8)
             else -> null
         }
     }

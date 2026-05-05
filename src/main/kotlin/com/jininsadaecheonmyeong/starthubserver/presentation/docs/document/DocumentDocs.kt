@@ -4,6 +4,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.common.BaseResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.AIEditRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.AnswerQuestionsRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.CreateDocumentRequest
+import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.SaveAnswersRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.request.document.UpdateDocumentRequest
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.document.DocumentEditHistoryResponse
 import com.jininsadaecheonmyeong.starthubserver.presentation.dto.response.document.DocumentListResponse
@@ -35,6 +36,12 @@ interface DocumentDocs {
     @Operation(summary = "질문 목록 조회", description = "문서 생성을 위한 질문 목록을 조회합니다.")
     fun getQuestions(
         @PathVariable documentId: Long,
+    ): ResponseEntity<BaseResponse<List<DocumentQuestionResponse>>>
+
+    @Operation(summary = "질문 답변 저장", description = "질문에 대한 답변을 저장합니다. (문서 생성 없이 답변만 저장)")
+    fun saveAnswers(
+        @PathVariable documentId: Long,
+        @Valid @RequestBody request: SaveAnswersRequest,
     ): ResponseEntity<BaseResponse<List<DocumentQuestionResponse>>>
 
     @Operation(summary = "템플릿 파일 업로드", description = "지원 사업 계획서 양식 파일을 업로드하면 파일 기반 질문을 생성합니다. PDF, DOCX, HWP 형식 지원 (최대 20MB)")
