@@ -20,7 +20,7 @@ class AppleService(
             sub = claims.subject,
             name = claims["name"] as? String ?: "",
             email = claims.get("email", String::class.java),
-            email_verified = claims.get("email_verified", Boolean::class.java),
+            email_verified = claims["email_verified"] as? Boolean ?: false,
             given_name = claims["given_name"] as? String,
             family_name = claims["family_name"] as? String,
             locale = claims["locale"] as? String,
