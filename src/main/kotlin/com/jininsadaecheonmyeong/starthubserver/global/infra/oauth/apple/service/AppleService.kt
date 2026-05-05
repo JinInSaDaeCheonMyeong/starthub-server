@@ -16,14 +16,15 @@ class AppleService(
     }
 
     private fun createAppleUserInfoFromClaims(claims: Claims): AppleUserInfo {
+        val map: Map<String, Any> = HashMap(claims)
         return AppleUserInfo(
             sub = claims.subject,
-            name = claims["name"] as? String ?: "",
-            email = claims["email"] as? String ?: "",
-            email_verified = claims["email_verified"]?.toString()?.toBoolean() ?: false,
-            given_name = claims["given_name"] as? String,
-            family_name = claims["family_name"] as? String,
-            locale = claims["locale"] as? String,
+            name = map["name"] as? String ?: "",
+            email = map["email"] as? String ?: "",
+            email_verified = map["email_verified"] as? Boolean ?: false,
+            given_name = map["given_name"] as? String,
+            family_name = map["family_name"] as? String,
+            locale = map["locale"] as? String,
         )
     }
 }
