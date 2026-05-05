@@ -19,8 +19,8 @@ class AppleService(
         return AppleUserInfo(
             sub = claims.subject,
             name = claims["name"] as? String ?: "",
-            email = claims.get("email", String::class.java),
-            email_verified = claims["email_verified"] as? Boolean ?: false,
+            email = claims["email"] as? String ?: "",
+            email_verified = claims["email_verified"]?.toString()?.toBoolean() ?: false,
             given_name = claims["given_name"] as? String,
             family_name = claims["family_name"] as? String,
             locale = claims["locale"] as? String,
