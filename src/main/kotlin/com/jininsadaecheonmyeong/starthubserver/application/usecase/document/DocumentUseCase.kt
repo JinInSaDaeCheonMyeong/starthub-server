@@ -378,6 +378,8 @@ class DocumentUseCase(
                 appendLine("- 한국어로 작성")
                 appendLine("- HTML 형식으로 작성 (h1, h2, p, ul, li, blockquote 태그 사용)")
                 appendLine("- 구체적이고 실질적인 내용으로 작성")
+                appendLine("- 질문/답변 원본을 문서에 포함하지 마세요")
+                appendLine("- 오직 완성된 문서 HTML만 출력하세요 (코드블록 마크다운 ``` 제외)")
             }
 
         return documentAIService.chat(
@@ -403,11 +405,13 @@ class DocumentUseCase(
                 appendLine("## 규칙")
                 appendLine("- 수정 요청에 해당하는 부분만 수정하고, 나머지는 그대로 유지하세요")
                 appendLine("- HTML 형식을 유지하세요")
-                appendLine("- 수정된 전체 문서를 반환하세요")
+                appendLine("- 수정된 전체 문서 HTML만 반환하세요")
+                appendLine("- 질문/답변, 설명, 코드블록 마크다운(```)을 포함하지 마세요")
+                appendLine("- 오직 HTML 문서 본문만 출력하세요")
             }
 
         return documentAIService.chat(
-            systemPrompt = "당신은 문서 편집 전문가입니다. 요청에 따라 문서의 특정 부분을 수정합니다.",
+            systemPrompt = "당신은 문서 편집 전문가입니다. 요청에 따라 문서의 특정 부분을 수정합니다. 반드시 HTML 문서 내용만 반환하고, 질문/답변이나 부가 설명은 절대 포함하지 마세요.",
             userMessage = prompt,
         )
     }

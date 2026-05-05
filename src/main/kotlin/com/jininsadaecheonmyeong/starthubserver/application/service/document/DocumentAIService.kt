@@ -8,6 +8,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
+import java.time.Duration
 
 @Service
 class DocumentAIService(
@@ -49,6 +50,7 @@ class DocumentAIService(
                     .bodyValue(request)
                     .retrieve()
                     .bodyToMono<OpenAIResponse>()
+                    .timeout(Duration.ofSeconds(60))
                     .block()
 
             response?.choices?.firstOrNull()?.message?.content ?: ""
