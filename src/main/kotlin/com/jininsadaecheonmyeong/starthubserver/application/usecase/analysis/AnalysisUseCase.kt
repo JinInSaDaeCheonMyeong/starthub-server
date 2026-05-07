@@ -28,6 +28,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.beans.factory.annotation.Qualifier
@@ -177,8 +178,10 @@ class AnalysisUseCase(
                 logger.debug("GPT 프롬프트 길이: {}자", analysisPrompt.length)
 
                 val gptResponse =
-                    withContext(Dispatchers.IO) {
-                        chatModel.call(analysisPrompt)
+                    withTimeout(50_000L) {
+                        withContext(Dispatchers.IO) {
+                            chatModel.call(analysisPrompt)
+                        }
                     }
                 logger.info("GPT 응답 수신 - 길이: {}자", gptResponse.length)
                 logger.debug("GPT 응답 앞부분: {}", gptResponse.take(500))
