@@ -61,6 +61,8 @@ class User(
     var bannedAt: LocalDateTime? = null,
     @Column(columnDefinition = "TEXT")
     var banReason: String? = null,
+    @Column(nullable = false)
+    var chatbotBanned: Boolean = false,
 ) : BaseEntity() {
     fun updateTier(newTier: UserTier) {
         this.tier = newTier

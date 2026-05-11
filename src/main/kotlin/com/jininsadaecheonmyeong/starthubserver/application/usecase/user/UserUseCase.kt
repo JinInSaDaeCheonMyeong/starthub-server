@@ -172,6 +172,7 @@ class UserUseCase(
             startupFields = startupFields,
             startupHistory = user.startupHistory,
             provider = user.provider,
+            chatbotBanned = user.chatbotBanned,
         )
     }
 

@@ -8,6 +8,7 @@ import com.jininsadaecheonmyeong.starthubserver.global.exception.CustomErrorResp
 import com.jininsadaecheonmyeong.starthubserver.logger
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
@@ -38,6 +39,21 @@ class ChatbotRateLimitInterceptor(
                 response,
                 HttpStatus.FORBIDDEN,
                 "계정이 차단되었습니다. 관리자에게 문의해주세요.",
+            )
+            return false
+        }
+
+        if (user.chatbotBanned && request.method != HttpMethod.GET.name()) {
+            log.warn(
+                "Chatbot ban으로 차단: userId={}, method={}, uri={}",
+                userId,
+                request.method,
+                request.requestURI,
+            )
+            writeErrorResponse(
+                response,
+                HttpStatus.FORBIDDEN,
+                "부적절하거나 악의적인 챗봇 기능 사용으로 사용이 제한되었습니다.",
             )
             return false
         }

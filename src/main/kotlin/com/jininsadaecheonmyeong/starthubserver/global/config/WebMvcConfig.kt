@@ -10,6 +10,6 @@ class WebMvcConfig(
 ) : WebMvcConfigurer {
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(chatbotRateLimitInterceptor)
-            .addPathPatterns("/chatbot/sessions/*/messages/**")
+            .addPathPatterns("/chatbot/**")
     }
 }

@@ -21,4 +21,5 @@ data class UserResponse(
     val startupFields: List<StartupFieldResponse>,
     val startupHistory: Int?,
     val provider: AuthType,
+    val chatbotBanned: Boolean,
 )
